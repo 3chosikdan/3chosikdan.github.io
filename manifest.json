@@ -1,0 +1,14 @@
+{
+  "name": "3초식단 — 기록 3초",
+  "short_name": "3초식단",
+  "description": "기록 3초. 가입 없음, 설치 없음.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
