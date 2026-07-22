@@ -32,6 +32,8 @@
   .date { font-size:13px; color:#8e8e93; font-weight:600; margin-top:2px; }
   .streak { font-size:15px; font-weight:700; color:#ff9500; }
   .gear { font-size:20px; background:none; border:none; cursor:pointer; color:#c7c7cc; }
+  .hdr-btn { font-size:12.5px; font-weight:700; background:#f2f2f7; border:none; border-radius:100px; padding:7px 12px; cursor:pointer; color:#3a3a3c; white-space:nowrap; }
+  .hdr-btn:active { background:#e5e5ea; }
 
   /* ring */
   .hero { text-align:center; padding:8px 0 4px; }
@@ -183,6 +185,9 @@
   .frow { display:flex; gap:10px; margin-bottom:12px; }
   .frow > div { flex:1; }
   .flabel { font-size:12px; font-weight:700; color:#8e8e93; margin:4px 0 6px; }
+  .seg-help { font-size:12px; line-height:1.5; color:#3a3a3c; background:#f2f2f7; border-radius:10px; padding:9px 12px; margin:-4px 0 12px; }
+  .seg-help.warn { background:#fff3f2; color:#c0392b; }
+  .seg-help b { color:#111; }
   select.txt-input { appearance:none; -webkit-appearance:none; }
   .tdee-box { background:#111; color:#fff; border-radius:16px; padding:16px; margin:14px 0 8px; display:flex; justify-content:space-around; text-align:center; }
   .tdee-box .tv { font-size:20px; font-weight:800; letter-spacing:-0.5px; }
@@ -238,10 +243,10 @@
     <div class="date" id="dateLabel" onclick="openDatePick()" style="cursor:pointer;"></div>
     <input type="date" id="datePick" style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;border:0;padding:0;" onchange="goToDate(this.value)">
   </div>
-  <div style="display:flex; align-items:center; gap:14px;">
+  <div style="display:flex; align-items:center; gap:8px;">
     <span class="streak" id="streak"></span>
-    <button class="gear" onclick="openGuide()" style="font-size:17px;">📖</button>
-    <button class="gear" onclick="openSettings()">⚙︎</button>
+    <button class="hdr-btn" onclick="openGuide()">📖 가이드</button>
+    <button class="hdr-btn" onclick="openSettings()">⚙︎ 목표</button>
   </div>
 </header>
 
@@ -469,6 +474,7 @@
       <button data-v="-500" onclick="setSeg('segCut','-500')">보통 −500</button>
       <button data-v="-700" onclick="setSeg('segCut','-700')">공격적 −700</button>
     </div>
+    <div class="seg-help" id="cutHelp"></div>
   </div>
 
   <div class="flabel">스타일 — 어떻게 먹을까</div>
@@ -477,6 +483,7 @@
     <button data-v="lowcarb" onclick="setSeg('segMacro','lowcarb')">저탄수</button>
     <button data-v="hicarb" onclick="setSeg('segMacro','hicarb')">고탄수</button>
   </div>
+  <div class="seg-help" id="macroHelp"></div>
 
   <div class="tdee-box">
     <div><div class="tv" id="tvBmr">–</div><div class="tl">BMR 기초대사</div></div>
@@ -1515,7 +1522,32 @@ function setSeg(id, v){
   if(id==='segSex') syncSexUI();
   if(id==='segGoalType') syncGoalTypeUI();
   if(id==='segMode') document.getElementById('cutRow').classList.toggle('hidden', v!=='cut');
+  if(id==='segCut' || id==='segMode') renderCutHelp();
+  if(id==='segMacro') renderMacroHelp(v);
   previewTDEE();
+}
+function renderCutHelp(){
+  const el = document.getElementById('cutHelp'); if(!el) return;
+  const cut = segVal('segCut');
+  const sex = segVal('segSex');
+  const map = {
+    '-300': ['완만 −300', '근손실·정체기 최소. 오래 걸려도 안전. 저체중·여성·유지형에 추천.', false],
+    '-500': ['보통 −500', '표준 감량. 대부분에게 균형 잡힌 속도(주 약 0.45kg).', false],
+    '-700': ['공격적 −700', '빠르지만 근손실·요요·정체기 위험 ↑. <b>단기(2~3주)만</b>, 목표 칼로리가 기초대사량 아래로 안 갈 때만.'+(sex==='f'?' 여성은 호르몬 교란 위험이 커 특히 비권장.':''), true]
+  };
+  const m = map[cut] || map['-500'];
+  el.className = 'seg-help' + (m[2] ? ' warn' : '');
+  el.innerHTML = (m[2]?'⚠️ ':'') + m[1];
+}
+function renderMacroHelp(v){
+  const el = document.getElementById('macroHelp'); if(!el) return;
+  const map = {
+    balanced: '탄수 50% — 대부분의 일반 다이어터에게 무난. 어떤 운동이든 두루 맞음.',
+    lowcarb:  '탄수 25% — 좌식·인슐린 민감도 낮은 사람, 정체기 돌파용. <b>단, 탄수는 총칼로리 40% 밑으로 오래 가면 대사가 느려지니 장기 지속은 주의.</b>',
+    hicarb:   '탄수 65% — <b>고강도 운동·바디빌딩·활동량 많은 사람</b>에 최적. 운동 수행력·회복·근성장에 유리.'
+  };
+  el.className = 'seg-help';
+  el.innerHTML = map[v || 'balanced'] || map.balanced;
 }
 function syncGoalTypeUI(){
   const t = segVal('segGoalType') || 'weight';
