@@ -505,72 +505,8 @@
 <div class="sheet" id="guideSheet">
   <div class="grabber"></div>
   <h3>식단 가이드 <span style="color:#30d158;">.</span></h3>
-
-  <div class="g-sec">
-    <div class="g-title">1 · 식단 짜는 순서</div>
-    <div class="g-body">
-      ① 칼로리 예산 — ⚙︎에서 자동 계산<br>
-      ② <b>단백질부터 확보</b> — 단백질은 목표, 나머지는 예산<br>
-      ③ 탄수화물 — 양은 남은 예산, <b>종류는 시간대</b>로<br>
-      ④ 지방 — <b>75%는 생선·아보카도·견과류</b>에서
-    </div>
-  </div>
-
-  <div class="g-sec">
-    <div class="g-title">2 · 탄수화물, 시간대로 고르기 (GI)</div>
-    <div class="g-body">
-      <b style="color:#1faa4b;">평소 — 저GI (혈당 안정, 포만감 오래)</b><br>
-      삶은 고구마 ~50 · 현미 ~55 · 오트밀 ~55 · 알덴테 파스타 ~49 · 덜 익은 바나나 ~45 · 사과 ~36<br><br>
-      <b style="color:#ff9500;">운동 직후 — 고GI (빠른 회복, 여기가 제자리)</b><br>
-      감자 ~80 · 흰쌀밥 ~73 · 쌀과자 ~82 · 잘 익은 바나나 ~58
-    </div>
-  </div>
-
-  <div class="g-sec" style="background:#fff3f2;">
-    <div class="g-title">⚠️ 조리법 함정</div>
-    <div class="g-body">
-      <b>군고구마는 저GI가 아닙니다</b> — 구우면 GI 80~90. 다이어트용은 찐/삶은 고구마.<br>
-      반대로 <b>밥·감자는 식히면 GI가 내려갑니다</b>(저항성 전분). 식은 밥·감자 샐러드 OK.
-    </div>
-  </div>
-
-  <div class="g-sec" style="background:#eafaf0;">
-    <div class="g-title">🥔 감자의 재발견</div>
-    <div class="g-body">
-      GI는 높지만 <b>포만감 지수 전 음식 1위</b> (흰빵의 3배), 100g에 80kcal로 밥의 절반. 삶거나 에어프라이어로 조리하면 다이어트 최고 무기. 편의점 구운감자도 OK.
-    </div>
-  </div>
-
-  <div class="g-sec">
-    <div class="g-title">3 · 바꿔치기</div>
-    <div class="g-body">
-      크림파스타·피자 → <b>토마토 파스타</b> (고탄수+고지방 조합 해체)<br>
-      흰빵·주스 → <b>통밀빵·통과일</b> (혈당 롤러코스터 차단)<br>
-      시럽커피·밀크티 → <b>아메리카노·제로 음료</b> (마시는 칼로리 0)<br>
-      햄·소시지 → <b>훈제닭가슴살·참치캔</b> (나트륨 부종 방지)<br>
-      야식 라면 → <b>계란+야채, 그릭요거트</b> (수면 중 지방분해 보호)
-    </div>
-  </div>
-
-  <div class="g-sec">
-    <div class="g-title">4 · 하루 조립 예시</div>
-    <div class="g-body">
-      <b>아침</b> 오트밀 40g + 그릭요거트 + 베리<br>
-      <b>점심</b> 일반식 OK — 밥 ⅔공기 + 고기·생선 반찬, 국물 남기기<br>
-      <b>운동 직후</b> 프로틴 1스쿱 + 감자 1개 (or 흰밥 반 공기)<br>
-      <b>저녁</b> 단백질 200g + 채소, 탄수 소량<br>
-      <b>간식</b> 방울토마토 · 삶은계란 · 견과 한 줌
-    </div>
-  </div>
-
-  <div class="g-sec" style="background:#111;color:#fff;">
-    <div class="g-title" style="color:#30d158;">💡 3초식단 사용법</div>
-    <div class="g-body" style="color:#e5e5ea;">
-      위 다섯 끼니를 기록 화면에서 <b>세트로 저장</b>하세요. 그러면 식단 관리가 매일 <b>탭 5번</b>이 됩니다. 지속이 전부입니다.
-    </div>
-  </div>
-
-  <div style="font-size:10.5px;color:#c7c7cc;line-height:1.6;margin-top:14px;">일반적 영양 정보이며 의학적 조언이 아닙니다. GI는 품종·조리법에 따라 달라지는 근사값입니다.</div>
+  <div id="guideBody"></div>
+  <div style="font-size:10.5px;color:#c7c7cc;line-height:1.6;margin-top:14px;">일반적 영양 정보이며 의학적 조언이 아닙니다. GI는 품종·조리법에 따라 달라지는 근사값입니다. 생리 불순·무월경·기저질환이 있다면 전문의와 상의하세요.</div>
 </div>
 
 <div id="toast"></div>
@@ -1431,7 +1367,144 @@ function closeSheet(){
   document.getElementById('settingsSheet').classList.remove('show');
   document.getElementById('guideSheet').classList.remove('show');
 }
+/* ============ 식단 가이드 (여성 프로필이면 생리주기 섹션 상단) ============ */
+const GUIDE_CYCLE = `
+  <div class="g-sec" style="background:#fff0f6;border:1.5px solid #ffd6e7;">
+    <div class="g-title">🌙 생리주기별 식단 — 호르몬에 맞춰 먹기</div>
+    <div class="g-body">
+      여성의 몸은 4주 내내 같지 않습니다. 에스트로겐·프로게스테론이 오르내리며 <b>기초대사·식욕·인슐린 감수성·수분</b>이 다 바뀌어요. 주기를 거스르지 말고 <b>올라타면</b> 훨씬 편합니다.
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">① 생리기 (1~5일) — 회복 · 철분</div>
+    <div class="g-body">
+      출혈로 <b>철분이 빠져나가는 시기</b>. 무리한 감량 금지, 몸을 달래는 주간.<br>
+      · <b>철분 보충:</b> 소고기 살코기, 시금치, 두부, 계란, 조개류 → 비타민C(피망·딸기·귤)와 같이 먹으면 흡수 ↑<br>
+      · <b>따뜻하게:</b> 미역국·된장국 등 국물로 복부 이완, 나트륨만 과하지 않게<br>
+      · 단 게 당기면 참지 말고 다크초콜릿 한 조각·바나나로 → 폭식 방지<br>
+      · 카페인·과한 나트륨은 경련·부종 악화 → 줄이기
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#eafaf0;">
+    <div class="g-title">② 난포기 (6~13일) — 황금기 · 감량 최적</div>
+    <div class="g-body">
+      에스트로겐 상승 → <b>기분·에너지·인슐린 감수성 최고</b>. 살이 가장 잘 빠지고 운동 성과도 좋은 구간.<br>
+      · <b>여기서 강하게:</b> 감량 강도 높여도 됨, 강도 높은 운동·근력 집중<br>
+      · 탄수 활용도 좋으니 <b>운동 전후 탄수</b> 적극 섭취(고구마·현미·바나나)<br>
+      · 단백질 꾸준히(LBM 기준) → 근육 만들기 최적 타이밍
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">③ 배란기 (14~16일) — 정점 후 전환</div>
+    <div class="g-body">
+      에너지 정점. 이후 프로게스테론이 오르기 시작.<br>
+      · 항염 식품으로 몸 준비: <b>오메가3</b>(연어·고등어·들기름), 채소·베리류<br>
+      · 수분·식이섬유 넉넉히 → 다음 주 부종·변비 대비
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#fff3f2;">
+    <div class="g-title">④ 황체기 (17~28일) — PMS · 식욕 폭발 구간</div>
+    <div class="g-body">
+      프로게스테론 ↑ → <b>기초대사가 오히려 약간 올라가고(하루 100~300kcal 더 씀)</b>, 대신 <b>식욕 폭발·단 것 갈망·수분 저류</b>가 옵니다. 여기서 다이어터가 제일 많이 무너져요.<br>
+      · <b>체중 1~2kg 늘어도 지방 아님 = 수분입니다.</b> 이때 몸무게 숫자는 무시하세요 (3초식단이 🌙 표시로 추세만 보게 도와줍니다)<br>
+      · 단 갈망엔 <b>복합탄수 + 단백질</b>: 고구마+그릭요거트, 오트밀+프로틴, 다크초콜릿 한 조각<br>
+      · <b>마그네슘·비타민B6</b>(견과·바나나·통곡물)가 PMS·기분 완화<br>
+      · 정 배고프면 참지 말고 목표를 살짝 늘리세요 — 이 주간 과한 절식은 폭식 부메랑<br>
+      · 나트륨·카페인·술 줄이면 부종·유방통이 덜함
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#111;color:#fff;">
+    <div class="g-title" style="color:#ff9dc4;">💡 핵심 한 줄</div>
+    <div class="g-body" style="color:#e5e5ea;">
+      난포기(6~13일)에 밀어붙이고, 황체기(17~28일)엔 몸무게 숫자 대신 추세만 보며 자책하지 마세요. 주기를 이기려 하지 말고 <b>주기에 맞춰</b>가 정답입니다.
+    </div>
+  </div>
+`;
+const GUIDE_MAIN = `
+  <div class="g-sec">
+    <div class="g-title">1 · 식단 짜는 순서</div>
+    <div class="g-body">
+      ① 칼로리 예산 — ⚙︎에서 자동 계산<br>
+      ② <b>단백질부터 확보</b> — 단백질은 목표, 나머지는 예산<br>
+      ③ 탄수화물 — 양은 남은 예산, <b>종류는 시간대</b>로<br>
+      ④ 지방 — <b>75%는 생선·아보카도·견과류</b>에서
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">2 · 탄수화물, 시간대로 고르기 (GI)</div>
+    <div class="g-body">
+      <b style="color:#1faa4b;">평소 — 저GI (혈당 안정, 포만감 오래)</b><br>
+      삶은 고구마 ~50 · 현미 ~55 · 오트밀 ~55 · 알덴테 파스타 ~49 · 덜 익은 바나나 ~45 · 사과 ~36<br><br>
+      <b style="color:#ff9500;">운동 직후 — 고GI (빠른 회복, 여기가 제자리)</b><br>
+      감자 ~80 · 흰쌀밥 ~73 · 쌀과자 ~82 · 잘 익은 바나나 ~58
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#fff3f2;">
+    <div class="g-title">⚠️ 조리법 함정</div>
+    <div class="g-body">
+      <b>군고구마는 저GI가 아닙니다</b> — 구우면 GI 80~90. 다이어트용은 찐/삶은 고구마.<br>
+      반대로 <b>밥·감자는 식히면 GI가 내려갑니다</b>(저항성 전분). 식은 밥·감자 샐러드 OK.
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#eafaf0;">
+    <div class="g-title">🥔 감자의 재발견</div>
+    <div class="g-body">
+      GI는 높지만 <b>포만감 지수 전 음식 1위</b> (흰빵의 3배), 100g에 80kcal로 밥의 절반. 삶거나 에어프라이어로 조리하면 다이어트 최고 무기. 편의점 구운감자도 OK.
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">3 · 피할 것 → 바꿔치기 (왜 살찌는지까지)</div>
+    <div class="g-body">
+      <b>크림파스타·피자·도넛</b> → 고탄수+고지방 = 지방 저장 최적 환경<br>→ 토마토 파스타, 고구마+계란, 현미+두부<br><br>
+      <b>흰빵·설탕·과일주스·시리얼</b> → 혈당 급등 → 인슐린 저항성·식욕 폭증<br>→ 현미·귀리·통밀빵·바나나<br><br>
+      <b>탄산·밀크티·시럽커피</b> → 씹는 포만감 0, 저혈당 반동으로 식욕 폭발<br>→ 탄산수·무가당티·아메리카노·레몬물<br><br>
+      <b>소시지·햄·베이컨·스팸</b> → 나트륨 부종 + 보존료 만성염증<br>→ 두부·생선·계란·기름뺀 차돌박이<br><br>
+      <b>야식 라면·떡볶이</b> → 취침 전 인슐린 = 지방분해 정지 + 호르몬 리듬 붕괴<br>→ 정 배고프면 삶은계란+야채, 그릭요거트
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">4 · 클린 단백질 — 닭가슴살 말고도</div>
+    <div class="g-body">
+      <b>육류</b> 소고기 살코기·양지, 기름뺀 닭다리살, 차돌박이(기름제거)<br>
+      <b>해산물</b> 연어·고등어, 참치캔(물), 명태포, 조개류<br>
+      <b>식물성</b> 두부·삶은콩·템페, 계란·계란흰자, 고단백 그릭요거트<br>
+      <b>보충제</b> WPI·무설탕 프로틴, 카제인(자기 전), 단백질바(당 3g↓)<br>
+      <span style="color:#8e8e93;">여러 종류를 섞어야 다양한 아미노산이 고르게 들어옵니다.</span>
+    </div>
+  </div>
+
+  <div class="g-sec">
+    <div class="g-title">5 · 하루 조립 예시</div>
+    <div class="g-body">
+      <b>아침</b> 오트밀 40g + 그릭요거트 + 베리<br>
+      <b>점심</b> 일반식 OK — 밥 ⅔공기 + 고기·생선 반찬, 국물 남기기<br>
+      <b>운동 직후</b> 프로틴 1스쿱 + 감자 1개 (or 흰밥 반 공기)<br>
+      <b>저녁</b> 단백질 200g + 채소, 탄수 소량<br>
+      <b>간식</b> 방울토마토 · 삶은계란 · 견과 한 줌
+    </div>
+  </div>
+
+  <div class="g-sec" style="background:#111;color:#fff;">
+    <div class="g-title" style="color:#30d158;">💡 3초식단 사용법</div>
+    <div class="g-body" style="color:#e5e5ea;">
+      위 다섯 끼니를 기록 화면에서 <b>세트로 저장</b>하세요. 그러면 식단 관리가 매일 <b>탭 5번</b>이 됩니다. 지속이 전부입니다.
+    </div>
+  </div>
+`;
 function openGuide(){
+  const isFemale = S.profile && S.profile.sex==='f';
+  document.getElementById('guideBody').innerHTML = (isFemale ? GUIDE_CYCLE : '') + GUIDE_MAIN + (isFemale ? '' :
+    `<div class="g-sec" style="background:#fff0f6;"><div class="g-title">🌙 생리주기별 식단도 있어요</div><div class="g-body">⚙︎ 프로필에서 성별을 <b>여성</b>으로 설정하면, 주기 4단계에 맞춘 식단 가이드가 여기 맨 위에 추가됩니다.</div></div>`);
   document.getElementById('overlay').classList.add('show');
   document.getElementById('guideSheet').classList.add('show');
 }
