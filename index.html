@@ -140,6 +140,8 @@
     padding:12px 24px 160px; /* 키보드·탭바에 안 가리게 아래 여유 */
   }
   .sheet.show { transform:translate(-50%,0); }
+  /* 장바구니가 떠 있을 때: 하단 여유를 합계바가 대신한다 (renderCart에서 토글) */
+  .sheet.has-cart { padding-bottom:0; }
   .grabber { width:36px; height:5px; border-radius:3px; background:#e5e5ea; margin:0 auto 14px; }
   .sheet-x {
     position:sticky; top:2px; float:right; z-index:5;
@@ -1049,6 +1051,10 @@ function backToMain(refocus){
 }
 function renderCart(pop){
   const wrap = document.getElementById('cartWrap');
+  // 시트 하단 패딩(160px)이 남아 있으면 sticky 합계바가 그만큼 위에서 멈춰 목록을 덮는다.
+  // 담은 게 있을 때만 패딩을 걷어내 바가 진짜 시트 바닥에 붙게 한다.
+  const sheetEl = wrap.closest('.sheet');
+  if(sheetEl) sheetEl.classList.toggle('has-cart', cart.length > 0);
   if(!cart.length){ wrap.classList.add('hidden'); document.getElementById('cartList').innerHTML=''; return; }
   wrap.classList.remove('hidden');
   document.getElementById('cartTitle').textContent = `담은 것 · ${cart.length}개`;
