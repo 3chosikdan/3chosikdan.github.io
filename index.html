@@ -406,6 +406,10 @@
   <div id="stepPortion" class="hidden">
     <h3 id="portionTitle"></h3>
     <div style="font-size:12px;color:#8e8e93;font-weight:600;margin:-8px 0 12px;" id="portionBase"></div>
+    <div class="chip-row hidden" id="unitToggleRow" style="margin:-4px 0 12px;">
+      <button class="chip" id="unitChipA" onclick="setPortionMode('unit')"></button>
+      <button class="chip" id="unitChipB" onclick="setPortionMode('g')">g으로 입력</button>
+    </div>
     <div style="text-align:center;margin:10px 0 4px;">
       <input class="portion-num" id="portionNum" type="number" inputmode="decimal" oninput="portionFromNum()"><span style="font-size:18px;font-weight:700;color:#8e8e93;margin-left:6px;" id="portionUnit"></span>
       <div style="font-size:14px;color:#8e8e93;font-weight:600;margin-top:8px;" id="portionInfo"></div>
@@ -588,6 +592,7 @@ const FOODS = {
   "피자":[550,22,60,25],"햄버거":[600,25,45,35],"햄버거세트":[950,30,110,42],"파스타":[650,20,85,24],"리조또":[600,15,80,24],"스테이크":[500,45,5,34],
   "샐러드":[250,8,15,17],"닭가슴살샐러드":[300,30,12,14],"포케":[450,30,50,14],
   "계란":[78,6,1,5],"계란후라이":[110,7,1,9],"삶은계란":[78,6,1,5],"계란찜":[150,12,3,10],"스크램블":[180,12,2,14],
+  "계란흰자":[52,11,1,0],"계란노른자":[322,16,4,27],"삶은계란흰자":[48,11,0,0],
   "고구마":[130,2,30,0],"감자":[110,2,25,0],"바나나":[105,1,27,0],"사과":[95,0,25,0],"방울토마토":[30,1,6,0],"오렌지":[60,1,15,0],
   "그릭요거트":[130,12,8,5],"요거트":[100,5,14,3],"프로틴쉐이크":[120,24,3,2],"단백질바":[200,20,20,6],"견과류":[170,5,6,15],
   "오트밀":[150,5,27,3],"시리얼":[300,6,60,4],"죽":[250,6,50,2],"두부":[90,8,3,5],
@@ -788,7 +793,9 @@ const SERVING_G = {
   /* 회 (1인분 g) */
   "광어회":150,"연어회":150,"참치회":150,"우럭회":150,"방어회":150,"모듬회":200,
   /* 다이어트 제품 */
-  "허닭닭가슴살":100,"아임닭닭가슴살":100,"두부바":100,"곤약면":100,"저당요거트":100
+  "허닭닭가슴살":100,"아임닭닭가슴살":100,"두부바":100,"곤약면":100,"저당요거트":100,
+  /* 계란 부위 — g 기록용 (계란 1개 ≈ 흰자 33g + 노른자 17g) */
+  "계란흰자":100,"계란노른자":100,"삶은계란흰자":100
 };
 /* 개수/스쿱 단위 음식 (DB 값 = 1단위 기준) */
 const UNITS = {
@@ -816,6 +823,28 @@ const UNITS = {
   "꿀":"큰술","땅콩버터":"큰술","고추장":"큰술","된장":"큰술","쌈장":"큰술",
   /* 주류 */
   "소주1잔":"잔","고량주1잔":"잔","생맥주500":"잔","카스500":"잔","테라500":"잔"
+};
+/* 개수 단위 음식의 1단위 무게(g) — 분량 화면에서 "개 ⇄ g" 전환에 씀.
+   여기 없는 항목은 g 전환 버튼이 안 뜬다. 새 UNITS 항목 추가하면 여기도 같이 채울 것. */
+const UNIT_G = {
+  "프로틴쉐이크":30,"WPI쉐이크":30,
+  "계란":50,"삶은계란":50,"계란후라이":55,"구운계란":50,
+  "단백질바":50,"삼각김밥":100,"바나나":100,"마카롱":20,"붕어빵":60,"닭꼬치":100,
+  "참치마요삼각김밥":100,"전주비빔삼각김밥":100,"불고기삼각김밥":100,"김치삼각김밥":100,"스팸삼각김밥":100,
+  "메추리알":10,"비엔나소시지":10,"어묵바":60,"닭가슴살어묵바":60,"주먹밥":100,
+  "BBQ황금올리브치킨":70,"BHC뿌링클":70,"BHC맛초킹":70,"교촌허니콤보":60,"교촌오리지널":60,
+  "교촌레드윙":60,"굽네고추바사삭":70,"굽네오븐구이":70,"푸라닭":70,"네네스노윙치즈":70,
+  "처갓집슈프림양념":70,"60계치킨":70,"KFC오리지널치킨":80,"치킨한조각":70,"양념치킨한조각":70,
+  "닭다리":100,"닭날개구이":40,
+  "도미노포테이토피자":120,"도미노블랙타이거슈림프":120,"피자헛치즈피자":120,"미스터피자":120,
+  "반올림피자":110,"불고기피자":120,"하와이안피자":120,"시카고피자":150,
+  "소보로빵":80,"단팥빵":80,"크림빵":80,"앙버터":100,"휘낭시에":40,"마들렌":40,"브라우니":60,
+  "에그타르트":60,"크로플":80,"뺑오쇼콜라":70,"모닝빵":30,"콘도그":100,"치즈핫도그":120,"감자핫도그":120,
+  "식빵":35,"통밀식빵":35,"김":2,"라이스페이퍼":8,
+  "야쿠르트":65,"액티비아":80,"요플레":85,"하루견과":25,"드링킹요구르트":150,
+  "올리브유":13,"참기름":13,"버터":14,"마요네즈":15,"케찹":17,"설탕":12,
+  "꿀":21,"땅콩버터":16,"고추장":18,"된장":18,"쌈장":18,
+  "소주1잔":50,"고량주1잔":30,"생맥주500":500,"카스500":500,"테라500":500
 };
 const EMOJI = {
   /* 구체적인 키가 먼저 — 위에서부터 순서대로 매칭됨 ("김밥"이 "밥"보다 앞) */
@@ -1075,19 +1104,47 @@ function openPortion(name,k,p,c,f,gBase,gDefault,uLabel){
   const unit = gBase ? null : (UNITS[name]||null);
   const g = gBase || (unit ? null : (SERVING_G[name]||null));
   const ul = uLabel || 'g';
-  window._pf = { name, k, p, c, f, g, unit, ul };
+  // 개수 단위인데 1단위 무게를 아는 음식 = g으로도 입력 가능
+  const unitG = (unit && UNIT_G[name]) ? UNIT_G[name] : null;
+  window._pf = { name, k, p, c, f, g, unit, ul, unitG, mode: unit ? 'unit' : 'g' };
   document.getElementById('portionTitle').textContent = name;
-  document.getElementById('portionBase').textContent =
-    unit ? `기준: 1${unit} = ${k}kcal · P${p}g` : g ? `기준: ${g}${ul} = ${k}kcal · P${p}g` : `기준: 1인분 = ${k}kcal · P${p}g`;
-  const sl = document.getElementById('portionSlider');
-  const num = document.getElementById('portionNum');
-  const dflt = gDefault || g;
-  if(unit){ sl.min=0.5; sl.max=5; sl.step=0.5; sl.value=1; num.value=1; }
-  else if(g){ sl.min=10; sl.max=Math.max(500, dflt*2); sl.step=5; sl.value=dflt; num.value=dflt; }
-  else { sl.min=25; sl.max=300; sl.step=25; sl.value=100; num.value=100; } // % (1인분=100)
-  document.getElementById('portionUnit').textContent = unit ? unit : g ? ul : '%';
+  const row = document.getElementById('unitToggleRow');
+  if(unitG){
+    row.classList.remove('hidden');
+    document.getElementById('unitChipA').textContent = `${unit}로 입력`;
+    document.getElementById('unitChipB').textContent = `g으로 입력 (1${unit}=${unitG}g)`;
+  } else row.classList.add('hidden');
+  renderPortionStep(gDefault);
   document.getElementById('stepMain').classList.add('hidden');
   document.getElementById('stepPortion').classList.remove('hidden');
+}
+/* 개 ⇄ g 전환. 값은 현재 입력량을 환산해서 이어받는다. */
+function setPortionMode(mode){
+  const pf = window._pf;
+  if(!pf || !pf.unitG || pf.mode === mode) return;
+  const v = portionVal();
+  pf.mode = mode;
+  renderPortionStep(v === null ? null : (mode === 'g' ? Math.round(v * pf.unitG) : Math.round((v / pf.unitG) * 10) / 10));
+}
+function renderPortionStep(preset){
+  const pf = window._pf;
+  const asUnit = pf.mode === 'unit' && pf.unit;
+  const gBaseNow = asUnit ? null : (pf.unitG || pf.g);
+  const sl = document.getElementById('portionSlider');
+  const num = document.getElementById('portionNum');
+  document.getElementById('portionBase').textContent =
+    asUnit ? `기준: 1${pf.unit} = ${pf.k}kcal · P${pf.p}g`
+    : gBaseNow ? `기준: ${gBaseNow}${pf.ul} = ${pf.k}kcal · P${pf.p}g`
+    : `기준: 1인분 = ${pf.k}kcal · P${pf.p}g`;
+  if(asUnit){ sl.min=0.5; sl.max=5; sl.step=0.5; num.value = preset || 1; }
+  else if(gBaseNow){ sl.min=10; sl.max=Math.max(500, gBaseNow*2); sl.step=5; num.value = preset || gBaseNow; }
+  else { sl.min=25; sl.max=300; sl.step=25; num.value = preset || 100; } // % (1인분=100)
+  sl.value = Math.min(parseFloat(sl.max), Math.max(parseFloat(sl.min), num.value));
+  document.getElementById('portionUnit').textContent = asUnit ? pf.unit : gBaseNow ? pf.ul : '%';
+  if(pf.unitG){
+    document.getElementById('unitChipA').classList.toggle('on', asUnit);
+    document.getElementById('unitChipB').classList.toggle('on', !asUnit);
+  }
   refreshPortionInfo();
 }
 function portionVal(){ // 입력창이 기준 (슬라이더 범위 밖 값도 허용)
@@ -1097,7 +1154,9 @@ function portionVal(){ // 입력창이 기준 (슬라이더 범위 밖 값도 �
 function portionScale(){
   const pf = window._pf, v = portionVal();
   if(v===null) return null;
-  return pf.unit ? v : pf.g ? v/pf.g : v/100;
+  if(pf.mode === 'unit' && pf.unit) return v;
+  const base = pf.unitG || pf.g;
+  return base ? v/base : v/100;
 }
 function portionFromSlider(){
   document.getElementById('portionNum').value = document.getElementById('portionSlider').value;
@@ -1110,9 +1169,10 @@ function portionFromNum(){
 }
 function nudgePortion(dir){
   const pf = window._pf;
-  const step = pf.unit ? 0.5 : 25;
+  const asUnit = pf.mode === 'unit' && pf.unit;
+  const step = asUnit ? 0.5 : 10;
   const v = portionVal() || 0;
-  document.getElementById('portionNum').value = Math.max(pf.unit?0.5:25, Math.round((v+dir*step)*10)/10);
+  document.getElementById('portionNum').value = Math.max(asUnit?0.5:5, Math.round((v+dir*step)*10)/10);
   portionFromNum();
 }
 function refreshPortionInfo(){
@@ -1123,8 +1183,9 @@ function refreshPortionInfo(){
 function confirmPortion(){
   const pf = window._pf, s = portionScale(), v = portionVal();
   if(s===null){ toast('분량을 입력하세요'); return; }
-  const label = pf.unit ? (v===1 ? pf.name : `${pf.name} ${v}${pf.unit}`)
-    : pf.g ? `${pf.name} ${v}${pf.ul||'g'}`
+  const asUnit = pf.mode === 'unit' && pf.unit;
+  const label = asUnit ? (v===1 ? pf.name : `${pf.name} ${v}${pf.unit}`)
+    : (pf.unitG || pf.g) ? `${pf.name} ${v}${pf.ul||'g'}`
     : (s===1 ? pf.name : `${pf.name} x${Math.round(s*100)/100}`);
   addMeal(label, pf.k*s, pf.p*s, pf.c*s, pf.f*s, null, true);
 }
@@ -1286,7 +1347,9 @@ function renderMatches(){
   const box = document.getElementById('matches');
   if(!q){ box.innerHTML=''; window._firstHit=null; return; }
   const all = {...FOODS, ...S.custom};
-  const ALIAS = {"삼김":"삼각김밥","아아":"아메리카노","뜨아":"아메리카노","라면땅":"라면","닭가슴":"닭가슴살","프쉐":"프로틴쉐이크","혼밥":"도시락","컵반":"컵밥","샌드":"샌드위치","불닭":"불닭볶음면","돈가스":"돈까스","계란프라이":"계란후라이"};
+  const ALIAS = {"삼김":"삼각김밥","아아":"아메리카노","뜨아":"아메리카노","라면땅":"라면","닭가슴":"닭가슴살","프쉐":"프로틴쉐이크","혼밥":"도시락","컵반":"컵밥","샌드":"샌드위치","불닭":"불닭볶음면","돈가스":"돈까스","계란프라이":"계란후라이",
+    "난백":"계란흰자","흰자":"계란흰자","달걀흰자":"계란흰자","에그화이트":"계란흰자","난백분리":"계란흰자",
+    "난황":"계란노른자","노른자":"계란노른자","달걀노른자":"계란노른자"};
   let nq = q.replace(/\s/g,''); // 공백 무시 매칭
   nq = ALIAS[nq] || nq;
   const isCho = /^[ㄱ-ㅎ]+$/.test(nq);
