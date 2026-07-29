@@ -189,6 +189,8 @@
   .photo-btn { width:100%; padding:15px; border-radius:14px; border:none; background:#111; color:#fff; font-size:16px; font-weight:700; cursor:pointer; margin-bottom:12px; }
 
   /* ===== 장바구니: 여러 개 담고 한 번에 기록 ===== */
+  .qty-note { background:#f2f2f7; border-radius:10px; padding:8px 11px; margin:8px 0 4px; font-size:12px; font-weight:600; color:#3a3a3c; }
+  .qty-note b { color:#111; }
   .cart-wrap { margin-top:18px; border-top:1.5px solid #f2f2f7; padding-top:14px; }
   .cart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   .cart-head h2 { margin:0; }
@@ -375,7 +377,7 @@
       <button class="mini-btn" style="width:auto;margin:0;padding:0 18px;" onclick="addSlot()">추가</button>
     </div>
 
-    <input class="search-input" id="searchInput" placeholder="✏️ 음식·제품명 또는 초성(ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="renderMatches()">
+    <input class="search-input" id="searchInput" placeholder="✏️ 흰쌀밥 150 처럼 g까지 · 초성(ㄱㅊㅉ)도 OK" aria-label="음식 이름 검색" oninput="renderMatches()">
     <div class="matches" id="matches"></div>
 
     <div id="setsWrap" class="hidden" style="margin-top:16px;">
@@ -1340,19 +1342,33 @@ function extItem(i){
   return { n:a[0], k:+a[1], p:+a[2], c:+a[3], f:+a[4], g:(+a[5]||100), t:+a[6], u:(a[7]==='m'?'ml':'g') };
 }
 /* 확장 DB 항목은 전부 100g(ml) 기준 → 1회분량으로 환산해서 담는다 */
-function quickPickExt(i){
-  const e = extItem(i), s = e.g/100;
-  addMeal(`${e.n} ${e.g}${e.u}`, e.k*s, e.p*s, e.c*s, e.f*s, null, true);
+function quickPickExt(i, qty){
+  const e = extItem(i);
+  const q = (qty === undefined) ? window._qty : qty;
+  const amt = q || e.g, s = amt/100;
+  addMeal(`${e.n} ${amt}${e.u}`, e.k*s, e.p*s, e.c*s, e.f*s, null, true);
 }
 function portionExt(i){
   const e = extItem(i);
   openPortion(e.n, e.k, e.p, e.c, e.f, 100, e.g, e.u);
 }
 
+/* "흰쌀밥 150" / "닭가슴살 200g" → {name:'흰쌀밥', qty:150}
+   공백 없이 붙여 쓸 땐 단위(g/ml)를 요구한다. "생맥주500" 같은 음식명이 잘리지 않게. */
+function parseQty(raw){
+  let m = raw.match(/^(.+?)\s+([0-9]+(?:\.[0-9]+)?)\s*(g|ml|G|ML)?$/);
+  if(!m) m = raw.match(/^(.+?)([0-9]+(?:\.[0-9]+)?)\s*(g|ml|G|ML)$/);
+  if(!m || !m[1].trim()) return { name: raw, qty: null };
+  return { name: m[1].trim(), qty: parseFloat(m[2]) };
+}
 function renderMatches(){
-  const q = document.getElementById('searchInput').value.trim();
+  const raw = document.getElementById('searchInput').value.trim();
   const box = document.getElementById('matches');
-  if(!q){ box.innerHTML=''; window._firstHit=null; return; }
+  if(!raw){ box.innerHTML=''; window._firstHit=null; window._qty=null; return; }
+  const parsed = parseQty(raw);
+  const q = parsed.name;
+  window._qty = parsed.qty;
+  const qty = parsed.qty;
   const all = {...FOODS, ...S.custom};
   const ALIAS = {"삼김":"삼각김밥","아아":"아메리카노","뜨아":"아메리카노","라면땅":"라면","닭가슴":"닭가슴살","프쉐":"프로틴쉐이크","혼밥":"도시락","컵반":"컵밥","샌드":"샌드위치","불닭":"불닭볶음면","돈가스":"돈까스","계란프라이":"계란후라이",
     "난백":"계란흰자","흰자":"계란흰자","달걀흰자":"계란흰자","에그화이트":"계란흰자","난백분리":"계란흰자",
@@ -1374,17 +1390,23 @@ function renderMatches(){
   scored.sort((a,b)=>b[1]-a[1]);
   const hits = scored.slice(0,8).map(s=>s[0]);   // 엄선 DB는 최대 8개, 나머지는 식약처 DB로
   window._firstHit = hits[0] || null;
-  let html = hits.map(n=>{
+  let html = '';
+  if(qty !== null) html += `<div class="qty-note">⚖ <b>${qty}g</b> 기준으로 계산합니다 · 줄을 탭하면 그대로 담김</div>`;
+  html += hits.map(n=>{
     const [k,p,c,f] = normFood(all[n]);
-    const unit = UNITS[n] ? `1${UNITS[n]}` : SERVING_G[n] ? `${SERVING_G[n]}g` : '1인분';
-    // 줄 전체 탭 = 기본량 바로 담기 (3초) / 오른쪽 "분량" = 그램·개수 조절
+    const base = SERVING_G[n] || (UNITS[n] ? UNIT_G[n] : null);
+    const s = (qty && base) ? qty/base : 1;
+    const amt = (qty && base) ? `${qty}g`
+      : UNITS[n] ? `1${UNITS[n]}` : SERVING_G[n] ? `${SERVING_G[n]}g` : '1인분';
+    const chip = (SERVING_G[n] || (UNITS[n] && UNIT_G[n])) ? 'g 입력' : '양 조절';
+    // 줄 전체 탭 = 기본량(또는 입력한 g) 바로 담기 / 오른쪽 칩 = 직접 조절
     return `<button class="match" onclick="quickPick('${n}')">
       <b>${emojiFor(n)} ${n}</b>
       <span style="display:flex;align-items:center;gap:10px;">
-        <span>${unit} ${k}kcal · P${p}</span>
+        <span>${amt} ${Math.round(k*s)}kcal · P${Math.round(p*s)}</span>
         <span role="button" tabindex="0" aria-label="${n} 분량 조절"
           onclick="event.stopPropagation();openPortion('${n}',${k},${p},${c},${f})"
-          style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;">분량</span>
+          style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;white-space:nowrap;">${chip}</span>
       </span></button>`;
   }).join('');
   // ── 2·3단: 식약처 DB (엄선분 아래에 구분선 넣고 표시) ──
@@ -1406,14 +1428,15 @@ function renderMatches(){
     if(ext.length){
       html += `<div class="db-div">식약처 식품영양성분 DB · ${ext.length>=4000?'4000+':ext.length}건</div>`;
       html += ext.slice(0,20).map(([i])=>{
-        const e = extItem(i), s = e.g/100;
+        const e = extItem(i);
+        const amt = qty || e.g, s = amt/100;
         return `<button class="match" onclick="quickPickExt(${i})">
           <b>${emojiFor(e.n)} ${e.n}${e.t===2?'<span class="mtag">제품</span>':''}</b>
           <span style="display:flex;align-items:center;gap:10px;">
-            <span>${e.g}${e.u} ${Math.round(e.k*s)}kcal · P${Math.round(e.p*s)}</span>
+            <span>${amt}${e.u} ${Math.round(e.k*s)}kcal · P${Math.round(e.p*s)}</span>
             <span role="button" tabindex="0" aria-label="${e.n} 분량 조절"
               onclick="event.stopPropagation();portionExt(${i})"
-              style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;">분량</span>
+              style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;white-space:nowrap;">g 입력</span>
           </span></button>`;
       }).join('');
     }
@@ -1426,10 +1449,17 @@ function renderMatches(){
     window._extFirst = m ? +m.getAttribute('onclick').match(/\d+/)[0] : null;
   } else window._extFirst = null;
 }
-/* 검색 결과 줄 탭 → 기본 1인분(또는 1개/기준g)으로 바로 담기 */
-function quickPick(name){
+/* 검색 결과 줄 탭 → 검색창에 g을 같이 썼으면 그 양, 아니면 기본 1인분(1개/기준g) */
+function quickPick(name, qty){
   const all = {...FOODS, ...S.custom};
   const [k,p,c,f] = normFood(all[name]);
+  const q = (qty === undefined) ? window._qty : qty;
+  const base = SERVING_G[name] || (UNITS[name] ? UNIT_G[name] : null);
+  if(q && base){
+    const s = q/base;
+    addMeal(`${name} ${q}g`, k*s, p*s, c*s, f*s, null, true);
+    return;
+  }
   const label = SERVING_G[name] ? `${name} ${SERVING_G[name]}g` : name;
   addMeal(label, k, p, c, f, null, true);
 }
