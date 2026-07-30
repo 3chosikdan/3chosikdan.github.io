@@ -888,8 +888,8 @@ const MIN_G = [["전골",500],["샤브",500],["마라",500],["탕",400],["찌개
   ["아메리카노",300],["라떼",300],["커피",300],["에이드",300],["주스",250],["음료",250],["차",200]];
 /* 이름·칼로리로 1인분 중량 추정 (10g 단위) */
 function servingOf(name, kcal){
+  if(UNITS[name]) return UNIT_G[name] || null;   // 완제품·개수 단위가 우선
   if(SERVING_G[name]) return SERVING_G[name];
-  if(UNITS[name]) return UNIT_G[name] || null;
   if(!kcal) return null;
   const n = name.replace(/\s/g,'');
   let d = 0;
@@ -926,7 +926,22 @@ const UNITS = {
   "올리브유":"큰술","참기름":"큰술","버터":"큰술","마요네즈":"큰술","케찹":"큰술","설탕":"큰술",
   "꿀":"큰술","땅콩버터":"큰술","고추장":"큰술","된장":"큰술","쌈장":"큰술",
   /* 주류 */
-  "소주1잔":"잔","고량주1잔":"잔","생맥주500":"잔","카스500":"잔","테라500":"잔"
+  "소주1잔":"잔","고량주1잔":"잔","생맥주500":"잔","카스500":"잔","테라500":"잔",
+  /* ── 완제품은 "1개에 몇 kcal"이 자연스럽다. 그램은 스왑 버튼으로 전환 ── */
+  "라면":"개","신라면":"개","진라면":"개","불닭볶음면":"개","비빔면":"개",
+  "컵라면":"개","큰컵라면":"개","육개장컵라면":"개","튀김우동컵":"개",
+  "즉석밥":"개","햇반":"개","3분카레":"개","컵밥":"개","김혜자도시락":"개","도시락":"개",
+  "김밥":"줄","참치김밥":"줄","치즈김밥":"줄","곤약김밥":"줄","닭가슴살김밥":"줄","키토김밥":"줄","야채김밥":"줄",
+  "샌드위치":"개","치아바타샌드위치":"개","햄치즈샌드위치":"개","토스트":"개",
+  "소금빵":"개","바게트":"개","베이글크림치즈":"개","프로틴빵":"개",
+  "콜라":"개","제로콜라":"개","제로음료":"개","이온음료":"개","에너지드링크":"개",
+  "바나나우유":"개","초코우유":"개","흰우유":"개","저지방우유":"개","두유":"개","아몬드우유":"개",
+  "오트음료":"개","프로틴음료":"개","프로틴우유":"개","단백질요거트":"개",
+  "참치캔":"캔","연어캔":"캔","스트링치즈":"개","슬라이스치즈":"장",
+  "핫바":"개","두부바":"개","닭가슴살소시지":"개","젤리":"봉","곤약젤리":"개",
+  "단백질과자":"봉","프로틴쿠키":"개","프로틴브라우니":"개","프로틴아이스크림":"개",
+  "맥도날드치즈버거":"개","맥도날드감자튀김중":"개","버거킹치즈와퍼":"개","치즈버거":"개",
+  "스타벅스바닐라크림콜드브루":"잔","스타벅스자바칩프라푸치노":"잔","스타벅스치즈케이크":"개"
 };
 /* 개수 단위 음식의 1단위 무게(g) — 분량 화면에서 "개 ⇄ g" 전환에 씀.
    여기 없는 항목은 g 전환 버튼이 안 뜬다. 새 UNITS 항목 추가하면 여기도 같이 채울 것. */
@@ -948,7 +963,22 @@ const UNIT_G = {
   "야쿠르트":65,"액티비아":80,"요플레":85,"하루견과":25,"드링킹요구르트":150,
   "올리브유":13,"참기름":13,"버터":14,"마요네즈":15,"케찹":17,"설탕":12,
   "꿀":21,"땅콩버터":16,"고추장":18,"된장":18,"쌈장":18,
-  "소주1잔":50,"고량주1잔":30,"생맥주500":500,"카스500":500,"테라500":500
+  "소주1잔":50,"고량주1잔":30,"생맥주500":500,"카스500":500,"테라500":500,
+  /* 완제품 1개 무게(g/ml) — 조리 후·국물 포함 기준 */
+  "라면":550,"신라면":550,"진라면":550,"불닭볶음면":400,"비빔면":400,
+  "컵라면":350,"큰컵라면":500,"육개장컵라면":300,"튀김우동컵":380,
+  "즉석밥":210,"햇반":210,"3분카레":200,"컵밥":300,"김혜자도시락":450,"도시락":450,
+  "김밥":230,"참치김밥":250,"치즈김밥":250,"곤약김밥":200,"닭가슴살김밥":230,"키토김밥":220,"야채김밥":240,
+  "샌드위치":200,"치아바타샌드위치":230,"햄치즈샌드위치":190,"토스트":180,
+  "소금빵":90,"바게트":80,"베이글크림치즈":140,"프로틴빵":80,
+  "콜라":500,"제로콜라":355,"제로음료":355,"이온음료":500,"에너지드링크":250,
+  "바나나우유":240,"초코우유":240,"흰우유":200,"저지방우유":200,"두유":190,"아몬드우유":190,
+  "오트음료":200,"프로틴음료":250,"프로틴우유":250,"단백질요거트":100,
+  "참치캔":100,"연어캔":100,"스트링치즈":18,"슬라이스치즈":18,
+  "핫바":90,"두부바":100,"닭가슴살소시지":60,"젤리":50,"곤약젤리":150,
+  "단백질과자":30,"프로틴쿠키":50,"프로틴브라우니":60,"프로틴아이스크림":100,
+  "맥도날드치즈버거":115,"맥도날드감자튀김중":115,"버거킹치즈와퍼":315,"치즈버거":115,
+  "스타벅스바닐라크림콜드브루":355,"스타벅스자바칩프라푸치노":355,"스타벅스치즈케이크":100
 };
 const EMOJI = {
   /* 구체적인 키가 먼저 — 위에서부터 순서대로 매칭됨 ("김밥"이 "밥"보다 앞) */
@@ -1474,10 +1504,12 @@ function rowHtml(r){
     <div class="rowpanel hidden" id="rp${i}"></div>
   </div>`;
 }
+/* per = 영양값의 기준량(g) · unitG = 1개의 무게(g).
+   내장 음식은 둘이 같고(값이 1개 기준), 식약처 제품은 per=100 · unitG=1회분량이다. */
 function rowScale(r){
-  if(r.mode === 'x') return r.amt;            // 1인분 배수
-  if(r.mode === 'unit') return r.amt;         // 1개 기준값 × 개수
-  return r.per ? r.amt/r.per : 1;             // 그램
+  if(r.mode === 'x') return r.amt;                                  // 1인분 배수
+  if(r.mode === 'unit') return r.amt * (r.unitG || r.per) / r.per;   // 개수 × 1개 무게
+  return r.per ? r.amt/r.per : 1;                                    // 그램
 }
 function rowAmtText(r){
   if(r.mode === 'x') return r.amt === 1 ? '1인분' : `${r.amt}인분`;
@@ -1488,7 +1520,7 @@ function rowAmtText(r){
 function rowPresets(r){
   if(r.mode === 'x') return [0.5, 1, 1.5, 2];
   if(r.mode === 'unit') return [0.5, 1, 2, 3];
-  const base = r.per;
+  const base = r.unitG || r.per;
   let list = base >= 80 ? [base, 50, 100, 150, 200, 300]
                         : [base, base*2, base*3, base*5, 100];
   list = list.map(v => Math.round(v)).filter(v => v > 0);
@@ -1510,8 +1542,9 @@ function renderRowPanel(i){
   const chips = rowPresets(r).map(v=>
     `<button class="rp-chip${v===r.amt?' on':''}" onclick="rowSet(${i},${v})">${v}${unitLabel}</button>`).join('');
   // 개수 단위 음식은 g으로도 넣을 수 있게 (UNIT_G를 아는 경우)
-  const swap = (r.unit && r.per)
-    ? `<button class="rp-swap" onclick="rowMode(${i},'${r.mode==='unit'?'g':'unit'}')">${r.mode==='unit'?`g으로 입력 (1${r.unit}=${r.per}g)`:`${r.unit} 단위로`}</button>` : '';
+  const ug = r.unitG || r.per;
+  const swap = (r.unit && ug)
+    ? `<button class="rp-swap" onclick="rowMode(${i},'${r.mode==='unit'?'g':'unit'}')">${r.mode==='unit'?`${r.uLabel}으로 입력 (1${r.unit}=${ug}${r.uLabel})`:`${r.unit} 단위로 입력`}</button>` : '';
   document.getElementById('rp'+i).innerHTML = `
     <div class="rp-chips">${chips}</div>
     <div class="rp-row">
@@ -1550,12 +1583,14 @@ function rowSet(i, v){
 }
 function rowNudge(i, dir){
   const r = window._rows[i];
-  const step = r.mode === 'g' ? (r.per >= 80 ? 10 : 5) : 0.5;
+  const base = r.unitG || r.per;
+  const step = r.mode === 'g' ? (base >= 80 ? 10 : 5) : 0.5;
   rowSet(i, Math.max(step, Math.round((r.amt + dir*step)*10)/10));
 }
 function rowMode(i, mode){
   const r = window._rows[i];
-  r.amt = mode === 'g' ? Math.round(r.amt * r.per) : Math.round((r.amt / r.per)*10)/10;
+  const ug = r.unitG || r.per;
+  r.amt = mode === 'g' ? Math.round(r.amt * ug) : Math.round((r.amt / ug)*10)/10;
   r.mode = mode;
   renderRowPanel(i);
 }
@@ -1600,9 +1635,9 @@ function renderMatches(){
   let html = '';
   html += hits.map(n=>{
     const [k,p,c,f] = normFood(all[n]);
-    const per = servingOf(n, k);
+    const per = servingOf(n, k);                 // 내장 음식은 값이 1개(1인분) 기준 → per = unitG
     return rowHtml({ name:n, emoji:emojiFor(n), tag:'', k, p, c, f,
-      per, unit: UNITS[n] || null, uLabel:'g',
+      per, unitG: per, unit: UNITS[n] || null, uLabel:'g',
       amt: (qty && per) ? qty : (UNITS[n] ? 1 : per || 1),
       mode: per ? ((UNITS[n] && !qty) ? 'unit' : 'g') : 'x' });
   }).join('');
@@ -1626,9 +1661,13 @@ function renderMatches(){
       html += `<div class="db-div">식약처 식품영양성분 DB · ${ext.length>=4000?'4000+':ext.length}건</div>`;
       html += ext.slice(0,20).map(([i])=>{
         const e = extItem(i);
-        return rowHtml({ name:e.n, emoji:emojiFor(e.n), tag: e.t===2?'<span class="mtag">제품</span>':'',
-          k:e.k, p:e.p, c:e.c, f:e.f, per:100, unit:null, uLabel:e.u,
-          amt: qty || e.g, mode:'g' });
+        // 가공식품(출처2)은 완제품 → "1개에 몇 kcal"이 기본. 조리음식(출처1)은 그램 기본.
+        const isProduct = e.t === 2;
+        return rowHtml({ name:e.n, emoji:emojiFor(e.n), tag: isProduct?'<span class="mtag">제품</span>':'',
+          k:e.k, p:e.p, c:e.c, f:e.f,
+          per:100, unitG:e.g, unit: isProduct ? '개' : null, uLabel:e.u,
+          amt: qty ? qty : (isProduct ? 1 : e.g),
+          mode: qty ? 'g' : (isProduct ? 'unit' : 'g') });
       }).join('');
     }
   }
