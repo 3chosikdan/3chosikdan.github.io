@@ -189,6 +189,13 @@
   .photo-btn { width:100%; padding:15px; border-radius:14px; border:none; background:#111; color:#fff; font-size:16px; font-weight:700; cursor:pointer; margin-bottom:12px; }
 
   /* ===== 장바구니: 여러 개 담고 한 번에 기록 ===== */
+  .tf-warn { background:#f2f2f7; border-radius:10px; padding:9px 11px; font-size:11.5px; font-weight:600; color:#3a3a3c; line-height:1.5; }
+  .tf-warn b { color:#111; }
+  .tf-link { width:100%; box-sizing:border-box; margin-top:6px; height:52px; resize:none; border:1.5px solid #e5e5ea;
+    border-radius:10px; padding:8px; font-size:10px; color:#8e8e93; background:#fafafa; word-break:break-all; }
+  .rec-del { display:block; width:100%; margin-top:8px; padding:11px; border-radius:11px; border:1.5px solid #ffd9d9;
+    background:#fff5f5; color:#d70015; font-size:13px; font-weight:700; cursor:pointer; }
+  .rec-del:active { background:#ffe9e9; }
   .qty-note { background:#f2f2f7; border-radius:10px; padding:8px 11px; margin:8px 0 4px; font-size:12px; font-weight:600; color:#3a3a3c; }
   .qty-note b { color:#111; }
   /* 검색 결과 줄 안에서 펼쳐지는 분량 패널 */
@@ -584,12 +591,18 @@
   <button class="save-btn" onclick="saveProfile()">저장 · 몸무게 바뀌면 목표도 자동 조정</button>
 
   <div class="flabel" style="margin-top:20px;">📂 내 기록 백업 — 폰 바꿔도 안 날아가게</div>
+  <button class="mini-btn" style="background:#111;color:#fff;margin-bottom:6px;" onclick="shareBackup()">💬 카톡으로 백업 보내기</button>
   <div class="frow" style="margin-bottom:6px;">
-    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">📤 내보내기</button>
+    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">📤 파일로 저장</button>
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="document.getElementById('importInput').click()">📥 불러오기</button>
   </div>
-  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">내보낸 파일을 카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기의 기록이 백업 파일 내용으로 교체됩니다.</div>
+  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기의 기록이 백업 내용으로 교체됩니다.</div>
   <input type="file" id="importInput" accept=".json,application/json" class="hidden">
+
+  <div class="flabel" style="margin-top:20px;">🔗 다른 기기로 옮기기 — 데스크탑에서 폰으로</div>
+  <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="makeTransferLink()">🔗 이동 링크 만들기</button>
+  <div id="transferBox" style="margin-top:8px;"></div>
+  <div style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:6px;">링크를 카톡 '나에게 보내기'로 보낸 뒤 다른 기기에서 열면 그 기록이 그대로 올라옵니다.</div>
 
   <div class="flabel" style="margin-top:20px;">💚 3초식단이 도움이 됐다면</div>
   <button class="mini-btn" style="background:#eafaf0;color:#111;" onclick="shareApp()">📤 친구에게 알리기 — 가입 없이 링크로 끝</button>
@@ -1620,6 +1633,17 @@ function saveWeightInput(){
   weightInputOpen = false;
   if(!isNaN(n) && n>20 && n<300) setWeight(n); else render();
 }
+/* 잘못 넣은 기록은 지울 수 있어야 한다 — 남아 있으면 14일 추세·변화량이 계속 오염된다 */
+function delWeight(){
+  if(!S.weights[viewDate]) return;
+  if(!confirm(`${viewDate} 몸무게 기록을 지울까요?`)) return;
+  delete S.weights[viewDate]; weightInputOpen=false; save(); render(); toast('몸무게 기록 삭제');
+}
+function delBf(){
+  if(!S.bodyfat[viewDate]) return;
+  if(!confirm(`${viewDate} 체지방 기록을 지울까요?`)) return;
+  delete S.bodyfat[viewDate]; bfInputOpen=false; save(); render(); toast('체지방 기록 삭제');
+}
 function lastWeight(){ const ks=Object.keys(S.weights).sort().reverse(); return ks.length?S.weights[ks[0]]:null; }
 /* 7일 이동평균 기반 주간 추세 — 일일 변동(수분)이 아니라 진짜 방향 */
 function maAt(dayKey){ // 해당 날짜 기준 직전 7일 이동평균
@@ -1833,7 +1857,7 @@ function render(){
     wa.innerHTML = `<div class="wcard" style="gap:10px">
       <input class="txt-input" id="wInput" type="number" inputmode="decimal" step="0.1" placeholder="몸무게 (kg)" value="${lw}" style="flex:1;font-size:20px;font-weight:700;">
       <button class="photo-btn" style="width:auto;margin:0;padding:14px 20px;" onclick="saveWeightInput()">저장</button>
-    </div>`;
+    </div>${S.weights[viewDate] ? `<button class="rec-del" onclick="delWeight()">이 날 몸무게 기록 삭제</button>` : ''}`;
   } else if(w){
     const pv = isToday ? prevWeight() : null;
     let delta='';
@@ -1865,7 +1889,7 @@ function render(){
     ba.innerHTML = `<div class="wcard" style="gap:10px">
       <input class="txt-input" id="bfInput" type="number" inputmode="decimal" step="0.1" placeholder="체지방률 %" value="${lb}" style="flex:1;font-size:20px;font-weight:700;">
       <button class="photo-btn" style="width:auto;margin:0;padding:14px 20px;" onclick="saveBfInput()">저장</button>
-    </div>`;
+    </div>${S.bodyfat[viewDate] ? `<button class="rec-del" onclick="delBf()">이 날 체지방 기록 삭제</button>` : ''}`;
   } else if(bf){
     const pb = isToday ? prevBf() : null;
     let delta='';
@@ -2407,6 +2431,93 @@ function exportData(){
   S.lastBackupAt = Date.now(); save();
   toast('백업 파일 저장됨 📤 카톡 "나에게 보내기"로 보관하세요');
 }
+/* 카톡으로 바로 보내기 — 파일 공유 시트를 띄운다(폰). 미지원이면 파일 저장으로 폴백(데스크탑) */
+async function shareBackup(){
+  const d = new Date();
+  const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const name = `3초식단-백업-${stamp}.json`;
+  try{
+    const file = new File([JSON.stringify(S)], name, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({ files:[file], title:'3초식단 백업' });
+      S.lastBackupAt = Date.now(); save();
+      toast('보냈어요 💬 카톡 "나에게 보내기"에 보관하세요');
+      return;
+    }
+  }catch(e){ if(e && e.name === 'AbortError') return; }
+  exportData();   // 공유 미지원(데스크탑 등) → 파일 저장
+}
+/* ── 기기 간 이동: 데이터를 압축해 링크 하나로 만든다 (서버 없음) ── */
+function b64urlFromBytes(bytes){
+  let s=''; for(const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function bytesFromB64url(str){
+  const b64 = str.replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(b64 + '==='.slice((b64.length+3)%4));
+  const out = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+async function gzip(str){
+  const cs = new CompressionStream('gzip');
+  const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(str)); w.close();
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+async function gunzip(bytes){
+  const ds = new DecompressionStream('gzip');
+  const w = ds.writable.getWriter(); w.write(bytes); w.close();
+  return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());
+}
+async function makeTransferLink(){
+  const box = document.getElementById('transferBox');
+  if(typeof CompressionStream === 'undefined'){
+    box.innerHTML = `<div class="tf-warn">이 브라우저는 링크 이동을 지원하지 않아요. 위 <b>파일로 저장</b>을 쓰세요.</div>`;
+    return;
+  }
+  box.innerHTML = `<div class="tf-warn">링크 만드는 중…</div>`;
+  try{
+    const packed = b64urlFromBytes(await gzip(JSON.stringify(S)));
+    const url = location.origin + location.pathname + '#load=' + packed;
+    if(url.length > 8000){
+      box.innerHTML = `<div class="tf-warn">기록이 많아 링크로는 안 담겨요(${Math.round(url.length/1024)}KB). 위 <b>카톡으로 백업 보내기</b>를 쓰세요.</div>`;
+      return;
+    }
+    box.innerHTML = `<button class="mini-btn" style="background:#111;color:#fff;" onclick="sendTransferLink()">💬 이 링크 카톡으로 보내기</button>
+      <textarea id="tfLink" class="tf-link" readonly onclick="this.select()">${url}</textarea>
+      <div class="tf-warn" style="background:none;color:#8e8e93;padding:4px 0;">탭하면 전체 선택됩니다 · ${Math.round(url.length/1024*10)/10}KB</div>`;
+    window._tfUrl = url;
+  }catch(e){
+    box.innerHTML = `<div class="tf-warn">링크를 만들지 못했어요. <b>카톡으로 백업 보내기</b>를 쓰세요.</div>`;
+  }
+}
+async function sendTransferLink(){
+  const url = window._tfUrl; if(!url) return;
+  try{
+    if(navigator.share){ await navigator.share({ title:'3초식단 기록 이동', text:'이 링크를 다른 기기에서 열면 기록이 올라옵니다', url }); return; }
+    await navigator.clipboard.writeText(url); toast('링크 복사됨 — 카톡에 붙여넣기');
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+    try{ await navigator.clipboard.writeText(url); toast('링크 복사됨 — 카톡에 붙여넣기'); }
+    catch(_){ toast('링크를 길게 눌러 복사하세요'); }
+  }
+}
+/* #load=... 로 열리면 그 기록을 이 기기에 올린다 */
+async function tryLoadFromHash(){
+  const m = location.hash.match(/^#load=(.+)$/);
+  if(!m) return false;
+  history.replaceState(null,'',location.pathname);   // 주소창에서 즉시 제거
+  try{
+    const json = await gunzip(bytesFromB64url(m[1]));
+    const data = JSON.parse(json);
+    if(!data || typeof data !== 'object') throw new Error('bad');
+    const cnt = data.meals ? Object.keys(data.meals).length : 0;
+    if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 올릴까요?\n지금 이 기기의 기록은 교체됩니다.`)) return false;
+    localStorage.setItem('foodspot', JSON.stringify(data));
+    location.reload();
+    return true;
+  }catch(e){ toast('이동 링크를 읽지 못했어요'); return false; }
+}
 document.getElementById('importInput').addEventListener('change', e=>{
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
@@ -2534,6 +2645,8 @@ if('serviceWorker' in navigator){
 }
 
 render();
+// 이동 링크(#load=)로 열렸으면 그 기록을 올린다 — render 뒤라 화면이 먼저 뜬다
+tryLoadFromHash();
 </script>
 
 <!-- 식약처 식품영양성분DB 38,749종 — 앱이 다 뜬 뒤에 붙는다(defer). 없어도 앱은 정상 동작. -->
