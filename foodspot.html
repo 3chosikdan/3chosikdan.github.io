@@ -191,6 +191,28 @@
   /* ===== 장바구니: 여러 개 담고 한 번에 기록 ===== */
   .qty-note { background:#f2f2f7; border-radius:10px; padding:8px 11px; margin:8px 0 4px; font-size:12px; font-weight:600; color:#3a3a3c; }
   .qty-note b { color:#111; }
+  /* 검색 결과 줄 안에서 펼쳐지는 분량 패널 */
+  .mrow { border-bottom:1px solid #f7f7fa; }
+  .rowpanel { padding:2px 8px 14px; }
+  .rp-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .rp-chip { border:1.5px solid #e5e5ea; background:#fff; border-radius:999px; padding:7px 13px;
+    font-size:13px; font-weight:700; color:#3a3a3c; cursor:pointer; }
+  .rp-chip.on { background:#111; border-color:#111; color:#fff; }
+  .rp-row { display:flex; align-items:center; gap:8px; }
+  .rp-step { width:38px; height:38px; flex-shrink:0; border-radius:50%; border:1.5px solid #e5e5ea;
+    background:#fff; font-size:17px; font-weight:700; color:#111; cursor:pointer; }
+  .rp-step:active { background:#f2f2f7; }
+  .rp-num { flex:1; min-width:0; text-align:center; font-size:22px; font-weight:800; letter-spacing:-0.5px;
+    border:1.5px solid #e5e5ea; border-radius:12px; padding:9px 6px; background:#fff; color:#111; }
+  .rp-num:focus { outline:none; border-color:#111; }
+  .rp-unit { font-size:15px; font-weight:700; color:#8e8e93; min-width:24px; }
+  .rp-info { margin:10px 0 4px; font-size:14px; font-weight:600; color:#8e8e93; }
+  .rp-info b { font-size:17px; color:#111; letter-spacing:-0.3px; }
+  .rp-swap { display:block; margin:2px 0 10px; border:none; background:none; padding:4px 0;
+    font-size:12px; font-weight:700; color:#8e8e93; text-decoration:underline; cursor:pointer; }
+  .rp-add { width:100%; padding:14px; border-radius:13px; border:none; background:#111; color:#fff;
+    font-size:15.5px; font-weight:800; cursor:pointer; }
+  .rp-add:active { background:#333; }
   .cart-wrap { margin-top:18px; border-top:1.5px solid #f2f2f7; padding-top:14px; }
   .cart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   .cart-head h2 { margin:0; }
@@ -377,7 +399,7 @@
       <button class="mini-btn" style="width:auto;margin:0;padding:0 18px;" onclick="addSlot()">추가</button>
     </div>
 
-    <input class="search-input" id="searchInput" placeholder="✏️ 흰쌀밥 150 처럼 g까지 · 초성(ㄱㅊㅉ)도 OK" aria-label="음식 이름 검색" oninput="renderMatches()">
+    <input class="search-input" id="searchInput" placeholder="✏️ 음식·제품명 또는 초성(ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="renderMatches()">
     <div class="matches" id="matches"></div>
 
     <div id="setsWrap" class="hidden" style="margin-top:16px;">
@@ -1361,6 +1383,113 @@ function parseQty(raw){
   if(!m || !m[1].trim()) return { name: raw, qty: null };
   return { name: m[1].trim(), qty: parseFloat(m[2]) };
 }
+/* ── 검색 결과 줄 = 접힌 상태. 탭하면 그 자리에서 펼쳐져 g(또는 개수)을 정하고 담는다.
+   r = { name, emoji, tag, k,p,c,f, per, unit, uLabel, amt, mode }
+   per = 영양값의 기준량(g). mode 'g'=그램 입력 / 'unit'=개수 입력 / 'x'=인분 배수 */
+function rowHtml(r){
+  const i = window._rows.length;
+  window._rows.push(r);
+  return `<div class="mrow">
+    <button class="match" onclick="toggleRow(${i})">
+      <b>${r.emoji} ${r.name}${r.tag}</b>
+      <span class="mamt" id="ma${i}">${rowAmtText(r)} ${Math.round(r.k*rowScale(r))}kcal · P${Math.round(r.p*rowScale(r))}</span>
+    </button>
+    <div class="rowpanel hidden" id="rp${i}"></div>
+  </div>`;
+}
+function rowScale(r){
+  if(r.mode === 'x') return r.amt;            // 1인분 배수
+  if(r.mode === 'unit') return r.amt;         // 1개 기준값 × 개수
+  return r.per ? r.amt/r.per : 1;             // 그램
+}
+function rowAmtText(r){
+  if(r.mode === 'x') return r.amt === 1 ? '1인분' : `${r.amt}인분`;
+  if(r.mode === 'unit') return `${r.amt}${r.unit}`;
+  return `${r.amt}${r.uLabel}`;
+}
+/* 빠른 선택 칩 값 — 기본량을 맨 앞에, 나머지는 눈에 익은 라운드 값 */
+function rowPresets(r){
+  if(r.mode === 'x') return [0.5, 1, 1.5, 2];
+  if(r.mode === 'unit') return [0.5, 1, 2, 3];
+  const base = r.per;
+  let list = base >= 80 ? [base, 50, 100, 150, 200, 300]
+                        : [base, base*2, base*3, base*5, 100];
+  list = list.map(v => Math.round(v)).filter(v => v > 0);
+  return [...new Set(list)].slice(0, 5);
+}
+function toggleRow(i){
+  const panel = document.getElementById('rp'+i);
+  if(!panel) return;
+  const wasOpen = !panel.classList.contains('hidden');
+  document.querySelectorAll('.rowpanel').forEach(p=>p.classList.add('hidden'));
+  if(wasOpen) return;
+  panel.classList.remove('hidden');
+  renderRowPanel(i);
+  setTimeout(()=>{ panel.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 60);
+}
+function renderRowPanel(i){
+  const r = window._rows[i];
+  const unitLabel = r.mode === 'x' ? '인분' : r.mode === 'unit' ? r.unit : r.uLabel;
+  const chips = rowPresets(r).map(v=>
+    `<button class="rp-chip${v===r.amt?' on':''}" onclick="rowSet(${i},${v})">${v}${unitLabel}</button>`).join('');
+  // 개수 단위 음식은 g으로도 넣을 수 있게 (UNIT_G를 아는 경우)
+  const swap = (r.unit && r.per)
+    ? `<button class="rp-swap" onclick="rowMode(${i},'${r.mode==='unit'?'g':'unit'}')">${r.mode==='unit'?`g으로 입력 (1${r.unit}=${r.per}g)`:`${r.unit} 단위로`}</button>` : '';
+  document.getElementById('rp'+i).innerHTML = `
+    <div class="rp-chips">${chips}</div>
+    <div class="rp-row">
+      <button class="rp-step" onclick="rowNudge(${i},-1)" aria-label="줄이기">−</button>
+      <input class="rp-num" id="rq${i}" type="number" inputmode="decimal" step="any" value="${r.amt}"
+        oninput="rowInput(${i})" aria-label="${r.name} 분량">
+      <span class="rp-unit">${unitLabel}</span>
+      <button class="rp-step" onclick="rowNudge(${i},1)" aria-label="늘리기">＋</button>
+    </div>
+    <div class="rp-info" id="ri${i}"></div>
+    ${swap}
+    <button class="rp-add" onclick="commitRow(${i})">담기</button>`;
+  rowCalc(i);
+}
+function rowCalc(i){
+  const r = window._rows[i], s = rowScale(r);
+  const info = document.getElementById('ri'+i);
+  if(info) info.innerHTML = r.amt > 0
+    ? `<b>${Math.round(r.k*s)} kcal</b> · P${Math.round(r.p*s)} C${Math.round(r.c*s)} F${Math.round(r.f*s)}`
+    : '분량을 입력하세요';
+  const ma = document.getElementById('ma'+i);
+  if(ma) ma.textContent = `${rowAmtText(r)} ${Math.round(r.k*s)}kcal · P${Math.round(r.p*s)}`;
+  document.querySelectorAll(`#rp${i} .rp-chip`).forEach(el=>{
+    el.classList.toggle('on', parseFloat(el.textContent) === r.amt);
+  });
+}
+function rowInput(i){
+  const v = parseFloat(document.getElementById('rq'+i).value);
+  window._rows[i].amt = (isNaN(v) || v <= 0) ? 0 : v;
+  rowCalc(i);
+}
+function rowSet(i, v){
+  window._rows[i].amt = v;
+  const el = document.getElementById('rq'+i); if(el) el.value = v;
+  rowCalc(i);
+}
+function rowNudge(i, dir){
+  const r = window._rows[i];
+  const step = r.mode === 'g' ? (r.per >= 80 ? 10 : 5) : 0.5;
+  rowSet(i, Math.max(step, Math.round((r.amt + dir*step)*10)/10));
+}
+function rowMode(i, mode){
+  const r = window._rows[i];
+  r.amt = mode === 'g' ? Math.round(r.amt * r.per) : Math.round((r.amt / r.per)*10)/10;
+  r.mode = mode;
+  renderRowPanel(i);
+}
+function commitRow(i){
+  const r = window._rows[i], s = rowScale(r);
+  if(!(r.amt > 0)){ toast('분량을 입력하세요'); return; }
+  const label = r.mode === 'x' ? (r.amt === 1 ? r.name : `${r.name} x${r.amt}`)
+    : r.mode === 'unit' ? (r.amt === 1 ? r.name : `${r.name} ${r.amt}${r.unit}`)
+    : `${r.name} ${r.amt}${r.uLabel}`;
+  addMeal(label, r.k*s, r.p*s, r.c*s, r.f*s, null, true);
+}
 function renderMatches(){
   const raw = document.getElementById('searchInput').value.trim();
   const box = document.getElementById('matches');
@@ -1390,24 +1519,15 @@ function renderMatches(){
   scored.sort((a,b)=>b[1]-a[1]);
   const hits = scored.slice(0,8).map(s=>s[0]);   // 엄선 DB는 최대 8개, 나머지는 식약처 DB로
   window._firstHit = hits[0] || null;
+  window._rows = [];
   let html = '';
-  if(qty !== null) html += `<div class="qty-note">⚖ <b>${qty}g</b> 기준으로 계산합니다 · 줄을 탭하면 그대로 담김</div>`;
   html += hits.map(n=>{
     const [k,p,c,f] = normFood(all[n]);
-    const base = SERVING_G[n] || (UNITS[n] ? UNIT_G[n] : null);
-    const s = (qty && base) ? qty/base : 1;
-    const amt = (qty && base) ? `${qty}g`
-      : UNITS[n] ? `1${UNITS[n]}` : SERVING_G[n] ? `${SERVING_G[n]}g` : '1인분';
-    const chip = (SERVING_G[n] || (UNITS[n] && UNIT_G[n])) ? 'g 입력' : '양 조절';
-    // 줄 전체 탭 = 기본량(또는 입력한 g) 바로 담기 / 오른쪽 칩 = 직접 조절
-    return `<button class="match" onclick="quickPick('${n}')">
-      <b>${emojiFor(n)} ${n}</b>
-      <span style="display:flex;align-items:center;gap:10px;">
-        <span>${amt} ${Math.round(k*s)}kcal · P${Math.round(p*s)}</span>
-        <span role="button" tabindex="0" aria-label="${n} 분량 조절"
-          onclick="event.stopPropagation();openPortion('${n}',${k},${p},${c},${f})"
-          style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;white-space:nowrap;">${chip}</span>
-      </span></button>`;
+    const per = SERVING_G[n] || (UNITS[n] ? UNIT_G[n] : null);
+    return rowHtml({ name:n, emoji:emojiFor(n), tag:'', k, p, c, f,
+      per, unit: UNITS[n] || null, uLabel:'g',
+      amt: (qty && per) ? qty : (UNITS[n] ? 1 : per || 1),
+      mode: per ? ((UNITS[n] && !qty) ? 'unit' : 'g') : 'x' });
   }).join('');
   // ── 2·3단: 식약처 DB (엄선분 아래에 구분선 넣고 표시) ──
   if(EXT_N){
@@ -1429,25 +1549,14 @@ function renderMatches(){
       html += `<div class="db-div">식약처 식품영양성분 DB · ${ext.length>=4000?'4000+':ext.length}건</div>`;
       html += ext.slice(0,20).map(([i])=>{
         const e = extItem(i);
-        const amt = qty || e.g, s = amt/100;
-        return `<button class="match" onclick="quickPickExt(${i})">
-          <b>${emojiFor(e.n)} ${e.n}${e.t===2?'<span class="mtag">제품</span>':''}</b>
-          <span style="display:flex;align-items:center;gap:10px;">
-            <span>${amt}${e.u} ${Math.round(e.k*s)}kcal · P${Math.round(e.p*s)}</span>
-            <span role="button" tabindex="0" aria-label="${e.n} 분량 조절"
-              onclick="event.stopPropagation();portionExt(${i})"
-              style="border:1.5px solid #e5e5ea;border-radius:9px;padding:5px 9px;color:#111;font-size:11px;cursor:pointer;white-space:nowrap;">g 입력</span>
-          </span></button>`;
+        return rowHtml({ name:e.n, emoji:emojiFor(e.n), tag: e.t===2?'<span class="mtag">제품</span>':'',
+          k:e.k, p:e.p, c:e.c, f:e.f, per:100, unit:null, uLabel:e.u,
+          amt: qty || e.g, mode:'g' });
       }).join('');
     }
   }
   html += `<button class="match" onclick="customAdd('${q.replace(/['"<>]/g,"")}')"><b>＋ "${q}" 직접 추가</b><span>영양 정보 입력</span></button>`;
   box.innerHTML = html;
-  // 엄선 DB에 없고 식약처 DB에만 있으면 Enter가 그쪽 첫 결과를 고르게
-  if(!window._firstHit && EXT_N){
-    const m = box.querySelector('button.match[onclick^="quickPickExt"]');
-    window._extFirst = m ? +m.getAttribute('onclick').match(/\d+/)[0] : null;
-  } else window._extFirst = null;
 }
 /* 검색 결과 줄 탭 → 검색창에 g을 같이 썼으면 그 양, 아니면 기본 1인분(1개/기준g) */
 function quickPick(name, qty){
@@ -1492,10 +1601,8 @@ function saveCustom(name){
 document.getElementById('searchInput').addEventListener('keydown', e=>{
   if(e.key !== 'Enter') return;
   e.preventDefault();
-  if(window._firstHit){
-    quickPick(window._firstHit);   // Enter = 첫 결과 기본량 바로 담기 → 계속 입력
-  } else if(window._extFirst != null){
-    quickPickExt(window._extFirst);
+  if(window._rows && window._rows.length){
+    commitRow(0);   // Enter = 첫 결과 기본량 바로 담기 → 계속 입력
   } else {
     const q = document.getElementById('searchInput').value.trim();
     if(q) customAdd(q.replace(/['"<>]/g,""));
