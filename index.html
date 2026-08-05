@@ -437,7 +437,7 @@
       </div>
       <div id="cartList"></div>
       <div class="cart-bar">
-        <div class="cb-sum"><b id="cartKcal">0 kcal</b><span id="cartMacro">P0 C0 F0</span></div>
+        <div class="cb-sum"><b id="cartKcal">0 kcal</b><span id="cartMacro">탄0 · 단0 · 지0</span></div>
         <button class="cart-btn" id="cartBtn" onclick="cartCommit()">기록하기</button>
       </div>
     </div>
@@ -472,10 +472,10 @@
       <button class="chip" id="ppYes" onclick="setPhotoProtein(true)">🍗 고기·생선·계란 있음</button>
     </div>
     <div class="portion-row">
-      <button class="portion" onclick="savePhotoMeal(300,15,30,12)"><div class="pn">가볍게</div><div class="pk">~300 kcal · P15 C30 F12</div></button>
-      <button class="portion" onclick="savePhotoMeal(500,25,55,18)"><div class="pn">보통</div><div class="pk">~500 kcal · P25 C55 F18</div></button>
-      <button class="portion" onclick="savePhotoMeal(700,35,75,26)"><div class="pn">든든하게</div><div class="pk">~700 kcal · P35 C75 F26</div></button>
-      <button class="portion" onclick="savePhotoMeal(900,45,95,34)"><div class="pn">푸짐하게</div><div class="pk">~900 kcal · P45 C95 F34</div></button>
+      <button class="portion" onclick="savePhotoMeal(300,15,30,12)"><div class="pn">가볍게</div><div class="pk">~300 kcal · 탄30 · 단15 · 지12</div></button>
+      <button class="portion" onclick="savePhotoMeal(500,25,55,18)"><div class="pn">보통</div><div class="pk">~500 kcal · 탄55 · 단25 · 지18</div></button>
+      <button class="portion" onclick="savePhotoMeal(700,35,75,26)"><div class="pn">든든하게</div><div class="pk">~700 kcal · 탄75 · 단35 · 지26</div></button>
+      <button class="portion" onclick="savePhotoMeal(900,45,95,34)"><div class="pn">푸짐하게</div><div class="pk">~900 kcal · 탄95 · 단45 · 지34</div></button>
     </div>
   </div>
 </div>
@@ -630,7 +630,7 @@ const FOODS = {
   "김치찌개":[450,20,25,28],"된장찌개":[400,22,28,20],"순두부찌개":[300,18,15,18],"부대찌개":[550,25,45,28],"청국장":[400,25,30,18],
   "비빔밥":[560,16,85,15],"흰쌀밥":[310,6,68,1],"현미밥":[300,6,64,2],"잡곡밥":[300,7,62,2],"볶음밥":[600,13,80,24],"김치볶음밥":[580,12,78,23],
   "삼겹살":[660,35,2,58],"제육볶음":[550,30,20,38],"불고기":[400,32,15,22],"닭갈비":[600,40,35,30],"찜닭":[650,45,50,28],"곱창":[750,28,10,65],
-  "치킨":[900,60,45,52],"양념치킨":[1000,55,70,55],"후라이드치킨":[900,60,45,52],"닭가슴살":[165,31,0,4],"삼계탕":[900,55,40,55],
+  "치킨":[900,60,45,52],"양념치킨":[1000,55,70,55],"후라이드치킨":[900,60,45,52],"닭가슴살":[115,23,0,2],"삼계탕":[900,55,40,55],
   "라면":[500,10,75,17],"짜장면":[800,18,120,25],"짬뽕":[700,25,90,25],"우동":[430,12,80,6],"쌀국수":[420,20,70,7],"냉면":[480,15,90,5],"칼국수":[550,18,95,10],"마라탕":[700,30,50,42],
   "김밥":[480,12,75,14],"참치김밥":[530,18,75,17],"떡볶이":[550,10,105,8],"순대":[350,14,45,12],"튀김":[400,8,45,21],"토스트":[350,12,40,16],"샌드위치":[400,18,42,17],
   "돈까스":[700,32,55,38],"제육덮밥":[650,28,85,22],"카레":[600,15,95,17],"오므라이스":[650,18,90,22],
@@ -642,7 +642,7 @@ const FOODS = {
   "계란흰자":[52,11,1,0],"계란노른자":[322,16,4,27],"삶은계란흰자":[48,11,0,0],
   "고구마":[130,2,30,0],"감자":[110,2,25,0],"바나나":[105,1,27,0],"사과":[95,0,25,0],"방울토마토":[30,1,6,0],"오렌지":[60,1,15,0],
   "그릭요거트":[130,12,8,5],"요거트":[100,5,14,3],"프로틴쉐이크":[120,24,3,2],"단백질바":[200,20,20,6],"견과류":[170,5,6,15],
-  "오트밀":[150,5,27,3],"시리얼":[300,6,60,4],"죽":[250,6,50,2],"두부":[90,8,3,5],
+  "오트밀":[150,5,27,3],"시리얼":[300,6,60,4],"죽":[250,6,50,2],"두부":[120,12,4,7],
   "아메리카노":[5,0,1,0],"카페라떼":[180,8,15,9],"바닐라라떼":[250,8,35,9],"콜라":[140,0,35,0],"제로콜라":[0,0,0,0],"맥주":[150,1,12,0],"소주":[400,0,0,0],
   "빵":[280,6,50,6],"크로와상":[300,5,30,17],"베이글":[290,10,55,2],"케이크":[350,4,45,17],"쿠키":[150,2,20,7],"아이스크림":[250,4,30,13],"과자":[280,3,35,14],
   /* --- 편의점/가공식품 --- */
@@ -746,10 +746,10 @@ const FOODS = {
   "오징어덮밥":[600,28,85,15],"낙지덮밥":[580,28,85,13],"김치덮밥":[600,15,90,18],"참치마요덮밥":[700,22,90,26],
   "강된장":[200,12,15,10],"알탕":[350,30,15,18],"대구탕":[300,35,10,12],"동태탕":[300,32,12,12],
   "매운탕":[350,32,15,16],"아귀찜":[500,45,30,22],"해물찜":[500,45,30,22],"낙곱새":[600,35,30,38],
-  "닭한마리":[700,55,30,38],"백숙":[750,60,25,45],"오리주물럭":[650,40,20,45],"훈제오리":[450,30,5,35],
+  "닭한마리":[700,55,30,38],"백숙":[750,60,25,45],"오리주물럭":[650,40,20,45],"훈제오리":[320,22,2,25],
   "소막창":[600,30,5,52],"대창":[700,25,5,65],"양대창":[650,28,5,58],"갈매기살":[450,35,2,33],
-  "가브리살":[500,32,2,40],"돼지껍데기":[400,30,2,30],"소갈비살":[550,32,2,45],"등심":[400,35,2,28],
-  "안심":[300,38,2,15],"채끝":[400,34,2,28],"토시살":[400,35,2,28],"제비추리":[380,33,2,26],
+  "가브리살":[500,32,2,40],"돼지껍데기":[400,30,2,30],"소갈비살":[550,32,2,45],"등심":[320,18,1,27],
+  "안심":[200,33,1,7],"채끝":[400,34,2,28],"토시살":[400,35,2,28],"제비추리":[380,33,2,26],
   "돼지불백":[500,32,15,35],"닭갈비볶음밥":[550,25,75,17],"김치말이국수":[350,10,65,4],"열무국수":[400,11,75,5],
   "콩나물해장국":[300,15,35,10],"북엇국":[180,15,10,8],"떡갈비":[400,25,20,25],"동그랑땡":[250,15,10,17],
   "고추장찌개":[400,22,25,22],"두부김치":[400,22,15,26],"김치볶음":[200,5,12,15],"제육쌈밥":[700,35,75,28],
@@ -1198,12 +1198,12 @@ function renderCart(pop){
     <div class="cart-item${pop && i===cart.length-1 ? ' cart-pop' : ''}">
       <span style="font-size:18px;">${m.photo?'📷':emojiFor(m.name)}</span>
       <div class="ci-n">${m.name}${m.est?' <span style="font-size:10px;color:#c7c7cc;">추정</span>':''}
-        <div class="ci-k">${m.kcal}kcal · P${m.p} C${m.c} F${m.f}</div></div>
+        <div class="ci-k">${m.kcal}kcal · ${macroText(m.p,m.c,m.f)}</div></div>
       <button class="ci-x" onclick="cartRemove(${i})" aria-label="${m.name} 빼기">✕</button>
     </div>`).join('');
   const t = cartTotal();
   document.getElementById('cartKcal').textContent = `${t.k} kcal`;
-  document.getElementById('cartMacro').textContent = `P${t.p} · C${t.c} · F${t.f}`;
+  document.getElementById('cartMacro').textContent = macroText(t.p,t.c,t.f);
   document.getElementById('cartBtn').textContent = `${curSlot}에 ${cart.length}개 기록하기`;
   // 담자마자 합계바가 보이도록
   if(pop) setTimeout(()=>{ try{ wrap.scrollIntoView({behavior:'smooth', block:'end'}); }catch(_){} }, 80);
@@ -1276,9 +1276,9 @@ function renderPortionStep(preset){
   const sl = document.getElementById('portionSlider');
   const num = document.getElementById('portionNum');
   document.getElementById('portionBase').textContent =
-    asUnit ? `기준: 1${pf.unit} = ${pf.k}kcal · P${pf.p}g`
-    : gBaseNow ? `기준: ${gBaseNow}${pf.ul} = ${pf.k}kcal · P${pf.p}g`
-    : `기준: 1인분 = ${pf.k}kcal · P${pf.p}g`;
+    asUnit ? `기준: 1${pf.unit} = ${pf.k}kcal · 단${pf.p}g`
+    : gBaseNow ? `기준: ${gBaseNow}${pf.ul} = ${pf.k}kcal · 단${pf.p}g`
+    : `기준: 1인분 = ${pf.k}kcal · 단${pf.p}g`;
   if(asUnit){ sl.min=0.5; sl.max=5; sl.step=0.5; num.value = preset || 1; }
   else if(gBaseNow){ sl.min=10; sl.max=Math.max(500, gBaseNow*2); sl.step=5; num.value = preset || gBaseNow; }
   else { sl.min=25; sl.max=300; sl.step=25; num.value = preset || 100; } // % (1인분=100)
@@ -1321,7 +1321,7 @@ function nudgePortion(dir){
 function refreshPortionInfo(){
   const pf = window._pf, s = portionScale();
   document.getElementById('portionInfo').textContent = s===null ? '분량을 입력하세요'
-    : `${Math.round(pf.k*s)} kcal · P${Math.round(pf.p*s)} C${Math.round(pf.c*s)} F${Math.round(pf.f*s)}`;
+    : `${Math.round(pf.k*s)} kcal · ${macroText(pf.p*s, pf.c*s, pf.f*s)}`;
 }
 function confirmPortion(){
   const pf = window._pf, s = portionScale(), v = portionVal();
@@ -1379,7 +1379,7 @@ function renderSets(){
     const t = items.reduce((a,x)=>({k:a.k+x.kcal, p:a.p+(x.p||0), c:a.c+(x.c||0), f:a.f+(x.f||0)}), {k:0,p:0,c:0,f:0});
     return `<button class="quick" onclick="logSet('${n.replace(/['"<>]/g,"")}')">
       <div class="qthumb">📦</div>
-      <div style="flex:1"><div class="qn">${n}</div><div class="qk">${items.length}개 · ${t.k}kcal · P${Math.round(t.p)} C${Math.round(t.c)} F${Math.round(t.f)}</div></div>
+      <div style="flex:1"><div class="qn">${n}</div><div class="qk">${items.length}개 · ${t.k}kcal · ${macroText(t.p,t.c,t.f)}</div></div>
       <span class="set-x" role="button" aria-label="세트 삭제" onclick="delSet('${n.replace(/['"<>]/g,"")}', event)">✕</span>
     </button>`;
   }).join('');
@@ -1517,11 +1517,15 @@ function rowScale(r){
   if(r.mode === 'unit') return r.amt * (r.unitG || r.per) / r.per;   // 개수 × 1개 무게
   return r.per ? r.amt/r.per : 1;                                    // 그램
 }
+/* 영양 표기는 앱 전체에서 "탄 · 단 · 지" 한글 순서로 통일한다 (P/C/F는 알아보기 어렵다) */
+function macroText(p, c, f){
+  return `탄${Math.round(c)} · 단${Math.round(p)} · 지${Math.round(f)}`;
+}
 /* 검색 결과 줄 오른쪽 — 칼로리만으로는 부족하다. 탄단지까지 한눈에 */
 function maText(r){
   const s = rowScale(r);
   return `<span class="ma-k">${rowAmtText(r)} ${Math.round(r.k*s)}kcal</span>`
-       + `<span class="ma-m">P${Math.round(r.p*s)} · C${Math.round(r.c*s)} · F${Math.round(r.f*s)}</span>`;
+       + `<span class="ma-m">${macroText(r.p*s, r.c*s, r.f*s)}</span>`;
 }
 function rowAmtText(r){
   if(r.mode === 'x') return r.amt === 1 ? '1인분' : `${r.amt}인분`;
@@ -1575,7 +1579,7 @@ function rowCalc(i){
   const r = window._rows[i], s = rowScale(r);
   const info = document.getElementById('ri'+i);
   if(info) info.innerHTML = r.amt > 0
-    ? `<b>${Math.round(r.k*s)} kcal</b> · P${Math.round(r.p*s)} C${Math.round(r.c*s)} F${Math.round(r.f*s)}`
+    ? `<b>${Math.round(r.k*s)} kcal</b> · ${macroText(r.p*s, r.c*s, r.f*s)}`
     : '분량을 입력하세요';
   const ma = document.getElementById('ma'+i);
   if(ma) ma.innerHTML = maText(r);
@@ -1949,11 +1953,11 @@ function render(){
       const items = meals.filter(m=>(m.slot||'간식')===slot);
       if(!items.length) return;
       const t = items.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
-      html += `<div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')">세트로 저장</button></span><span class="sk">${t.k} kcal<small>P${Math.round(t.p)} · C${Math.round(t.c)} · F${Math.round(t.f)}</small></span></div>`;
+      html += `<div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')">세트로 저장</button></span><span class="sk">${t.k} kcal<small>${macroText(t.p,t.c,t.f)}</small></span></div>`;
       html += items.map(m=>`
         <div class="meal" onclick="tapMeal('${m.id}')">
           <div class="thumb">${m.photo?`<img src="${m.photo}">`:emojiFor(m.name)}</div>
-          <div class="info"><div class="name">${m.name}</div><div class="time">${m.time} · P${m.p||0} C${m.c||0} F${m.f||0}</div></div>
+          <div class="info"><div class="name">${m.name}</div><div class="time">${m.time} · ${macroText(m.p||0,m.c||0,m.f||0)}</div></div>
           ${pendingDel===m.id
             ? `<button class="del-btn" onclick="deleteMeal('${m.id}', event)">삭제</button>`
             : `<div class="kcal">${m.est?'~':''}${m.kcal}</div>`}
@@ -2158,7 +2162,7 @@ function openSheet(){
       return `
       <button class="quick" onclick="addMeal('${safe}',${d.kcal},${d.p||0},${d.c||0},${d.f||0}${d.photo?`,'${'__P__'+safe}'`:''})">
         <div class="qthumb">${d.photo?`<img src="${d.photo}">`:emojiFor(n)}</div>
-        <div><div class="qn">${n}</div><div class="qk">${d.kcal}kcal · P${d.p||0} · ${d.n}회</div></div>
+        <div><div class="qn">${n}</div><div class="qk">${d.kcal}kcal · ${macroText(d.p||0,d.c||0,d.f||0)} · ${d.n}회</div></div>
       </button>`;
     }).join('');
     window._freqPhotos = Object.fromEntries(freq.filter(([n,d])=>d.photo).map(([n,d])=>['__P__'+n.replace(/['"<>]/g,""), d.photo]));
