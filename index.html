@@ -70,7 +70,7 @@
   }
   .slot-head:first-child { margin-top:0; }
   .slot-head .sn { font-size:15px; font-weight:800; }
-  .slot-head .sk { font-size:13px; font-weight:700; color:#8e8e93; }
+  .slot-head .sk { font-size:13px; font-weight:700; color:#8e8e93; text-align:right; }
   .meal { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f2f2f7; }
   .meal:last-child { border-bottom:none; }
   .meal .thumb {
@@ -177,6 +177,11 @@
   .match { display:flex; justify-content:space-between; align-items:center; width:100%; padding:13px 8px; background:none; border:none; border-bottom:1px solid #f2f2f7; font-size:15px; cursor:pointer; text-align:left; }
   .match b { font-weight:600; }
   .match span { color:#8e8e93; font-weight:600; font-size:12px; white-space:nowrap; }
+  /* 오른쪽 영양 표시 — 칼로리 위, 탄단지 아래 */
+  .match .mamt { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0; }
+  .match .ma-k { color:#3a3a3c; font-size:12px; font-weight:700; }
+  .match .ma-m { color:#c7c7cc; font-size:10.5px; font-weight:600; letter-spacing:-0.2px; }
+  .slot-head .sk small { display:block; font-size:10.5px; font-weight:600; color:#c7c7cc; margin-top:2px; letter-spacing:-0.2px; }
 
   .quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
   .quick { display:flex; align-items:center; gap:10px; padding:11px; background:#f2f2f7; border:none; border-radius:14px; cursor:pointer; text-align:left; }
@@ -1370,10 +1375,11 @@ function renderSets(){
   }
   wrap.classList.remove('hidden');
   document.getElementById('setGrid').innerHTML = names.map(n=>{
-    const items = S.sets[n], tot = items.reduce((a,x)=>a+x.kcal,0), tp = items.reduce((a,x)=>a+x.p,0);
+    const items = S.sets[n];
+    const t = items.reduce((a,x)=>({k:a.k+x.kcal, p:a.p+(x.p||0), c:a.c+(x.c||0), f:a.f+(x.f||0)}), {k:0,p:0,c:0,f:0});
     return `<button class="quick" onclick="logSet('${n.replace(/['"<>]/g,"")}')">
       <div class="qthumb">📦</div>
-      <div style="flex:1"><div class="qn">${n}</div><div class="qk">${items.length}개 · ${tot}kcal · P${tp}</div></div>
+      <div style="flex:1"><div class="qn">${n}</div><div class="qk">${items.length}개 · ${t.k}kcal · P${Math.round(t.p)} C${Math.round(t.c)} F${Math.round(t.f)}</div></div>
       <span class="set-x" role="button" aria-label="세트 삭제" onclick="delSet('${n.replace(/['"<>]/g,"")}', event)">✕</span>
     </button>`;
   }).join('');
@@ -1499,7 +1505,7 @@ function rowHtml(r){
   return `<div class="mrow">
     <button class="match" onclick="toggleRow(${i})">
       <b>${r.emoji} ${r.name}${r.tag}</b>
-      <span class="mamt" id="ma${i}">${rowAmtText(r)} ${Math.round(r.k*rowScale(r))}kcal · P${Math.round(r.p*rowScale(r))}</span>
+      <span class="mamt" id="ma${i}">${maText(r)}</span>
     </button>
     <div class="rowpanel hidden" id="rp${i}"></div>
   </div>`;
@@ -1510,6 +1516,12 @@ function rowScale(r){
   if(r.mode === 'x') return r.amt;                                  // 1인분 배수
   if(r.mode === 'unit') return r.amt * (r.unitG || r.per) / r.per;   // 개수 × 1개 무게
   return r.per ? r.amt/r.per : 1;                                    // 그램
+}
+/* 검색 결과 줄 오른쪽 — 칼로리만으로는 부족하다. 탄단지까지 한눈에 */
+function maText(r){
+  const s = rowScale(r);
+  return `<span class="ma-k">${rowAmtText(r)} ${Math.round(r.k*s)}kcal</span>`
+       + `<span class="ma-m">P${Math.round(r.p*s)} · C${Math.round(r.c*s)} · F${Math.round(r.f*s)}</span>`;
 }
 function rowAmtText(r){
   if(r.mode === 'x') return r.amt === 1 ? '1인분' : `${r.amt}인분`;
@@ -1566,7 +1578,7 @@ function rowCalc(i){
     ? `<b>${Math.round(r.k*s)} kcal</b> · P${Math.round(r.p*s)} C${Math.round(r.c*s)} F${Math.round(r.f*s)}`
     : '분량을 입력하세요';
   const ma = document.getElementById('ma'+i);
-  if(ma) ma.textContent = `${rowAmtText(r)} ${Math.round(r.k*s)}kcal · P${Math.round(r.p*s)}`;
+  if(ma) ma.innerHTML = maText(r);
   document.querySelectorAll(`#rp${i} .rp-chip`).forEach(el=>{
     el.classList.toggle('on', parseFloat(el.textContent) === r.amt);
   });
@@ -1936,8 +1948,8 @@ function render(){
     [...S.slots, ...extra].forEach(slot=>{
       const items = meals.filter(m=>(m.slot||'간식')===slot);
       if(!items.length) return;
-      const sub = items.reduce((a,m)=>a+m.kcal,0);
-      html += `<div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')">세트로 저장</button></span><span class="sk">${sub} kcal</span></div>`;
+      const t = items.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
+      html += `<div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')">세트로 저장</button></span><span class="sk">${t.k} kcal<small>P${Math.round(t.p)} · C${Math.round(t.c)} · F${Math.round(t.f)}</small></span></div>`;
       html += items.map(m=>`
         <div class="meal" onclick="tapMeal('${m.id}')">
           <div class="thumb">${m.photo?`<img src="${m.photo}">`:emojiFor(m.name)}</div>
