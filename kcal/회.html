@@ -36,6 +36,16 @@
   .sim { display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f2f2f7; text-decoration:none; font-weight:700; }
   .sim span { color:#8e8e93; font-size:13px; }
   .src { font-size:11px; color:#c7c7cc; margin-top:28px; line-height:1.6; }
+
+  .fill-lead { font-size:13px; color:#8e8e93; line-height:1.5; margin:0 0 10px; }
+  .fill-row { display:flex; flex-direction:column; gap:10px; }
+  .fill-item { display:block; padding:14px 16px; border-radius:14px; background:#f2f2f7; text-decoration:none; color:#111; }
+  .fi-e { font-size:18px; margin-right:4px; }
+  .fi-n { font-weight:800; font-size:15px; }
+  .fi-w { display:block; font-size:12px; color:#8e8e93; font-weight:600; margin:3px 0 6px; }
+  .fi-g { font-size:12px; font-weight:800; color:#007aff; }
+  .fill-note { font-size:10px; color:#c7c7cc; line-height:1.5; margin-top:8px; }
+
 </style>
 </head>
 <body>
@@ -54,6 +64,9 @@
 <a class="cta" href="../?add=회">3초 만에 기록하기</a>
 <h2>비슷한 음식</h2>
 <a class="sim" href="연어스테이크.html">연어스테이크<span>350kcal</span></a><a class="sim" href="대구탕.html">대구탕<span>300kcal</span></a><a class="sim" href="연어회.html">연어회<span>300kcal</span></a>
+<div id="buyBox"></div>
+<script src="../affiliate.js"></script>
+<script>document.getElementById('buyBox').innerHTML = shopBlockFor('회');</script>
 <p class="src">출처: 3초식단 엄선 DB (시중 1회 제공량 평균). 조리법·브랜드에 따라 달라질 수 있습니다. 일반적 영양 정보이며 의학적 조언이 아닙니다.<br><a href="../food.html">음식 칼로리 사전</a> · <a href="../privacy.html">개인정보처리방침</a></p>
 </body>
 </html>

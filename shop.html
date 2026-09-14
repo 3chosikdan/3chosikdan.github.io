@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단백질 채우기 — 닭가슴살·프로틴·그릭요거트 | 3초식단</title>
+<meta name="description" content="단백질이 부족할 때 바로 채우는 한식·편의점 조합. 닭가슴살, 프로틴 음료, 그릭요거트. 가입 없이 식단 기록으로 이어집니다.">
+<link rel="canonical" href="https://3cho.kr/shop.html">
+<meta property="og:title" content="단백질 채우기 — 3초식단">
+<meta property="og:description" content="부족한 단백질만 골라 채웁니다. 가입 없음.">
+<meta property="og:image" content="https://3cho.kr/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://3cho.kr/og.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; background:#fff; color:#111; max-width:480px; margin:0 auto; padding:24px 24px 64px; }
+  a { color:#111; text-decoration:none; }
+  .wm { font-size:18px; font-weight:900; letter-spacing:-1px; }
+  .wm span { color:#30d158; }
+  h1 { font-size:24px; font-weight:900; letter-spacing:-0.8px; margin:24px 0 6px; }
+  .lead { font-size:14px; color:#8e8e93; line-height:1.5; margin-bottom:18px; }
+  h2 { font-size:13px; color:#8e8e93; margin:22px 0 10px; }
+  .fill-row { display:flex; flex-direction:column; gap:10px; }
+  .fill-item { display:block; padding:16px; border-radius:16px; background:#f2f2f7; }
+  .fill-item:active { background:#e5e5ea; }
+  .fi-e { font-size:22px; margin-right:6px; }
+  .fi-n { font-size:16px; font-weight:800; }
+  .fi-w { display:block; font-size:12px; color:#8e8e93; font-weight:600; margin:4px 0 8px; }
+  .fi-g { font-size:12px; font-weight:800; color:#007aff; }
+  .fill-note, .src { font-size:11px; color:#c7c7cc; line-height:1.6; margin-top:16px; }
+  .cta { display:block; margin-top:22px; padding:16px; border-radius:14px; background:#111; color:#fff; text-align:center; font-weight:800; }
+</style>
+</head>
+<body>
+<a class="wm" href="./">3초식단<span>.</span></a>
+<h1>단백질 채우기</h1>
+<p class="lead">칼로리를 깎는 것보다, 부족한 단백질만 채우는 게 덜 배고픕니다. 기록은 이 기기에서, 장보기는 필요할 때만.</p>
+<div id="list"></div>
+<a class="cta" href="./">식단 기록으로 돌아가기</a>
+<p class="src" id="src">일반적 영양 정보이며 의학적 조언이 아닙니다. <a href="food.html">음식 칼로리 사전</a> · <a href="privacy.html">개인정보처리방침</a></p>
+<script src="affiliate.js"></script>
+<script>
+const el = document.getElementById('list');
+el.innerHTML = '<h2>자주 채우는 것</h2>' + shopCardsHtml(window.FILL_ITEMS||[]);
+const n = affiliateNote();
+if(n) document.getElementById('src').insertAdjacentHTML('afterbegin', n+'<br>');
+</script>
+</body>
+</html>

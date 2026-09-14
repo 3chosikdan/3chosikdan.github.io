@@ -342,6 +342,17 @@
     overflow-wrap:anywhere; word-break:keep-all; box-sizing:border-box;
   }
   #toast.show { transform:translateY(0); }
+  .fill { margin:10px 24px 0; }
+  .fill-h { font-size:12px; font-weight:800; color:#3a3a3c; margin-bottom:8px; }
+  .fill-row { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+  .fill-item { flex:0 0 44%; display:block; padding:12px; border-radius:14px; background:#f2f2f7; text-decoration:none; color:#111; }
+  .fill-item:active { background:#e5e5ea; }
+  .fi-e { font-size:18px; }
+  .fi-n { display:block; font-size:13px; font-weight:800; margin-top:4px; }
+  .fi-w { display:block; font-size:11px; color:#8e8e93; font-weight:600; margin:2px 0 6px; }
+  .fi-g { font-size:11px; font-weight:800; color:#007aff; }
+  .fill-note { font-size:10px; color:#c7c7cc; line-height:1.5; margin-top:8px; }
+
 </style>
 </head>
 <body>
@@ -383,6 +394,7 @@
     </div>
     <div class="cond-row" id="condRow"></div>
     <div class="reco" id="reco"></div>
+    <div id="fillBox" class="fill"></div>
     <div class="reco hidden" id="dayWrap" style="background:#111;color:#e5e5ea;"></div>
   </div>
 
@@ -400,6 +412,7 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
+    <a href="shop.html">단백질 채우기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
   </footer>
@@ -432,6 +445,7 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
+    <a href="shop.html">단백질 채우기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
 </div>
@@ -672,6 +686,7 @@
 
 <div id="toast"></div>
 
+<script src="affiliate.js"></script>
 <script>
 /* ============ 음식 DB — 1인분 [kcal, 단백질g, 탄수g, 지방g] ============ */
 const FOODS = {
@@ -1870,6 +1885,18 @@ function recommend(){
     return prefix+`<b>${left} kcal</b> 남음 · 단백질 <b>${pLeft}g</b> 부족 — 이게 오늘의 숙제입니다.`;
   return prefix+`잘 가고 있습니다. <b>${left} kcal · P ${pLeft}g</b> 남았습니다.`;
 }
+function renderFill(isToday, s){
+  const box = document.getElementById('fillBox');
+  if(!box) return;
+  if(!isToday || !S.profile || typeof shopCardsHtml !== 'function'){ box.innerHTML=''; return; }
+  const t = macroTargets();
+  const pLeft = t.p - (s.p||0);
+  const meals = S.meals[todayKey()]||[];
+  if(meals.length < 1 || pLeft < 15){ box.innerHTML=''; return; }
+  const items = (window.FILL_ITEMS||[]).filter(x=>x.p>=12).slice(0,3);
+  if(!items.length){ box.innerHTML=''; return; }
+  box.innerHTML = `<div class="fill-h">단백질 ${Math.round(pLeft)}g 부족 · 이걸로 채울 수 있어요</div>` + shopCardsHtml(items);
+}
 
 /* ============ 스트릭 ============ */
 function streak(){
@@ -1982,6 +2009,7 @@ function render(){
 
   document.getElementById('reco').innerHTML = isToday ? recommend()
     : `📅 지난 날짜를 보는 중입니다 — 지금 기록하면 <b>이 날짜</b>에 추가됩니다. <b style="color:#007aff;cursor:pointer;" onclick="backToToday()">오늘로 돌아가기</b>`;
+  renderFill(isToday, s);
 
   // 온보딩: 가치 먼저(3초 기록), 프로필은 그 다음
   const sb = document.getElementById('setupBanner');
@@ -2017,7 +2045,7 @@ function render(){
     const score = Math.round((kcalScore*0.5 + pScore*0.5)*100);
     const msg = score>=80 ? '완벽에 가까운 하루였습니다' : score>=60 ? '충분히 잘한 하루입니다' : '기록한 것 자체가 이긴 겁니다';
     wrapEl.classList.remove('hidden');
-    wrapEl.innerHTML = `🌙 오늘 마감 — <b style="color:#30d158;">${score}점</b> · 단백질 ${Math.round(pScore*100)}% · 🔥 ${streak()}일째<br><span style="color:#98989f;">${msg}. 내일 아침 몸무게로 이어가요.</span>${score>=80?`<br><b style="color:#007aff;cursor:pointer;" onclick="shareCard()">📤 이런 날은 자랑해도 됩니다 — 리포트 카드</b>`:''}`;
+    wrapEl.innerHTML = `🌙 오늘 마감 — <b style="color:#30d158;">${score}점</b> · 단백질 ${Math.round(pScore*100)}% · 🔥 ${streak()}일째<br><span style="color:#98989f;">${msg}. 내일 아침 몸무게로 이어가요.</span>${pScore<0.8?`<br><a href="shop.html" style="color:#30d158;font-weight:800;text-decoration:none;">단백질이 부족했어요 — 내일 장보기 →</a>`:''}${score>=80?`<br><b style="color:#007aff;cursor:pointer;" onclick="shareCard()">📤 이런 날은 자랑해도 됩니다 — 리포트 카드</b>`:''}`;
   } else wrapEl.classList.add('hidden');
 
   // 홈 화면 설치 유도 — 재방문(2일째 기록)부터 / 일요일엔 리포트 카드 배너

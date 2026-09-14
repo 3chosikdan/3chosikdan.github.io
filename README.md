@@ -6,4 +6,7 @@ https://3cho.kr/
 
 - 음식 칼로리 사전: /food.html
 - 하루 권장 칼로리: /calc.html
+- 단백질 채우기: /shop.html
 - 개인정보처리방침: /privacy.html
+
+제휴(쿠팡 파트너스)는 `affiliate.js`의 `lptag` 또는 상품 `url`만 채우면 켜집니다. 기록 화면에는 배너 광고를 넣지 않습니다.
