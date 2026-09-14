@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>단백질 채우기 — 닭가슴살·프로틴·그릭요거트 | 3초식단</title>
-<meta name="description" content="단백질이 부족할 때 바로 채우는 한식·편의점 조합. 닭가슴살, 프로틴 음료, 그릭요거트. 가입 없이 식단 기록으로 이어집니다.">
+<title>장보기 — 닭가슴살·프로틴·그릭요거트 | 3초식단</title>
+<meta name="description" content="단백질이 부족할 때 사는 것. 한끼통살 닭가슴살, 셀렉스 프로틴, 그릭데이. 가입 없이 식단 기록으로 이어집니다.">
 <link rel="canonical" href="https://3cho.kr/shop.html">
-<meta property="og:title" content="단백질 채우기 — 3초식단">
-<meta property="og:description" content="부족한 단백질만 골라 채웁니다. 가입 없음.">
+<meta property="og:title" content="장보기 — 3초식단">
+<meta property="og:description" content="부족한 단백질만 골라 삽니다. 가입 없음.">
 <meta property="og:image" content="https://3cho.kr/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://3cho.kr/og.png">
@@ -34,15 +34,15 @@
 </head>
 <body>
 <a class="wm" href="./">3초식단<span>.</span></a>
-<h1>단백질 채우기</h1>
-<p class="lead">칼로리를 깎는 것보다, 부족한 단백질만 채우는 게 덜 배고픕니다. 기록은 이 기기에서, 장보기는 필요할 때만.</p>
+<h1>장보기</h1>
+<p class="lead">검색이 아니라 상품으로 바로 갑니다. 기록은 앱에서, 살 것만 여기서.</p>
 <div id="list"></div>
 <a class="cta" href="./">식단 기록으로 돌아가기</a>
 <p class="src" id="src">일반적 영양 정보이며 의학적 조언이 아닙니다. <a href="food.html">음식 칼로리 사전</a> · <a href="privacy.html">개인정보처리방침</a></p>
 <script src="affiliate.js"></script>
 <script>
 const el = document.getElementById('list');
-el.innerHTML = '<h2>자주 채우는 것</h2>' + shopCardsHtml(window.FILL_ITEMS||[]);
+el.innerHTML = '<h2>지금 사면 되는 것</h2>' + shopCardsHtml(window.FILL_ITEMS||[]);
 const n = affiliateNote();
 if(n) document.getElementById('src').insertAdjacentHTML('afterbegin', n+'<br>');
 </script>

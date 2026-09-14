@@ -1,39 +1,34 @@
-/* 3초식단 제휴 — 가입 없이, 기록 화면에 광고 배너는 넣지 않는다.
- *
- * 수익을 켜려면:
- *  1) https://partners.coupang.com 가입, 채널에 https://3cho.kr 등록
- *  2) 대시보드에서 상품 숏링크를 만들어 아래 url 칸에 붙여넣기
- *  3) 또는 lptag 만 넣으면 검색 링크에 트래킹이 붙습니다
- *
- * lptag / url 이 비어 있으면 일반 쿠팡 검색으로만 열립니다 (수수료 없음).
- */
+/* 3초식단 제휴 — 기록 화면 배너는 넣지 않는다.
+ * 상품 URL은 쿠팡 파트너스 lptag로 감싼다. */
 window.AFFILIATE = {
   lptag: 'AF2421382',
   subid: '3cho'
 };
 
 window.FILL_ITEMS = [
-  { id:'chicken', q:'훈제 닭가슴살 한끼통살', name:'훈제 닭가슴살', why:'단 23g · 110kcal', p:23, k:110, emoji:'🍗', url:'' },
-  { id:'shake',   q:'프로틴 음료 RTD',         name:'프로틴 음료',   why:'단 20g · 180kcal', p:20, k:180, emoji:'🥛', url:'' },
-  { id:'yogurt',  q:'그릭요거트 무가당',       name:'그릭요거트',    why:'단 12g · 130kcal', p:12, k:130, emoji:'🥣', url:'' },
-  { id:'egg',     q:'훈제란 삶은계란',         name:'훈제란',        why:'단 6g · 78kcal',   p:6,  k:78,  emoji:'🥚', url:'' },
-  { id:'oats',    q:'오트밀 단백질',           name:'오트밀',        why:'끼니 대체 150kcal', p:5,  k:150, emoji:'🌾', url:'' }
+  { id:'chicken', name:'한끼통살 닭가슴살', why:'100g · 단백질 23g', p:23, k:110, emoji:'🍗',
+    product:'https://www.coupang.com/vp/products/9151670974' },
+  { id:'shake',   name:'셀렉스 프로틴 오리지널', why:'125ml · 단백질 20g', p:20, k:180, emoji:'🥛',
+    product:'https://www.coupang.com/vp/products/9334640009' },
+  { id:'yogurt',  name:'그릭데이 시그니처', why:'100g · 단백질 12g', p:12, k:130, emoji:'🥣',
+    product:'https://www.coupang.com/vp/products/5463245022' },
+  { id:'egg',     name:'곰곰 동물복지 반숙란', why:'1개 · 단백질 6g', p:6, k:78, emoji:'🥚',
+    product:'https://www.coupang.com/vp/products/6586318474' },
+  { id:'oats',    name:'냉장고쏙 롤드 오트', why:'아침 한 그릇 · 150kcal', p:5, k:150, emoji:'🌾',
+    product:'https://www.coupang.com/vp/products/6386799209' }
 ];
 
 window.FOOD_SHOP = {
   '닭가슴살': ['chicken'], '훈제닭가슴살': ['chicken'], '닭가슴살샐러드': ['chicken','yogurt'],
   '프로틴쉐이크': ['shake'], '프로틴음료': ['shake'],
   '그릭요거트': ['yogurt'], '오트밀': ['oats'], '샐러드': ['chicken','yogurt'],
-  '계란': ['egg'], '삶은계란': ['egg'], '스크램블': ['egg'], '계란후라이': ['egg'],
-  '라면': ['chicken','egg'], '신라면': ['chicken'], '컵라면': ['chicken','egg'],
-  '삼각김밥': ['egg','chicken'], '참치김밥': ['egg'], '김밥': ['egg'],
-  '편의점도시락': ['chicken'], '흰쌀밥': ['chicken'], '제로콜라': ['shake']
+  '계란': ['egg'], '삶은계란': ['egg'], '스크램블': ['egg'], '계란후라이': ['egg']
 };
 
 function coupangUrl(item){
   if(item && item.url) return item.url;
-  const q = (item && item.q) || item || '';
-  const land = 'https://www.coupang.com/np/search?q=' + encodeURIComponent(q);
+  const land = (item && item.product)
+    || ('https://www.coupang.com/np/search?q=' + encodeURIComponent((item && item.q) || item || ''));
   const tag = (window.AFFILIATE && AFFILIATE.lptag) || '';
   if(!tag) return land;
   return 'https://link.coupang.com/re/AFFSDP?lptag=' + encodeURIComponent(tag)
@@ -57,7 +52,7 @@ function shopCardsHtml(items, extraClass){
       <span class="fi-e">${it.emoji}</span>
       <span class="fi-n">${it.name}</span>
       <span class="fi-w">${it.why}</span>
-      <span class="fi-g">쿠팡에서 보기 →</span>
+      <span class="fi-g">쿠팡에서 이 상품 보기 →</span>
     </a>`).join('')}</div>` + (note ? `<div class="fill-note">${note}</div>` : '');
 }
 function shopBlockFor(food){
