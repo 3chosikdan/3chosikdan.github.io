@@ -490,7 +490,7 @@
       <button class="mini-btn" style="width:auto;margin:0;padding:0 18px;" onclick="addSlot()">추가</button>
     </div>
 
-    <input class="search-input" id="searchInput" placeholder="닭가슴살 · 그릭요거트 · 초성(ㄱㅊㅅ)" aria-label="음식 이름 검색" oninput="renderMatches()">
+    <input class="search-input" id="searchInput" placeholder="음식 이름 또는 초성 (ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="renderMatches()">
     <div class="matches" id="matches"></div>
 
     <div id="nowWrap" class="hidden" style="margin-top:16px;">
@@ -2056,11 +2056,7 @@ function render(){
   const vMeals = S.meals[viewDate]||[];
   const s = vMeals.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
   document.getElementById('kcalNow').textContent = s.k.toLocaleString();
-  const totalMealsEarly = Object.values(S.meals).flat().length;
-  const firstEmpty = isToday && totalMealsEarly === 0 && !S.profile;
-  document.getElementById('kcalGoalLabel').textContent = firstEmpty
-    ? `단백질 ${proteinTarget()}g 목표`
-    : `/ ${goal.toLocaleString()} kcal`;
+  document.getElementById('kcalGoalLabel').textContent = `/ ${goal.toLocaleString()} kcal`;
   document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.k/goal,1));
   document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : '#111';
 
@@ -2098,7 +2094,7 @@ function render(){
   if(recoEl) recoEl.classList.toggle('hidden', !recoEl.innerHTML.trim());
   renderFill(isToday, s);
 
-  // 첫 방문: 편의점 예시 대신 식단(단백질)부터
+  // 첫 방문: 특정 음식을 밀어주지 않는다. 한 끼 적힌 뒤에만 목표 설정 유도.
   const sb = document.getElementById('setupBanner');
   const totalMeals = Object.values(S.meals).flat().length;
   const bodySec = document.getElementById('bodySection');
@@ -2106,27 +2102,13 @@ function render(){
     const hasBody = Object.keys(S.weights).length || Object.keys(S.bodyfat).length || totalMeals > 0 || S.profile;
     bodySec.classList.toggle('hidden', isToday && !hasBody);
   }
-  if(!isToday || S.profile){
+  if(!isToday || S.profile || totalMeals === 0){
     sb.classList.add('hidden');
     sb.innerHTML = '';
-  } else if(totalMeals === 0){
-    sb.classList.remove('hidden');
-    sb.innerHTML = `<div style="padding:18px;border-radius:16px;border:1.5px solid #111;line-height:1.55;">
-      <div style="font-size:16px;font-weight:800;">오늘 단백질부터 적으세요</div>
-      <div style="font-size:12px;color:#8e8e93;margin-top:2px;">감량·증량 공통 · 탄단지 · 가입 없음</div>
-      <div class="ex-row">
-        <button class="ex-btn" onclick="quickFirstLog('훈제닭가슴살')">🍗 훈제닭가슴살<span class="ex-k">단 22g · 110kcal</span></button>
-        <button class="ex-btn" onclick="quickFirstLog('그릭요거트')">🥛 그릭요거트<span class="ex-k">단 12g · 130kcal</span></button>
-        <button class="ex-btn" onclick="quickFirstLog('프로틴쉐이크')">💪 프로틴쉐이크<span class="ex-k">단 24g · 120kcal</span></button>
-      </div>
-      <button style="width:100%;margin-top:10px;padding:13px;border-radius:12px;border:1.5px solid #e5e5ea;background:#fff;font-size:13px;font-weight:700;cursor:pointer;" onclick="quickFirstCombo(['현미밥','닭가슴살','삶은계란'])">🍚 식단 한상 · 현미밥+닭가슴+계란</button>
-      <button style="width:100%;margin-top:8px;padding:14px;border-radius:12px;border:none;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="openSheet()">＋ 음식 검색해서 기록</button>
-      <button style="width:100%;margin-top:4px;padding:9px;border-radius:12px;border:none;background:none;color:#8e8e93;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="openSettings()">⚙︎ 체지방·활동량으로 목표 잡기 (30초)</button>
-    </div>`;
   } else {
     sb.classList.remove('hidden');
     sb.innerHTML = `<button style="width:100%;padding:15px;border-radius:16px;border:1.5px solid #e5e5ea;background:none;font-size:13.5px;font-weight:600;color:#3a3a3c;cursor:pointer;text-align:left;line-height:1.5;" onclick="openSettings()">
-      💪 감량·증량 목표 대비를 보려면 — <b>체지방·활동량 30초 설정</b></button>`;
+      감량·증량 목표 대비를 보려면 — <b>체지방·활동량 30초 설정</b></button>`;
   }
 
   // 오늘 마감 정산 — 저녁의 마침표 (리텐션의 심장)
@@ -2194,7 +2176,7 @@ function render(){
   if(!meals.length){
     ml.innerHTML = yestMeals.length
       ? `<div class="empty">오늘은 아직이에요.<br>위에서 어제 끼니를 그대로 담거나 아래 <b>+</b> 로 새로 기록하세요.</div>`
-      : `<div class="empty">아직 기록이 없어요.<br>단백질부터 적으면 탄단지가 채워집니다.</div>`;
+      : `<div class="empty">아직 기록이 없어요.<br>아래 <b>+</b> 를 눌러 방금 먹은 걸 검색하세요.</div>`;
   } else {
     let html='';
     const extra = [...new Set(meals.map(m=>m.slot||'간식'))].filter(s=>!S.slots.includes(s));
@@ -2418,18 +2400,18 @@ function openSheet(){
   } else qw.classList.add('hidden');
   const hour = new Date().getHours();
   const nowList = hour < 10
-    ? ['그릭요거트','오트밀','계란후라이','프로틴쉐이크','닭가슴살']
+    ? ['그릭요거트','오트밀','계란후라이','아메리카노']
     : hour < 15
-    ? ['훈제닭가슴살','닭가슴살샐러드','현미밥','그릭요거트','삶은계란']
+    ? ['닭가슴살','김밥','샐러드','현미밥']
     : hour < 21
-    ? ['닭가슴살','현미밥','두부','삶은계란','그릭요거트']
-    : ['프로틴쉐이크','그릭요거트','삶은계란','훈제닭가슴살','저지방우유'];
+    ? ['흰쌀밥','김치찌개','닭가슴살','된장찌개']
+    : ['프로틴쉐이크','그릭요거트','삶은계란','컵라면'];
   const freqNames = new Set(freq.map(([n])=>n));
   const nowFoods = nowList.filter(n => FOODS[n] && !freqNames.has(n)).slice(0,5);
   const nw = document.getElementById('nowWrap');
-  if(nowFoods.length){
+  if(nowFoods.length && freq.length){
     nw.classList.remove('hidden');
-    document.getElementById('nowTitle').textContent = hour < 10 ? '아침 식단으로 많이 적는 것' : hour < 15 ? '점심 식단으로 많이 적는 것' : hour < 21 ? '저녁 식단으로 많이 적는 것' : '자기 전 단백질';
+    document.getElementById('nowTitle').textContent = hour < 10 ? '아침으로 많이 적는 것' : hour < 15 ? '점심으로 많이 적는 것' : hour < 21 ? '저녁으로 많이 적는 것' : '야식으로 많이 적는 것';
     document.getElementById('nowGrid').innerHTML = nowFoods.map(n=>{
       const [k,p,c,f] = FOODS[n];
       return `<button class="quick" onclick="addMeal('${n}',${k},${p},${c},${f})">
