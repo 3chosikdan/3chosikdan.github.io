@@ -6,6 +6,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="3초식단">
 <meta name="theme-color" content="#ffffff">
+<script>
+(function(){
+  try{
+    var t=(JSON.parse(localStorage.getItem('foodspot')||'{}').theme)||'system';
+    var dark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if(dark) document.documentElement.classList.add('dark');
+  }catch(e){}
+})();
+</script>
 <title>3초식단 — 탄단지 3초, 가입 없음</title>
 <meta name="description" content="바디빌딩·다이어트 식단을 가입 없이 3초 기록. 단백질·탄수·지방, 체지방, 감량·증량 목표. 닭가슴살부터 한식까지 식약처 DB 3.7만종.">
 <meta property="og:title" content="3초식단 — 탄단지 3초, 가입 없음">
@@ -377,6 +386,63 @@
   .fill-pair { width:100%; margin-bottom:8px; padding:12px 14px; border-radius:14px; border:none; background:#eafaf0; color:#0a8f3c; font-size:13px; font-weight:700; text-align:left; line-height:1.45; cursor:pointer; font-family:inherit; }
   .fill-pair b { color:#111; }
 
+  /* dark */
+  html.dark { color-scheme: dark; }
+  html.dark body { background:#000; color:#f2f2f7; }
+  html.dark .hdr-btn { background:#2c2c2e; color:#e5e5ea; }
+  html.dark .hdr-btn:active { background:#3a3a3c; }
+  html.dark .kcal-sub, html.dark .date, html.dark h2, html.dark .mval, html.dark .flabel,
+  html.dark .meal .time, html.dark .empty, html.dark .del-hint, html.dark .site-foot,
+  html.dark .faq p, html.dark .fi-w, html.dark .cart-item .ci-k { color:#8e8e93; }
+  html.dark .mbar, html.dark .meal .thumb, html.dark .wcard, html.dark .reco,
+  html.dark .quick, html.dark .stat, html.dark .yest, html.dark .g-sec, html.dark .seg,
+  html.dark .macro-box, html.dark .chart-card, html.dark .fill-item, html.dark .edit-btn,
+  html.dark .stepper-round, html.dark .cart-item .ci-x { background:#1c1c1e; }
+  html.dark .mbar div { background:#f2f2f7; }
+  html.dark .reco { color:#e5e5ea; }
+  html.dark .reco b, html.dark .eta b, html.dark .g-body, html.dark .fill-h, html.dark .faq summary,
+  html.dark .site-foot a, html.dark .yest h3, html.dark .bf-guide b, html.dark .seg-help b,
+  html.dark .qty-note b, html.dark .tf-warn b, html.dark .rp-info b { color:#f2f2f7; }
+  html.dark .slot-head { border-bottom-color:#f2f2f7; }
+  html.dark .meal, html.dark .faq details, html.dark .match, html.dark .cart-item,
+  html.dark .cart-wrap, html.dark .mrow { border-color:#2c2c2e; }
+  html.dark .cond-chip, html.dark .chip, html.dark .train-btn, html.dark .portion,
+  html.dark .search-input, html.dark .txt-input, html.dark .rp-chip, html.dark .rp-step, html.dark .rp-num,
+  html.dark .ex-btn, html.dark .yest-chip { background:#1c1c1e; border-color:#3a3a3c; color:#e5e5ea; }
+  html.dark .cond-chip.on, html.dark .chip.on, html.dark .train-btn.on, html.dark .rp-chip.on,
+  html.dark .tab.on { background:#f2f2f7; border-color:#f2f2f7; color:#000; }
+  html.dark .fab, html.dark .photo-btn, html.dark .save-btn, html.dark .cart-btn, html.dark .rp-add,
+  html.dark .yest-all, html.dark .mini-btn, html.dark .inst-btn { background:#f2f2f7; color:#000; }
+  html.dark .cart-btn:active, html.dark .rp-add:active { background:#d1d1d6; }
+  html.dark nav { background:rgba(0,0,0,.88); border-top-color:#2c2c2e; }
+  html.dark .sheet { background:#1c1c1e; }
+  html.dark .grabber { background:#3a3a3c; }
+  html.dark .sheet-x { background:#2c2c2e; color:#8e8e93; }
+  html.dark .seg button.on { background:#2c2c2e; color:#f2f2f7; box-shadow:none; }
+  html.dark .tdee-box { background:#2c2c2e; color:#f2f2f7; }
+  html.dark .helper-panel { background:#111; border-color:#3a3a3c; }
+  html.dark .seg-help, html.dark .qty-note, html.dark .tf-warn { background:#2c2c2e; color:#e5e5ea; }
+  html.dark .wempty-btn { border-color:#3a3a3c; color:#8e8e93; }
+  html.dark .stepper button { background:#2c2c2e; color:#f2f2f7; box-shadow:none; }
+  html.dark #toast { background:#f2f2f7; color:#000; }
+  html.dark #toast button { background:#000; color:#f2f2f7; }
+  html.dark #ringBg { stroke:#2c2c2e; }
+  html.dark .fill-item { color:#f2f2f7; }
+  html.dark .fill-item:active, html.dark .quick:active { background:#2c2c2e; }
+  html.dark .fill-pair { background:#0f2a18; color:#30d158; }
+  html.dark .fill-pair b { color:#f2f2f7; }
+  html.dark .cart-bar { background:rgba(28,28,30,.94); border-top-color:#2c2c2e; }
+  html.dark .portion-num { border-bottom-color:#3a3a3c; color:#f2f2f7; }
+  html.dark .portion-num:focus, html.dark .search-input:focus, html.dark .txt-input:focus { border-color:#f2f2f7; }
+  html.dark .quick .qthumb { background:#2c2c2e; }
+  html.dark .db-div::after { background:#2c2c2e; }
+  html.dark .match .mtag { background:#2c2c2e; color:#8e8e93; }
+  html.dark .match .ma-k { color:#e5e5ea; }
+  html.dark #adjPill { background:#1c1c1e !important; color:#e5e5ea !important; }
+  html.dark .preview { background:#2c2c2e; }
+  html.dark a { color:#f2f2f7; }
+  html.dark .rec-del { background:#2a1215; border-color:#5a2020; color:#ff6b6b; }
+
 </style>
 </head>
 <body>
@@ -401,7 +467,7 @@
   <div class="hero">
     <div class="ring-wrap">
       <svg width="190" height="190" viewBox="0 0 190 190">
-        <circle cx="95" cy="95" r="82" fill="none" stroke="#f2f2f7" stroke-width="13"/>
+        <circle id="ringBg" cx="95" cy="95" r="82" fill="none" stroke="#f2f2f7" stroke-width="13"/>
         <circle id="ringFg" cx="95" cy="95" r="82" fill="none" stroke="#111" stroke-width="13"
                 stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="515"/>
       </svg>
@@ -582,6 +648,13 @@
   <div class="grabber"></div>
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <h3>내 목표 설정</h3>
+
+  <div class="flabel">화면</div>
+  <div class="seg" id="segTheme">
+    <button data-v="system" onclick="setTheme('system')">시스템</button>
+    <button data-v="light" onclick="setTheme('light')">밝게</button>
+    <button data-v="dark" onclick="setTheme('dark')">어둡게</button>
+  </div>
 
   <div class="flabel">성별</div>
   <div class="seg" id="segSex">
@@ -1106,6 +1179,7 @@ S.slots = S.slots || ["아침","점심","저녁","간식"]; // 끼니 자유 추
 S.sets = S.sets || {};        // 자주 먹는 콤보 { '점심 세트': [{name,kcal,p,c,f},...] }
 S.condition = S.condition || {}; // { date: 'good'|'tired'|'stress'|'refeed' }
 S.train = S.train || {};         // { date: true } 운동한 날
+S.theme = S.theme || 'system';
 /* ============ 데이터 보존 3중 장치 ============
    ① storage.persist() — 브라우저에 "이 데이터 지우지 마" 요청 (iOS 7일 삭제 방어)
    ② IndexedDB 미러 — localStorage가 날아가도 IDB 복사본으로 자동 복구
@@ -1143,6 +1217,22 @@ const save = () => { const j = JSON.stringify(S); localStorage.setItem('foodspot
 const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const keyOffset = n => { const d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 
+function isDark(){
+  const t = S.theme || 'system';
+  return t==='dark' || (t!=='light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+function applyTheme(){
+  const dark = isDark();
+  document.documentElement.classList.toggle('dark', dark);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.content = dark ? '#000000' : '#ffffff';
+}
+function setTheme(v){
+  S.theme = v; save(); applyTheme();
+  if(typeof setSegOnly==='function') setSegOnly('segTheme', v);
+}
+applyTheme();
+try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(_){}
 function toast(msg, undo){
   const t=document.getElementById('toast');
   t.innerHTML = '';
@@ -2194,7 +2284,7 @@ function render(){
   document.getElementById('kcalNow').textContent = s.k.toLocaleString();
   document.getElementById('kcalGoalLabel').textContent = `/ ${goal.toLocaleString()} kcal`;
   document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.k/goal,1));
-  document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : '#111';
+  document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : (isDark() ? '#f2f2f7' : '#111');
 
   // 과식 자동 차감을 숨기지 않고 보여준다 (신뢰 포인트)
   const adjP = document.getElementById('adjPill');
@@ -2942,6 +3032,7 @@ function openSettings(){
     if(lw) document.getElementById('pWeight').value = lw;
   }
   previewTDEE();
+  setSegOnly('segTheme', S.theme || 'system');
   document.getElementById('overlay').classList.add('show');
   document.getElementById('settingsSheet').classList.add('show');
 }
@@ -3052,7 +3143,7 @@ document.getElementById('importInput').addEventListener('change', e=>{
     try {
       const d = JSON.parse(r.result);
       if(typeof d !== 'object' || !d.meals) throw 0;
-      ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','profile'].forEach(k=>{
+      ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile'].forEach(k=>{
         if(d[k] !== undefined) S[k] = d[k];
       });
       save(); closeSheet(); render();

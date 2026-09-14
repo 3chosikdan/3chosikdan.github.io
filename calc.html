@@ -11,6 +11,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://3cho.kr/og.png">
 <link rel="icon" href="icon-192.png">
+<script>
+(function(){try{var t=(JSON.parse(localStorage.getItem('foodspot')||'{}').theme)||'system';if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}})();
+</script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; background:#fff; color:#111; max-width:480px; margin:0 auto; padding:24px 24px 64px; }
@@ -36,6 +39,16 @@
   .macro .tl { font-size:10px; color:#8e8e93; font-weight:700; margin-top:2px; }
   .cta { display:block; margin-top:16px; padding:16px; border-radius:14px; background:#111; color:#fff; text-align:center; font-weight:800; }
   .src { font-size:11px; color:#c7c7cc; margin-top:20px; line-height:1.6; }
+  html.dark { color-scheme:dark; }
+  html.dark body { background:#000; color:#f2f2f7; }
+  html.dark a { color:#f2f2f7; }
+  html.dark .lead, html.dark .flabel, html.dark .src, html.dark .box .tl, html.dark .macro .tl { color:#8e8e93; }
+  html.dark .txt { background:#1c1c1e; border-color:#3a3a3c; color:#f2f2f7; }
+  html.dark .seg { background:#1c1c1e; }
+  html.dark .seg button.on { background:#2c2c2e; color:#f2f2f7; box-shadow:none; }
+  html.dark .box { background:#1c1c1e; }
+  html.dark .macro { background:#1c1c1e; }
+  html.dark .cta { background:#f2f2f7; color:#000; }
 </style>
 </head>
 <body>
