@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://3cho.kr/sitemap.xml

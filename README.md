@@ -1,1 +1,9 @@
-# 3chosikdan.github.io
+# 3초식단 — 기록 3초, 가입 없음
+
+https://3cho.kr/
+
+식단·체중 기록은 이 기기 브라우저에만 저장됩니다. 서버로 보내지 않습니다.
+
+- 음식 칼로리 사전: /food.html
+- 하루 권장 칼로리: /calc.html
+- 개인정보처리방침: /privacy.html
