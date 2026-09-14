@@ -455,7 +455,8 @@
   </div>
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="streak" id="streak"></span>
-    <button class="hdr-btn" onclick="openGuide()">📖 가이드</button>
+    <button class="hdr-btn" id="themeBtn" onclick="cycleTheme()" aria-label="화면 밝기">☾</button>
+    <button class="hdr-btn" onclick="openGuide()">가이드</button>
     <button class="hdr-btn" onclick="openSettings()">⚙︎ 목표</button>
   </div>
 </header>
@@ -1226,10 +1227,23 @@ function applyTheme(){
   document.documentElement.classList.toggle('dark', dark);
   const m = document.querySelector('meta[name="theme-color"]');
   if(m) m.content = dark ? '#000000' : '#ffffff';
+  const b = document.getElementById('themeBtn');
+  if(b){
+    const t = S.theme || 'system';
+    b.textContent = t==='light' ? '☀' : t==='dark' ? '☾' : '◐';
+    b.title = t==='light' ? '밝게' : t==='dark' ? '어둡게' : '시스템';
+  }
 }
 function setTheme(v){
   S.theme = v; save(); applyTheme();
   if(typeof setSegOnly==='function') setSegOnly('segTheme', v);
+}
+function cycleTheme(){
+  const order = ['system','light','dark'];
+  const cur = S.theme || 'system';
+  const next = order[(order.indexOf(cur)+1)%3];
+  setTheme(next);
+  toast(next==='system' ? '화면: 시스템' : next==='light' ? '화면: 밝게' : '화면: 어둡게');
 }
 applyTheme();
 try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(_){}
