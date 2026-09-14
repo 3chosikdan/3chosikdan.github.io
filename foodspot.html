@@ -345,13 +345,14 @@
   .fill { margin:10px 24px 0; }
   .fill-h { font-size:12px; font-weight:800; color:#3a3a3c; margin-bottom:8px; }
   .fill-row { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
-  .fill-item { flex:0 0 44%; display:block; padding:12px; border-radius:14px; background:#f2f2f7; text-decoration:none; color:#111; }
+  .fill-item { flex:0 0 44%; display:block; padding:12px; border-radius:14px; background:#f2f2f7; border:none; text-align:left; cursor:pointer; font-family:inherit; color:#111; }
   .fill-item:active { background:#e5e5ea; }
   .fi-e { font-size:18px; }
   .fi-n { display:block; font-size:13px; font-weight:800; margin-top:4px; }
   .fi-w { display:block; font-size:11px; color:#8e8e93; font-weight:600; margin:2px 0 6px; }
   .fi-g { font-size:11px; font-weight:800; color:#007aff; }
-  .fill-note { font-size:10px; color:#c7c7cc; line-height:1.5; margin-top:8px; }
+  .fill-pair { width:100%; margin-bottom:8px; padding:12px 14px; border-radius:14px; border:none; background:#eafaf0; color:#0a8f3c; font-size:13px; font-weight:700; text-align:left; line-height:1.45; cursor:pointer; font-family:inherit; }
+  .fill-pair b { color:#111; }
 
 </style>
 </head>
@@ -412,7 +413,6 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
-    <a href="shop.html">단백질 채우기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
   </footer>
@@ -445,7 +445,6 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
-    <a href="shop.html">단백질 채우기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
 </div>
@@ -473,6 +472,11 @@
 
     <input class="search-input" id="searchInput" placeholder="✏️ 음식·제품명 또는 초성(ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="renderMatches()">
     <div class="matches" id="matches"></div>
+
+    <div id="nowWrap" class="hidden" style="margin-top:16px;">
+      <h2 id="nowTitle">이 시간에 많이 적는 것</h2>
+      <div class="quick-grid" id="nowGrid"></div>
+    </div>
 
     <div id="setsWrap" class="hidden" style="margin-top:16px;">
       <h2>내 세트 · 원터치</h2>
@@ -686,7 +690,6 @@
 
 <div id="toast"></div>
 
-<script src="affiliate.js"></script>
 <script>
 /* ============ 음식 DB — 1인분 [kcal, 단백질g, 탄수g, 지방g] ============ */
 const FOODS = {
@@ -1885,17 +1888,62 @@ function recommend(){
     return prefix+`<b>${left} kcal</b> 남음 · 단백질 <b>${pLeft}g</b> 부족 — 이게 오늘의 숙제입니다.`;
   return prefix+`잘 가고 있습니다. <b>${left} kcal · P ${pLeft}g</b> 남았습니다.`;
 }
+const PAIR_ADD = {
+  '삼각김밥':{add:'삶은계란', why:'단백질 +6g'},
+  '참치마요삼각김밥':{add:'삶은계란', why:'단백질 +6g'},
+  '김밥':{add:'삶은계란', why:'단백질 +6g'},
+  '참치김밥':{add:'삶은계란', why:'단백질 +6g'},
+  '라면':{add:'계란후라이', why:'단백질 +7g'},
+  '컵라면':{add:'계란후라이', why:'단백질 +7g'},
+  '신라면':{add:'계란후라이', why:'단백질 +7g'},
+  '불닭볶음면':{add:'계란후라이', why:'단백질 +7g'},
+  '흰쌀밥':{add:'훈제닭가슴살', why:'단백질 +22g'},
+  '현미밥':{add:'훈제닭가슴살', why:'단백질 +22g'},
+  '샐러드':{add:'훈제닭가슴살', why:'단백질 +22g'},
+  '편의점도시락':{add:'삶은계란', why:'단백질 +6g'},
+  '떡볶이':{add:'삶은계란', why:'단백질 +6g'},
+  '토스트':{add:'삶은계란', why:'단백질 +6g'}
+};
+const FILL_LOG = [
+  { name:'훈제닭가슴살', why:'단 22g · 110kcal' },
+  { name:'프로틴쉐이크', why:'단 24g · 120kcal' },
+  { name:'그릭요거트', why:'단 12g · 130kcal' },
+  { name:'삶은계란2개', why:'단 12g · 156kcal' }
+];
+function foodBase(name){
+  const keys = Object.keys(FOODS);
+  return keys.find(n => name===n || name.startsWith(n+' ')) || name;
+}
 function renderFill(isToday, s){
   const box = document.getElementById('fillBox');
   if(!box) return;
-  if(!isToday || !S.profile || typeof shopCardsHtml !== 'function'){ box.innerHTML=''; return; }
-  const t = macroTargets();
-  const pLeft = t.p - (s.p||0);
+  if(!isToday){ box.innerHTML=''; return; }
   const meals = S.meals[todayKey()]||[];
-  if(meals.length < 1 || pLeft < 15){ box.innerHTML=''; return; }
-  const items = (window.FILL_ITEMS||[]).filter(x=>x.p>=12).slice(0,3);
-  if(!items.length){ box.innerHTML=''; return; }
-  box.innerHTML = `<div class="fill-h">단백질 ${Math.round(pLeft)}g 부족 · 이걸로 채울 수 있어요</div>` + shopCardsHtml(items);
+  if(!meals.length){ box.innerHTML=''; return; }
+  const last = meals[meals.length-1];
+  const pair = PAIR_ADD[foodBase(last.name)];
+  const already = pair && meals.some(m => foodBase(m.name)===pair.add);
+  const t = S.profile ? macroTargets() : null;
+  const pLeft = t ? t.p - (s.p||0) : 0;
+  let html = '';
+  if(pair && !already){
+    const short = foodBase(last.name);
+    html += `<button class="fill-pair" onclick="quickFirstLog('${pair.add}')">${emojiFor(pair.add)} ${short}에 <b>${pair.add}</b> 더하면 ${pair.why} · 탭해서 기록</button>`;
+  }
+  if(t && pLeft >= 15){
+    const items = FILL_LOG.filter(x => !meals.some(m => foodBase(m.name)===x.name)).slice(0,3);
+    if(items.length){
+      html += `<div class="fill-h">단백질 ${Math.round(pLeft)}g 부족 · 탭하면 바로 기록</div><div class="fill-row">`;
+      html += items.map(it=>`<button type="button" class="fill-item" onclick="quickFirstLog('${it.name}')">
+        <span class="fi-e">${emojiFor(it.name)}</span>
+        <span class="fi-n">${it.name}</span>
+        <span class="fi-w">${it.why}</span>
+        <span class="fi-g">바로 기록 →</span>
+      </button>`).join('');
+      html += `</div>`;
+    }
+  }
+  box.innerHTML = html;
 }
 
 /* ============ 스트릭 ============ */
@@ -2045,7 +2093,7 @@ function render(){
     const score = Math.round((kcalScore*0.5 + pScore*0.5)*100);
     const msg = score>=80 ? '완벽에 가까운 하루였습니다' : score>=60 ? '충분히 잘한 하루입니다' : '기록한 것 자체가 이긴 겁니다';
     wrapEl.classList.remove('hidden');
-    wrapEl.innerHTML = `🌙 오늘 마감 — <b style="color:#30d158;">${score}점</b> · 단백질 ${Math.round(pScore*100)}% · 🔥 ${streak()}일째<br><span style="color:#98989f;">${msg}. 내일 아침 몸무게로 이어가요.</span>${pScore<0.8?`<br><a href="shop.html" style="color:#30d158;font-weight:800;text-decoration:none;">단백질이 부족했어요 — 내일 장보기 →</a>`:''}${score>=80?`<br><b style="color:#007aff;cursor:pointer;" onclick="shareCard()">📤 이런 날은 자랑해도 됩니다 — 리포트 카드</b>`:''}`;
+    wrapEl.innerHTML = `🌙 오늘 마감 — <b style="color:#30d158;">${score}점</b> · 단백질 ${Math.round(pScore*100)}% · 🔥 ${streak()}일째<br><span style="color:#98989f;">${msg}. 내일 아침 몸무게로 이어가요.</span>${pScore<0.8?`<br><b style="color:#30d158;cursor:pointer;" onclick="quickFirstLog('훈제닭가슴살')">단백질이 부족했어요 — 훈제닭가슴살 바로 기록 →</b>`:''}${score>=80?`<br><b style="color:#007aff;cursor:pointer;" onclick="shareCard()">📤 이런 날은 자랑해도 됩니다 — 리포트 카드</b>`:''}`;
   } else wrapEl.classList.add('hidden');
 
   // 홈 화면 설치 유도 — 재방문(2일째 기록)부터 / 일요일엔 리포트 카드 배너
@@ -2322,6 +2370,28 @@ function openSheet(){
     }).join('');
     window._freqPhotos = Object.fromEntries(freq.filter(([n,d])=>d.photo).map(([n,d])=>['__P__'+n.replace(/['"<>]/g,""), d.photo]));
   } else qw.classList.add('hidden');
+  const hour = new Date().getHours();
+  const nowList = hour < 10
+    ? ['그릭요거트','오트밀','계란후라이','아메리카노','삼각김밥']
+    : hour < 15
+    ? ['삼각김밥','김밥','컵라면','샐러드','편의점도시락','참치김밥']
+    : hour < 21
+    ? ['흰쌀밥','김치찌개','제육볶음','닭가슴살','된장찌개']
+    : ['프로틴쉐이크','그릭요거트','삶은계란','삼각김밥','컵라면'];
+  const freqNames = new Set(freq.map(([n])=>n));
+  const nowFoods = nowList.filter(n => FOODS[n] && !freqNames.has(n)).slice(0,5);
+  const nw = document.getElementById('nowWrap');
+  if(nowFoods.length){
+    nw.classList.remove('hidden');
+    document.getElementById('nowTitle').textContent = hour < 10 ? '아침으로 많이 적는 것' : hour < 15 ? '점심으로 많이 적는 것' : hour < 21 ? '저녁으로 많이 적는 것' : '야식으로 많이 적는 것';
+    document.getElementById('nowGrid').innerHTML = nowFoods.map(n=>{
+      const [k,p,c,f] = FOODS[n];
+      return `<button class="quick" onclick="addMeal('${n}',${k},${p},${c},${f})">
+        <div class="qthumb">${emojiFor(n)}</div>
+        <div><div class="qn">${n}</div><div class="qk">${k}kcal · ${macroText(p,c,f)}</div></div>
+      </button>`;
+    }).join('');
+  } else nw.classList.add('hidden');
   renderSets();
   document.getElementById('stepMain').classList.remove('hidden');
   document.getElementById('stepPhoto').classList.add('hidden');
