@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미세영양소 하루 권장량 계산기 — 3초식단</title>
+<meta name="description" content="성별·나이로 비타민·무기질 하루 권장량을 계산합니다. 2020 한국인 영양소 섭취기준(KDRI). 감량·증량 식단에서 빠지기 쉬운 영양소까지.">
+<link rel="canonical" href="https://3cho.kr/micro.html">
+<meta property="og:title" content="미세영양소 계산기 — 3초식단">
+<meta property="og:description" content="칼슘·철·비타민D·식이섬유 하루 권장량. 가입 없이 바로 확인.">
+<meta property="og:image" content="https://3cho.kr/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://3cho.kr/og.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; background:#fff; color:#111; max-width:480px; margin:0 auto; padding:24px 24px 64px; }
+  a { color:#111; font-weight:700; text-decoration:none; }
+  .wm { font-size:18px; font-weight:900; letter-spacing:-1px; }
+  .wm span { color:#30d158; }
+  h1 { font-size:24px; font-weight:900; letter-spacing:-0.8px; margin:24px 0 6px; }
+  .lead { font-size:14px; color:#8e8e93; line-height:1.55; margin-bottom:18px; }
+  .flabel { font-size:12px; font-weight:700; color:#8e8e93; margin:14px 0 6px; }
+  .seg { display:flex; background:#f2f2f7; border-radius:12px; padding:3px; }
+  .seg button { flex:1; padding:10px 2px; border:none; border-radius:10px; background:none; font-size:13px; font-weight:600; color:#8e8e93; cursor:pointer; }
+  .seg button.on { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  .txt { width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid #e5e5ea; font-size:16px; outline:none; background:#fff; }
+  .txt:focus { border-color:#111; }
+  .note { background:#f2f2f7; border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.55; color:#3a3a3c; margin:16px 0 8px; }
+  .note b { color:#111; }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid #f2f2f7; }
+  .row .n { font-size:15px; font-weight:800; }
+  .row .k { font-size:11px; color:#8e8e93; font-weight:600; margin-top:2px; }
+  .row .v { text-align:right; }
+  .row .num { font-size:16px; font-weight:800; }
+  .row .u { font-size:11px; color:#8e8e93; font-weight:600; }
+  .tag { display:inline-block; font-size:10px; font-weight:800; color:#0a8f3c; background:#eafaf0; border-radius:6px; padding:2px 6px; margin-left:6px; vertical-align:middle; }
+  .tag.warn { color:#c93400; background:#fff1eb; }
+  h2 { font-size:13px; color:#8e8e93; margin:22px 0 8px; }
+  .cta { display:block; margin-top:18px; padding:16px; border-radius:14px; background:#111; color:#fff; text-align:center; font-weight:800; }
+  .src { font-size:11px; color:#c7c7cc; margin-top:20px; line-height:1.6; }
+  .src a { color:#8e8e93; }
+</style>
+</head>
+<body>
+<a class="wm" href="./">3초식단<span>.</span></a>
+<h1>미세영양소 하루 권장량</h1>
+<p class="lead">탄단지와 별개입니다. 성별·나이로 한국인 섭취기준(KDRI) 권장량을 계산합니다. 감량할 때 칼로리와 같이 빠지기 쉬운 것만 보면 됩니다.</p>
+
+<div class="flabel">성별</div>
+<div class="seg" id="sex">
+  <button class="on" data-v="m" onclick="set('sex',this)">남성</button>
+  <button data-v="f" onclick="set('sex',this)">여성</button>
+</div>
+<div class="flabel">나이</div>
+<input class="txt" id="age" type="number" inputmode="numeric" value="30" oninput="calc()">
+<div class="flabel">식단</div>
+<div class="seg" id="diet">
+  <button class="on" data-v="normal" onclick="set('diet',this)">일반</button>
+  <button data-v="cut" onclick="set('diet',this)">감량</button>
+  <button data-v="veg" onclick="set('diet',this)">채식</button>
+</div>
+
+<div class="note" id="how"></div>
+<div id="list"></div>
+
+<h2>계산법</h2>
+<div class="note" style="margin-top:0">
+  <b>평균필요량(EAR)</b> — 해당 집단의 50%가 충족하는 양.<br>
+  <b>권장섭취량(RNI)</b> = EAR × 1.2 전후. 97.5%가 충족하도록 올린 값. 표의 대부분.<br>
+  <b>충분섭취량(AI)</b> — EAR을 정할 연구가 없을 때. 비타민 D, 식이섬유, 칼륨.<br>
+  <b>상한섭취량(UL)</b> — 넘기면 부작용 위험. 보충제를 여러 개 겹칠 때 여기만 보면 됩니다.<br>
+  <b>만성질환 위험감소(CDRR)</b> — 나트륨은 권장이 아니라 <b>하루 2,300mg 이하</b>.<br><br>
+  단백질은 체중(g/kg)으로 올리지만, 비타민·무기질은 <b>나이·성별 표</b>가 기준입니다. 감량 중이어도 권장량은 거의 그대로라서, 먹는 양이 줄면 밀도가 높은 음식(채소·유제품·생선·햇볕)이 필요해집니다.
+</div>
+
+<a class="cta" href="./">이 기준으로 식단 기록</a>
+<p class="src">출처: 보건복지부·한국영양학회, 2020 한국인 영양소 섭취기준. 일반적 추정치이며 의학적 조언이 아닙니다. 질환·임신·수유는 전문의와 상의하세요.<br>
+<a href="./">식단 기록</a> · <a href="calc.html">칼로리 계산기</a> · <a href="food.html">음식 칼로리 사전</a> · <a href="privacy.html">개인정보처리방침</a></p>
+
+<script>
+function val(id){ return document.querySelector('#'+id+' button.on').dataset.v; }
+function set(id, btn){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on', b===btn));
+  calc();
+}
+function band(age){
+  if(age < 30) return 19;
+  if(age < 50) return 30;
+  if(age < 65) return 50;
+  return 65;
+}
+/* 2020 KDRI RNI. * 표시는 AI 또는 CDRR */
+const T = {
+  m: {
+    19: { vitA:[800,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[800,'mg','권장','멸치·우유·두부'], fe:[10,'mg','권장','소고기 살코기·굴'], zn:[10,'mg','권장','굴·소고기·계란'], mg:[360,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[30,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    30: { vitA:[800,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[800,'mg','권장','멸치·우유·두부'], fe:[10,'mg','권장','소고기 살코기·굴'], zn:[10,'mg','권장','굴·소고기·계란'], mg:[370,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[30,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    50: { vitA:[750,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[750,'mg','권장','멸치·우유·두부'], fe:[10,'mg','권장','소고기 살코기·굴'], zn:[9,'mg','권장','굴·소고기·계란'], mg:[370,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[30,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    65: { vitA:[700,'μg RAE','권장','간·당근·계란'], vitD:[15,'μg','충분','햇볕·연어·강화우유'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[700,'mg','권장','멸치·우유·두부'], fe:[9,'mg','권장','소고기 살코기·굴'], zn:[9,'mg','권장','굴·소고기·계란'], mg:[370,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[25,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] }
+  },
+  f: {
+    19: { vitA:[650,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[700,'mg','권장','멸치·우유·두부'], fe:[14,'mg','권장','소고기·굴·두부'], zn:[8,'mg','권장','굴·소고기·계란'], mg:[280,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[20,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    30: { vitA:[650,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[700,'mg','권장','멸치·우유·두부'], fe:[14,'mg','권장','소고기·굴·두부'], zn:[8,'mg','권장','굴·소고기·계란'], mg:[280,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[20,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    50: { vitA:[600,'μg RAE','권장','간·당근·계란'], vitD:[10,'μg','충분','햇볕 15분·연어·계란노른자'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[800,'mg','권장','멸치·우유·두부'], fe:[8,'mg','권장','소고기 살코기·굴'], zn:[7,'mg','권장','굴·소고기·계란'], mg:[280,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[20,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] },
+    65: { vitA:[550,'μg RAE','권장','간·당근·계란'], vitD:[15,'μg','충분','햇볕·연어·강화우유'], vitC:[100,'mg','권장','키위·딸기·고추'], b12:[2.4,'μg','권장','계란·생선·조개'], folate:[400,'μg DFE','권장','잎채소·콩'], ca:[800,'mg','권장','멸치·우유·두부'], fe:[8,'mg','권장','소고기 살코기·굴'], zn:[7,'mg','권장','굴·소고기·계란'], mg:[280,'mg','권장','견과·통곡·두부'], k:[3500,'mg','충분','감자·바나나·시금치'], fiber:[20,'g','충분','채소·현미·오트밀'], na:[2300,'mg','이하','가공육·국물·소스'] }
+  }
+};
+const LABELS = {
+  vitA:'비타민 A', vitD:'비타민 D', vitC:'비타민 C', b12:'비타민 B12', folate:'엽산',
+  ca:'칼슘', fe:'철', zn:'아연', mg:'마그네슘', k:'칼륨', fiber:'식이섬유', na:'나트륨'
+};
+const CUT = new Set(['vitD','ca','fe','mg','k','fiber']);
+const VEG = new Set(['b12','fe','zn','ca']);
+
+function calc(){
+  const sex = val('sex'), diet = val('diet');
+  const age = parseInt(document.getElementById('age').value,10) || 30;
+  const t = T[sex][band(age)];
+  const how = document.getElementById('how');
+  if(diet==='cut') how.innerHTML = '<b>감량 중</b> — 권장량은 그대로인데 밥양이 줄어 밀도 낮은 음식만 먹으면 D·칼슘·철·마그네슘·섬유가 먼저 빠집니다. 아래 초록 표시를 우선하세요.';
+  else if(diet==='veg') how.innerHTML = '<b>채식</b> — B12는 식품만으로 거의 안 채워집니다. 철·아연은 식물성이라 흡수율이 낮으니 비타민 C와 같이.';
+  else how.innerHTML = '<b>일반</b> — 하루 표입니다. 매 끼 맞출 필요 없고, 며칠 평균이면 됩니다.';
+
+  const order = ['fiber','ca','fe','vitD','mg','k','zn','vitC','vitA','b12','folate','na'];
+  document.getElementById('list').innerHTML = order.map(id=>{
+    const [n,u,kind,food] = t[id];
+    const warn = (diet==='cut' && CUT.has(id)) || (diet==='veg' && VEG.has(id));
+    const tag = id==='na' ? '<span class="tag warn">줄이기</span>' : warn ? '<span class="tag warn">부족하기 쉬움</span>' : '';
+    return `<div class="row"><div><div class="n">${LABELS[id]}${tag}</div><div class="k">${food}</div></div><div class="v"><div class="num">${n.toLocaleString()}${id==='na'?' 이하':''}</div><div class="u">${u} · ${kind}</div></div></div>`;
+  }).join('');
+}
+(function load(){
+  try{
+    const S = JSON.parse(localStorage.getItem('foodspot')||'{}');
+    const p = S.profile;
+    if(!p) return;
+    const sexBtn = document.querySelector('#sex button[data-v="'+(p.sex||'m')+'"]');
+    if(sexBtn) set('sex', sexBtn);
+    if(p.age) document.getElementById('age').value = p.age;
+    if(p.adjust < 0){
+      const d = document.querySelector('#diet button[data-v="cut"]');
+      if(d) set('diet', d);
+    }
+  }catch(_){}
+})();
+calc();
+</script>
+</body>
+</html>
