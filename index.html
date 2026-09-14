@@ -2099,7 +2099,7 @@ function render(){
   if(recoEl) recoEl.classList.toggle('hidden', !recoEl.innerHTML.trim());
   renderFill(isToday, s);
 
-  // 온보딩: 가치 먼저(3초 기록), 프로필은 그 다음
+  // 첫 방문에 가짜 예시 음식은 띄우지 않는다. 한 끼 적힌 뒤에만 프로필 유도.
   const sb = document.getElementById('setupBanner');
   const totalMeals = Object.values(S.meals).flat().length;
   const bodySec = document.getElementById('bodySection');
@@ -2107,21 +2107,9 @@ function render(){
     const hasBody = Object.keys(S.weights).length || Object.keys(S.bodyfat).length || totalMeals > 0 || S.profile;
     bodySec.classList.toggle('hidden', isToday && !hasBody);
   }
-  if(!isToday || S.profile){
+  if(!isToday || S.profile || totalMeals === 0){
     sb.classList.add('hidden');
-  } else if(totalMeals === 0){
-    sb.classList.remove('hidden');
-    sb.innerHTML = `<div style="padding:18px;border-radius:16px;border:1.5px solid #e5e5ea;line-height:1.6;">
-      <div style="font-size:16px;font-weight:700;">방금 뭐 드셨어요?</div>
-      <div style="font-size:12px;color:#8e8e93;margin-top:1px;">가입 없음 · 설치 없음 · 탭 한 번이면 기록됩니다</div>
-      <div class="ex-row">
-        <button class="ex-btn" onclick="quickFirstLog('참치김밥')">🍙 참치김밥<span class="ex-k">530kcal</span></button>
-        <button class="ex-btn" onclick="quickFirstLog('삼각김밥')">🍙 삼각김밥<span class="ex-k">170kcal</span></button>
-        <button class="ex-btn" onclick="quickFirstCombo(['흰쌀밥','계란후라이','김치찌개'])">🍚 집밥 한상<span class="ex-k">~870kcal</span></button>
-      </div>
-      <button style="width:100%;margin-top:12px;padding:14px;border-radius:12px;border:none;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="openSheet()">＋ 다른 음식 검색해서 기록</button>
-      <button style="width:100%;margin-top:6px;padding:9px;border-radius:12px;border:none;background:none;color:#8e8e93;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="openSettings()">👤 내 목표 설정 — 성별 · 체지방 · 활동량 (30초)</button>
-    </div>`;
+    sb.innerHTML = '';
   } else {
     sb.classList.remove('hidden');
     sb.innerHTML = `<button style="width:100%;padding:15px;border-radius:16px;border:1.5px solid #e5e5ea;background:none;font-size:13.5px;font-weight:600;color:#3a3a3c;cursor:pointer;text-align:left;line-height:1.5;" onclick="openSettings()">
@@ -2193,7 +2181,7 @@ function render(){
   if(!meals.length){
     ml.innerHTML = yestMeals.length
       ? `<div class="empty">오늘은 아직이에요.<br>위에서 어제 끼니를 그대로 담거나 아래 <b>+</b> 로 새로 기록하세요.</div>`
-      : `<div class="empty">아직 기록이 없어요.<br>위 예시 또는 아래 <b>+</b> 를 눌러 3초 만에 시작하세요.</div>`;
+      : `<div class="empty">아직 기록이 없어요.<br>아래 <b>+</b> 를 눌러 음식을 검색하세요.</div>`;
   } else {
     let html='';
     const extra = [...new Set(meals.map(m=>m.slot||'간식'))].filter(s=>!S.slots.includes(s));
@@ -2426,7 +2414,7 @@ function openSheet(){
   const freqNames = new Set(freq.map(([n])=>n));
   const nowFoods = nowList.filter(n => FOODS[n] && !freqNames.has(n)).slice(0,5);
   const nw = document.getElementById('nowWrap');
-  if(nowFoods.length){
+  if(nowFoods.length && freq.length){
     nw.classList.remove('hidden');
     document.getElementById('nowTitle').textContent = hour < 10 ? '아침으로 많이 적는 것' : hour < 15 ? '점심으로 많이 적는 것' : hour < 21 ? '저녁으로 많이 적는 것' : '야식으로 많이 적는 것';
     document.getElementById('nowGrid').innerHTML = nowFoods.map(n=>{
