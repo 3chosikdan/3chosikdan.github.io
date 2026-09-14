@@ -345,12 +345,15 @@
   .fill { margin:10px 24px 0; }
   .fill-h { font-size:12px; font-weight:800; color:#3a3a3c; margin-bottom:8px; }
   .fill-row { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
-  .fill-item { flex:0 0 44%; display:block; padding:12px; border-radius:14px; background:#f2f2f7; border:none; text-align:left; cursor:pointer; font-family:inherit; color:#111; }
+  .fill-col { flex:0 0 44%; }
+  .fill-item { width:100%; display:block; padding:12px; border-radius:14px; background:#f2f2f7; border:none; text-align:left; cursor:pointer; font-family:inherit; color:#111; }
   .fill-item:active { background:#e5e5ea; }
   .fi-e { font-size:18px; }
   .fi-n { display:block; font-size:13px; font-weight:800; margin-top:4px; }
   .fi-w { display:block; font-size:11px; color:#8e8e93; font-weight:600; margin:2px 0 6px; }
   .fi-g { font-size:11px; font-weight:800; color:#007aff; }
+  .fill-buy { display:block; margin-top:6px; font-size:11px; font-weight:700; color:#8e8e93; text-align:center; text-decoration:none; }
+  .fill-note { font-size:10px; color:#c7c7cc; line-height:1.5; margin-top:8px; }
   .fill-pair { width:100%; margin-bottom:8px; padding:12px 14px; border-radius:14px; border:none; background:#eafaf0; color:#0a8f3c; font-size:13px; font-weight:700; text-align:left; line-height:1.45; cursor:pointer; font-family:inherit; }
   .fill-pair b { color:#111; }
 
@@ -413,6 +416,7 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
+    <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
   </footer>
@@ -445,6 +449,7 @@
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
+    <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
 </div>
@@ -690,6 +695,7 @@
 
 <div id="toast"></div>
 
+<script src="affiliate.js"></script>
 <script>
 /* ============ 음식 DB — 1인분 [kcal, 단백질g, 탄수g, 지방g] ============ */
 const FOODS = {
@@ -1905,10 +1911,10 @@ const PAIR_ADD = {
   '토스트':{add:'삶은계란', why:'단백질 +6g'}
 };
 const FILL_LOG = [
-  { name:'훈제닭가슴살', why:'단 22g · 110kcal' },
-  { name:'프로틴쉐이크', why:'단 24g · 120kcal' },
-  { name:'그릭요거트', why:'단 12g · 130kcal' },
-  { name:'삶은계란2개', why:'단 12g · 156kcal' }
+  { name:'훈제닭가슴살', why:'단 22g · 110kcal', shop:'chicken' },
+  { name:'프로틴쉐이크', why:'단 24g · 120kcal', shop:'shake' },
+  { name:'그릭요거트', why:'단 12g · 130kcal', shop:'yogurt' },
+  { name:'삶은계란2개', why:'단 12g · 156kcal', shop:'egg' }
 ];
 function foodBase(name){
   const keys = Object.keys(FOODS);
@@ -1925,6 +1931,7 @@ function renderFill(isToday, s){
   const already = pair && meals.some(m => foodBase(m.name)===pair.add);
   const t = S.profile ? macroTargets() : null;
   const pLeft = t ? t.p - (s.p||0) : 0;
+  const canBuy = typeof affiliateOn === 'function' && affiliateOn();
   let html = '';
   if(pair && !already){
     const short = foodBase(last.name);
@@ -1934,13 +1941,23 @@ function renderFill(isToday, s){
     const items = FILL_LOG.filter(x => !meals.some(m => foodBase(m.name)===x.name)).slice(0,3);
     if(items.length){
       html += `<div class="fill-h">단백질 ${Math.round(pLeft)}g 부족 · 탭하면 바로 기록</div><div class="fill-row">`;
-      html += items.map(it=>`<button type="button" class="fill-item" onclick="quickFirstLog('${it.name}')">
-        <span class="fi-e">${emojiFor(it.name)}</span>
-        <span class="fi-n">${it.name}</span>
-        <span class="fi-w">${it.why}</span>
-        <span class="fi-g">바로 기록 →</span>
-      </button>`).join('');
+      html += items.map(it=>{
+        const shop = canBuy && (window.FILL_ITEMS||[]).find(x=>x.id===it.shop);
+        return `<div class="fill-col">
+          <button type="button" class="fill-item" onclick="quickFirstLog('${it.name}')">
+            <span class="fi-e">${emojiFor(it.name)}</span>
+            <span class="fi-n">${it.name}</span>
+            <span class="fi-w">${it.why}</span>
+            <span class="fi-g">바로 기록 →</span>
+          </button>
+          ${shop ? `<a class="fill-buy" href="${coupangUrl(shop)}" target="_blank" rel="noopener sponsored nofollow">없으면 쿠팡</a>` : ''}
+        </div>`;
+      }).join('');
       html += `</div>`;
+      if(canBuy && typeof affiliateNote === 'function'){
+        const n = affiliateNote();
+        if(n) html += `<div class="fill-note">${n}</div>`;
+      }
     }
   }
   box.innerHTML = html;

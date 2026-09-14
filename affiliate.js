@@ -8,7 +8,7 @@
  * lptag / url 이 비어 있으면 일반 쿠팡 검색으로만 열립니다 (수수료 없음).
  */
 window.AFFILIATE = {
-  lptag: '',   // 예: 'AF1234567'
+  lptag: 'AF2421382',
   subid: '3cho'
 };
 
