@@ -7,13 +7,25 @@
 <meta name="apple-mobile-web-app-title" content="3초식단">
 <meta name="theme-color" content="#ffffff">
 <title>3초식단 — 기록 3초, 가입 없음</title>
-<meta name="description" content="3초 식단기록. 가입 없음, 설치 없음, 탭 한 번이면 끝.">
+<meta name="description" content="가입 없이 3초 만에 식단 기록. 한식·편의점 칼로리, 단백질·탄수·지방, 체중·체지방 추적. 식약처 식품영양성분 DB 3.7만종.">
 <meta property="og:title" content="3초식단 — 기록 3초, 가입 없음">
-<meta property="og:description" content="가입 없음 · 설치 없음 · 탭 한 번이면 끝. 칼로리·단백질·체지방까지 알아서.">
+<meta property="og:description" content="가입 없음 · 설치 없음 · 탭 한 번이면 끝. 한식·편의점 칼로리와 단백질까지.">
 <meta property="og:image" content="https://3cho.kr/og.png">
 <meta property="og:url" content="https://3cho.kr">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="3초식단">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="3초식단 — 기록 3초, 가입 없음">
+<meta name="twitter:description" content="가입 없이 3초 만에 식단 기록. 한식·편의점 칼로리, 단백질까지.">
+<meta name="twitter:image" content="https://3cho.kr/og.png">
+<link rel="canonical" href="https://3cho.kr/">
+<meta name="keywords" content="식단기록,칼로리계산기,다이어트식단,한식칼로리,편의점칼로리,단백질,BMR,가입없이">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"3초식단","url":"https://3cho.kr","applicationCategory":"HealthApplication","operatingSystem":"Any","inLanguage":"ko","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"description":"가입 없이 3초 만에 식단 기록. 한식·편의점 칼로리, 단백질·체중·체지방 추적."}
+</script>
 <!-- 📊 익명 이용 통계 (프라이버시 친화) — 아직 미연결. 사용하려면 아래 한 줄 주석 해제 후 GoatCounter(goatcounter.com, 무료) 가입 코드로 교체:
 <script data-goatcounter="https://3cho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 3cho.kr이 Cloudflare 뒤에 있다면 대시보드의 Web Analytics(무료)가 스크립트 한 줄로 더 간단. -->
@@ -303,13 +315,33 @@
   .stat .v { font-size:19px; font-weight:800; letter-spacing:-0.5px; }
   .stat .l { font-size:11px; color:#8e8e93; font-weight:600; margin-top:3px; }
 
+
+  .ex-row { display:flex; gap:8px; margin-top:12px; }
+  .ex-btn { flex:1; padding:12px 6px; border-radius:12px; border:1.5px solid #e5e5ea; background:#fff;
+    font-size:12px; font-weight:700; cursor:pointer; line-height:1.35; color:#111; }
+  .ex-btn:active { background:#f2f2f7; }
+  .ex-btn .ex-k { display:block; font-size:10.5px; font-weight:600; color:#8e8e93; margin-top:3px; }
+  .yest { margin:0 0 12px; padding:14px 16px; border-radius:16px; background:#f2f2f7; text-align:left; }
+  .yest h3 { font-size:14px; font-weight:800; margin-bottom:6px; color:#111; }
+  .yest .ys { font-size:12px; color:#8e8e93; font-weight:600; margin-bottom:10px; }
+  .yest-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .yest-chip { border:none; background:#fff; border-radius:100px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#111; }
+  .yest-chip:active { background:#e5e5ea; }
+  .yest-all { width:100%; margin-top:8px; padding:12px; border-radius:12px; border:none; background:#111; color:#fff; font-size:13.5px; font-weight:800; cursor:pointer; }
+  .site-foot { padding:24px 24px 8px; font-size:11px; color:#8e8e93; line-height:1.75; }
+  .site-foot a { color:#3a3a3c; font-weight:700; margin-right:14px; text-decoration:none; }
+  .inst-btn { border:none; background:#111; color:#fff; font-size:12px; font-weight:700; padding:8px 12px; border-radius:10px; cursor:pointer; white-space:nowrap; }
   .hidden { display:none !important; }
   #toast {
-    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-80px);
-    background:#111; color:#fff; padding:12px 22px; border-radius:100px;
-    font-size:14px; font-weight:700; z-index:200; transition:transform .3s cubic-bezier(.32,.72,0,1); white-space:nowrap;
+    position:fixed; top:max(12px, env(safe-area-inset-top)); left:12px; right:12px;
+    margin:0 auto; max-width:456px; transform:translateY(-140%);
+    background:#111; color:#fff; padding:11px 14px; border-radius:16px;
+    font-size:13px; font-weight:700; z-index:300;
+    transition:transform .3s cubic-bezier(.32,.72,0,1);
+    white-space:pre-line; text-align:center; line-height:1.4;
+    overflow-wrap:anywhere; word-break:keep-all; box-sizing:border-box;
   }
-  #toast.show { transform:translateX(-50%) translateY(0); }
+  #toast.show { transform:translateY(0); }
 </style>
 </head>
 <body>
@@ -362,8 +394,15 @@
 
   <section>
     <h2>다이어리</h2>
+    <div id="yestBox"></div>
     <div id="mealList"></div>
   </section>
+  <footer class="site-foot">
+    <a href="food.html">음식 칼로리 사전</a>
+    <a href="calc.html">하루 권장 칼로리</a>
+    <a href="privacy.html">개인정보처리방침</a>
+    <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
+  </footer>
 </div>
 
 <!-- TREND -->
@@ -388,8 +427,13 @@
       <h4>칼로리</h4><div class="sub">최근 7일 · 선 = 목표</div>
       <div id="kcalChart"></div>
     </div>
-    <button class="photo-btn" style="margin-bottom:30px;" onclick="shareCard()">📤 주간 리포트 카드 만들기</button>
+    <button class="photo-btn" style="margin-bottom:12px;" onclick="shareCard()">📤 주간 리포트 카드 만들기</button>
   </section>
+  <footer class="site-foot">
+    <a href="food.html">음식 칼로리 사전</a>
+    <a href="calc.html">하루 권장 칼로리</a>
+    <a href="privacy.html">개인정보처리방침</a>
+  </footer>
 </div>
 
 <nav>
@@ -611,6 +655,10 @@
 
   <div class="flabel" style="margin-top:20px;">💚 3초식단이 도움이 됐다면</div>
   <button class="mini-btn" style="background:#eafaf0;color:#111;" onclick="shareApp()">📤 친구에게 알리기 — 가입 없이 링크로 끝</button>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f2f2f7;">
+    <a href="privacy.html" style="font-size:12px;font-weight:700;color:#8e8e93;text-decoration:none;">개인정보처리방침 — 기록은 이 기기에만 저장됩니다</a>
+    <div style="font-size:11px;color:#c7c7cc;margin-top:6px;">음식 영양 출처: 식품의약품안전처 식품영양성분 DB</div>
+  </div>
 </div>
 
 <!-- GUIDE SHEET -->
@@ -1225,11 +1273,11 @@ function cartCommit(){
   renderCart();
   save(); closeSheet(); render();
   const label = n === 1 ? first : `${first} 외 ${n-1}개`;
-  if(isPast){ toast(`✓ ${parseInt(k.slice(5,7))}/${parseInt(k.slice(8,10))} ${curSlot} · ${label}`); return; }
+  if(isPast){ toast(`✓ ${parseInt(k.slice(5,7))}/${parseInt(k.slice(8,10))} ${curSlot}\n${label}`); return; }
   const ts = todaySum(), pT = proteinTarget();
   const pct = Math.min(Math.round(ts.p/pT*100), 999);
-  toast(pct >= 100 ? `✓ ${label} (${tot.k}kcal) · 단백질 목표 달성 💪`
-                   : `✓ ${label} (${tot.k}kcal) · 단백질 ${pct}% (${ts.p}/${pT}g)`);
+  toast(pct >= 100 ? `✓ ${label}\n${tot.k}kcal · 단백질 달성`
+                   : `✓ ${label}\n${tot.k}kcal · 단 ${ts.p}g`);
 }
 function dismissTip(){ S.tipHome = 1; save(); render(); }
 function dismissShareBanner(){ S.shareWk = weekKeyOf(); save(); render(); }
@@ -1835,6 +1883,60 @@ function streak(){
   return s;
 }
 
+
+function replayYesterday(slot){
+  const src = S.meals[keyOffset(-1)]||[];
+  const k = viewDate;
+  S.replayed = S.replayed || {};
+  const marks = S.replayed[k] || {};
+  if(marks['*']){ toast('이미 오늘에 담았어요'); return; }
+  if(slot && marks[slot]){ toast('이미 담았어요'); return; }
+  let items = slot ? src.filter(m=>(m.slot||'간식')===slot) : src.slice();
+  if(!slot) items = items.filter(m => !marks[m.slot||'간식']);
+  if(!items.length){ toast('어제 기록이 없어요'); return; }
+  S.meals[k] = S.meals[k]||[];
+  items.forEach(m=>{
+    S.meals[k].push({ id: Date.now()+'-'+Math.random().toString(36).slice(2,7),
+      name:m.name, kcal:m.kcal, p:m.p||0, c:m.c||0, f:m.f||0,
+      slot:m.slot||'간식', time: nowTime(), photo:m.photo||null, est:!!m.est });
+  });
+  S.replayed[k] = marks;
+  if(slot) marks[slot] = 1; else marks['*'] = 1;
+  save(); render();
+  toast(slot ? `어제 ${slot}을 오늘에 담았어요` : `어제 ${items.length}개를 오늘에 담았어요`);
+}
+function quickFirstCombo(names){
+  curSlot = autoSlot();
+  cart = names.map(name=>{
+    const [k,p,c,f] = normFood(FOODS[name] || [500,15,50,15]);
+    return { name, kcal:k, p, c, f, photo:null, skipLearn:false, est:false };
+  });
+  cartCommit();
+}
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  _deferredPrompt = e;
+  try{ render(); }catch(_){}
+});
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+async function installApp(){
+  if(_deferredPrompt){
+    _deferredPrompt.prompt();
+    try{
+      const r = await _deferredPrompt.userChoice;
+      _deferredPrompt = null;
+      if(r && r.outcome==='accepted') toast('홈 화면에 추가됐어요');
+    }catch(_){}
+    render();
+    return;
+  }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  toast(ios ? '공유(□↑) 버튼 → 홈 화면에 추가' : '브라우저 메뉴에서 홈 화면에 추가');
+}
+
 /* ============ 렌더 ============ */
 function render(){
   const isToday = viewDate === todayKey();
@@ -1890,8 +1992,13 @@ function render(){
     sb.classList.remove('hidden');
     sb.innerHTML = `<div style="padding:18px;border-radius:16px;border:1.5px solid #e5e5ea;line-height:1.6;">
       <div style="font-size:16px;font-weight:700;">방금 뭐 드셨어요?</div>
-      <div style="font-size:12px;color:#8e8e93;margin-top:1px;">가입 없음 · 설치 없음 · 3초면 끝</div>
-      <button style="width:100%;margin-top:12px;padding:14px;border-radius:12px;border:none;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="openSheet()">＋ 3초 만에 기록해보기</button>
+      <div style="font-size:12px;color:#8e8e93;margin-top:1px;">가입 없음 · 설치 없음 · 탭 한 번이면 기록됩니다</div>
+      <div class="ex-row">
+        <button class="ex-btn" onclick="quickFirstLog('참치김밥')">🍙 참치김밥<span class="ex-k">530kcal</span></button>
+        <button class="ex-btn" onclick="quickFirstLog('삼각김밥')">🍙 삼각김밥<span class="ex-k">170kcal</span></button>
+        <button class="ex-btn" onclick="quickFirstCombo(['흰쌀밥','계란후라이','김치찌개'])">🍚 집밥 한상<span class="ex-k">~870kcal</span></button>
+      </div>
+      <button style="width:100%;margin-top:12px;padding:14px;border-radius:12px;border:none;background:#111;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" onclick="openSheet()">＋ 다른 음식 검색해서 기록</button>
       <button style="width:100%;margin-top:6px;padding:9px;border-radius:12px;border:none;background:none;color:#8e8e93;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="openSettings()">👤 내 목표 설정 — 성별 · 체지방 · 활동량 (30초)</button>
     </div>`;
   } else {
@@ -1919,10 +2026,14 @@ function render(){
   const mealDays = Object.keys(S.meals).filter(k=>(S.meals[k]||[]).length).length;
   if(!isToday){
     tip.classList.add('hidden');
-  } else if(mealDays >= 2 && !S.tipHome){
+  } else if(!isStandalone() && mealDays >= 1 && !S.tipHome){
     tip.classList.remove('hidden');
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const how = _deferredPrompt ? '아래 버튼 한 번이면 앱처럼 열려요'
+      : (ios ? "공유(□↑) 버튼 → '홈 화면에 추가'" : '브라우저 메뉴 → 홈 화면에 추가');
     tip.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#f2f2f7;font-size:12.5px;line-height:1.5;color:#3a3a3c;">
-      <span style="flex:1;">📌 <b>홈 화면에 추가</b>하면 앱처럼 열리고 기록도 안전하게 보관돼요 — 공유 버튼 → '홈 화면에 추가'</span>
+      <span style="flex:1;">📌 <b>홈 화면에 추가</b>하면 앱처럼 열리고 기록도 덜 날아가요 — ${how}</span>
+      ${(_deferredPrompt || ios) ? '<button class="inst-btn" onclick="installApp()">추가</button>' : ''}
       <button style="border:none;background:none;color:#c7c7cc;font-size:14px;cursor:pointer;" onclick="dismissTip()">✕</button>
     </div>`;
   } else if(mealDays >= 7 && (!S.lastBackupAt || Date.now()-S.lastBackupAt > 14*86400000) && S.backupNagWk !== weekKeyOf()){
@@ -1944,8 +2055,24 @@ function render(){
   // diary (끼니별 그룹 — 커스텀 슬롯 포함, 선택 날짜 기준)
   const meals = vMeals;
   const ml = document.getElementById('mealList');
+  const yestMeals = isToday ? (S.meals[keyOffset(-1)]||[]) : [];
+  const yb = document.getElementById('yestBox');
+  if(yb){
+    if(isToday && !meals.length && yestMeals.length){
+      const slots = [...new Set(yestMeals.map(m=>m.slot||'간식'))];
+      const tot = yestMeals.reduce((a,m)=>a+m.kcal,0);
+      yb.innerHTML = `<div class="yest">
+        <h3>어제랑 같게</h3>
+        <div class="ys">${yestMeals.length}개 · ${tot}kcal — 탭 한 번이면 오늘 기록에 복제됩니다</div>
+        <div class="yest-row">${slots.map(s=>`<button class="yest-chip" onclick="replayYesterday('${String(s).replace(/['"<>]/g,"")}')">${s}만</button>`).join('')}</div>
+        <button class="yest-all" onclick="replayYesterday()">어제 끼니 전부 오늘에 담기</button>
+      </div>`;
+    } else yb.innerHTML = '';
+  }
   if(!meals.length){
-    ml.innerHTML = `<div class="empty">아직 기록이 없어요.<br>아래 <b>+</b> 를 눌러 3초 만에 기록하세요.</div>`;
+    ml.innerHTML = yestMeals.length
+      ? `<div class="empty">오늘은 아직이에요.<br>위에서 어제 끼니를 그대로 담거나 아래 <b>+</b> 로 새로 기록하세요.</div>`
+      : `<div class="empty">아직 기록이 없어요.<br>위 예시 또는 아래 <b>+</b> 를 눌러 3초 만에 시작하세요.</div>`;
   } else {
     let html='';
     const extra = [...new Set(meals.map(m=>m.slot||'간식'))].filter(s=>!S.slots.includes(s));
@@ -2761,7 +2888,34 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
+
+function tryAddQuery(){
+  try{
+    const q = new URLSearchParams(location.search).get('add');
+    if(!q) return;
+    history.replaceState(null,'',location.pathname || '/');
+    setTimeout(()=>{
+      const known = FOODS[q] || (S.custom && S.custom[q]);
+      if(known){
+        const [k,p,c,f] = normFood(known);
+        curSlot = autoSlot();
+        cart = [{ name:q, kcal:k, p, c, f, photo:null, skipLearn:false, est:false }];
+        openSheet();
+        renderCart();
+        toast(q+'\n담았어요 · 기록하기를 누르세요');
+        return;
+      }
+      openSheet();
+      const el = document.getElementById('searchInput');
+      if(!el) return;
+      el.value = q;
+      renderMatches();
+      el.focus();
+    }, 80);
+  }catch(_){}
+}
 render();
+tryAddQuery();
 // 이동 링크(#load=)로 열렸으면 그 기록을 올린다 — render 뒤라 화면이 먼저 뜬다
 tryLoadFromHash();
 </script>

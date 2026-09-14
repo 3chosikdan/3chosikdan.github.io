@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하루 권장 칼로리·BMR 계산기 — 3초식단</title>
+<meta name="description" content="키·몸무게·활동량으로 기초대사(BMR)와 하루 소모 칼로리(TDEE)를 계산합니다. 가입 없이 바로 식단 기록으로 이어집니다.">
+<link rel="canonical" href="https://3cho.kr/calc.html">
+<meta property="og:title" content="하루 권장 칼로리 계산기 — 3초식단">
+<meta property="og:image" content="https://3cho.kr/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://3cho.kr/og.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; background:#fff; color:#111; max-width:480px; margin:0 auto; padding:24px 24px 64px; }
+  a { color:#111; font-weight:700; text-decoration:none; }
+  .wm { font-size:18px; font-weight:900; letter-spacing:-1px; }
+  .wm span { color:#30d158; }
+  h1 { font-size:24px; font-weight:900; letter-spacing:-0.8px; margin:24px 0 6px; }
+  .lead { font-size:14px; color:#8e8e93; line-height:1.5; margin-bottom:18px; }
+  .flabel { font-size:12px; font-weight:700; color:#8e8e93; margin:14px 0 6px; }
+  .seg { display:flex; background:#f2f2f7; border-radius:12px; padding:3px; }
+  .seg button { flex:1; padding:10px 2px; border:none; border-radius:10px; background:none; font-size:13px; font-weight:600; color:#8e8e93; cursor:pointer; }
+  .seg button.on { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+  .txt { width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid #e5e5ea; font-size:16px; outline:none; background:#fff; appearance:none; }
+  .txt:focus { border-color:#111; }
+  .frow { display:flex; gap:10px; }
+  .frow > div { flex:1; }
+  .box { background:#111; color:#fff; border-radius:16px; padding:16px; margin:18px 0 8px; display:flex; justify-content:space-around; text-align:center; }
+  .box .tv { font-size:20px; font-weight:800; }
+  .box .tl { font-size:10px; color:#98989f; font-weight:600; margin-top:3px; }
+  .box .goal { color:#30d158; }
+  .macro { display:flex; justify-content:space-around; background:#f2f2f7; border-radius:14px; padding:13px; text-align:center; }
+  .macro .tv { font-size:16px; font-weight:800; }
+  .macro .tl { font-size:10px; color:#8e8e93; font-weight:700; margin-top:2px; }
+  .cta { display:block; margin-top:16px; padding:16px; border-radius:14px; background:#111; color:#fff; text-align:center; font-weight:800; }
+  .src { font-size:11px; color:#c7c7cc; margin-top:20px; line-height:1.6; }
+</style>
+</head>
+<body>
+<a class="wm" href="./">3초식단<span>.</span></a>
+<h1>하루 권장 칼로리</h1>
+<p class="lead">키·몸무게·활동량으로 BMR과 TDEE를 계산합니다. 숫자는 이 기기에만 남고, 바로 식단 기록으로 이어집니다.</p>
+
+<div class="flabel">성별</div>
+<div class="seg" id="sex">
+  <button class="on" data-v="m" onclick="set('sex',this)">남성</button>
+  <button data-v="f" onclick="set('sex',this)">여성</button>
+</div>
+<div class="frow">
+  <div><div class="flabel">나이</div><input class="txt" id="age" type="number" inputmode="numeric" value="30" oninput="calc()"></div>
+  <div><div class="flabel">키 (cm)</div><input class="txt" id="height" type="number" inputmode="decimal" value="170" oninput="calc()"></div>
+</div>
+<div class="flabel">몸무게 (kg)</div>
+<input class="txt" id="weight" type="number" inputmode="decimal" value="70" oninput="calc()">
+<div class="flabel">활동량</div>
+<select class="txt" id="act" onchange="calc()">
+  <option value="0">거의 앉음 (사무)</option>
+  <option value="1" selected>가벼운 운동 (주 1–3회)</option>
+  <option value="2">보통 (주 3–5회)</option>
+  <option value="3">활발 (거의 매일)</option>
+  <option value="4">매우 활발 (육체노동)</option>
+</select>
+<div class="flabel">목표</div>
+<div class="seg" id="mode">
+  <button class="on" data-v="-500" onclick="set('mode',this)">감량</button>
+  <button data-v="0" onclick="set('mode',this)">유지</button>
+  <button data-v="300" onclick="set('mode',this)">증량</button>
+</div>
+
+<div class="box">
+  <div><div class="tv" id="bmr">–</div><div class="tl">BMR 기초대사</div></div>
+  <div><div class="tv" id="tdee">–</div><div class="tl">TDEE 하루소모</div></div>
+  <div><div class="tv goal" id="goal">–</div><div class="tl">일일 목표</div></div>
+</div>
+<div class="macro">
+  <div><div class="tv" id="mp">–</div><div class="tl">단백질</div></div>
+  <div><div class="tv" id="mc">–</div><div class="tl">탄수화물</div></div>
+  <div><div class="tv" id="mf">–</div><div class="tl">지방</div></div>
+</div>
+<a class="cta" href="./" onclick="stash();">이 목표로 식단 기록 시작</a>
+<p class="src">BMR은 체지방을 모르면 Mifflin-St Jeor, 알면 Katch-McArdle. TDEE는 tdeecalculator.net과 같은 활동 배수입니다. 일반적 추정치이며 의학적 조언이 아닙니다.<br><a href="./">식단 기록</a> · <a href="food.html">음식 칼로리 사전</a> · <a href="privacy.html">개인정보처리방침</a></p>
+<script>
+const ACT = [1.2, 1.375, 1.55, 1.725, 1.9];
+function val(id){ return document.querySelector('#'+id+' button.on').dataset.v; }
+function set(id, btn){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('on', b===btn));
+  calc();
+}
+function num(id){ return parseFloat(document.getElementById(id).value)||0; }
+function calc(){
+  const sex = val('sex'), age=num('age'), h=num('height'), w=num('weight');
+  const act = parseInt(document.getElementById('act').value, 10);
+  const adj = +val('mode');
+  if(!(age&&h&&w)) return;
+  const bmr = 10*w + 6.25*h - 5*age + (sex==='m'?5:-161);
+  const tdee = bmr * ACT[act];
+  const goal = Math.max(1200, Math.round(tdee + adj));
+  const p = Math.round(w * (adj<0?2.2:adj>0?2.0:1.8));
+  const rem = Math.max(goal - p*4, 200);
+  const c = Math.round(rem*0.5/4), f = Math.round(rem*0.5/9);
+  document.getElementById('bmr').textContent = Math.round(bmr).toLocaleString();
+  document.getElementById('tdee').textContent = Math.round(tdee).toLocaleString();
+  document.getElementById('goal').textContent = goal.toLocaleString();
+  document.getElementById('mp').textContent = p+'g';
+  document.getElementById('mc').textContent = c+'g';
+  document.getElementById('mf').textContent = f+'g';
+  window._goal = { sex, age, height:h, weight:w, activity:act, adjust:adj, goal };
+}
+function stash(){
+  try{
+    const S = JSON.parse(localStorage.getItem('foodspot')||'{}');
+    if(!window._goal) return;
+    const g = window._goal;
+    const prev = S.profile || {};
+    S.profile = {
+      sex:g.sex, age:g.age, height:g.height, weight:g.weight,
+      activity:g.activity, adjust:g.adjust,
+      bf: prev.bf || 0, macro: prev.macro || 'balanced',
+      goalType: prev.goalType || 'weight',
+      goalWeight: prev.goalWeight || null, goalBf: prev.goalBf || null
+    };
+    S.goal = g.goal;
+    localStorage.setItem('foodspot', JSON.stringify(S));
+  }catch(_){}
+}
+(function load(){
+  try{
+    const S = JSON.parse(localStorage.getItem('foodspot')||'{}');
+    const p = S.profile;
+    if(!p) return;
+    const sexBtn = document.querySelector('#sex button[data-v="'+(p.sex||'m')+'"]');
+    if(sexBtn) set('sex', sexBtn);
+    if(p.age) document.getElementById('age').value = p.age;
+    if(p.height) document.getElementById('height').value = p.height;
+    if(p.weight) document.getElementById('weight').value = p.weight;
+    if(p.activity !== undefined) document.getElementById('act').value = String(p.activity);
+    const adj = p.adjust===300 ? '300' : p.adjust===0 ? '0' : '-500';
+    const modeBtn = document.querySelector('#mode button[data-v="'+adj+'"]');
+    if(modeBtn) set('mode', modeBtn);
+  }catch(_){}
+})();
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한식·편의점 칼로리 사전 — 3초식단</title>
+<meta name="description" content="김밥, 김치찌개, 삼각김밥, 라면, 닭가슴살 등 한국인이 매일 먹는 음식 칼로리와 탄단지. 가입 없이 3초 기록.">
+<link rel="canonical" href="https://3cho.kr/food.html">
+<meta property="og:title" content="한식·편의점 칼로리 사전 — 3초식단">
+<meta property="og:description" content="한국인이 매일 찍는 음식 칼로리. 검색 후 바로 기록.">
+<meta property="og:image" content="https://3cho.kr/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://3cho.kr/og.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; background:#fff; color:#111; max-width:480px; margin:0 auto; padding:24px 24px 64px; }
+  a { color:#111; text-decoration:none; }
+  .wm { font-size:18px; font-weight:900; letter-spacing:-1px; }
+  .wm span { color:#30d158; }
+  h1 { font-size:24px; font-weight:900; letter-spacing:-0.8px; margin:24px 0 6px; }
+  .lead { font-size:14px; color:#8e8e93; line-height:1.5; margin-bottom:16px; }
+  input { width:100%; padding:14px 16px; border-radius:14px; border:1.5px solid #e5e5ea; font-size:16px; outline:none; margin-bottom:8px; }
+  input:focus { border-color:#111; }
+  h2 { font-size:13px; color:#8e8e93; margin:18px 0 8px; }
+  .row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:13px 0; border-bottom:1px solid #f2f2f7; }
+  .row b { font-size:15px; }
+  .row span { font-size:12px; color:#8e8e93; font-weight:600; white-space:nowrap; }
+  .src { font-size:11px; color:#c7c7cc; margin-top:24px; line-height:1.6; }
+</style>
+</head>
+<body>
+<a class="wm" href="./">3초식단<span>.</span></a>
+<h1>음식 칼로리 사전</h1>
+<p class="lead">한식·편의점·배달에서 자주 찍는 음식입니다. 이름을 누르면 탄단지를 보고, 3초 만에 기록할 수 있어요.</p>
+<input id="q" placeholder="음식 이름 또는 초성 (ㄱㅊㅉ)" aria-label="음식 검색">
+<div id="live"></div>
+<h2>자주 찾는 음식</h2>
+<div id="list">
+<a class="row" href="kcal/참치김밥.html"><b>참치김밥</b><span>530kcal · 단18 · 탄75 · 지17</span></a><a class="row" href="kcal/김밥.html"><b>김밥</b><span>480kcal · 단12 · 탄75 · 지14</span></a><a class="row" href="kcal/삼각김밥.html"><b>삼각김밥</b><span>170kcal · 단4 · 탄35 · 지2</span></a><a class="row" href="kcal/참치마요삼각김밥.html"><b>참치마요삼각김밥</b><span>220kcal · 단6 · 탄35 · 지6</span></a><a class="row" href="kcal/김치찌개.html"><b>김치찌개</b><span>450kcal · 단20 · 탄25 · 지28</span></a><a class="row" href="kcal/된장찌개.html"><b>된장찌개</b><span>400kcal · 단22 · 탄28 · 지20</span></a><a class="row" href="kcal/순두부찌개.html"><b>순두부찌개</b><span>300kcal · 단18 · 탄15 · 지18</span></a><a class="row" href="kcal/부대찌개.html"><b>부대찌개</b><span>550kcal · 단25 · 탄45 · 지28</span></a><a class="row" href="kcal/라면.html"><b>라면</b><span>500kcal · 단10 · 탄75 · 지17</span></a><a class="row" href="kcal/신라면.html"><b>신라면</b><span>500kcal · 단10 · 탄79 · 지16</span></a><a class="row" href="kcal/컵라면.html"><b>컵라면</b><span>380kcal · 단8 · 탄55 · 지14</span></a><a class="row" href="kcal/불닭볶음면.html"><b>불닭볶음면</b><span>530kcal · 단12 · 탄85 · 지13</span></a><a class="row" href="kcal/닭가슴살.html"><b>닭가슴살</b><span>115kcal · 단23 · 탄0 · 지2</span></a><a class="row" href="kcal/흰쌀밥.html"><b>흰쌀밥</b><span>310kcal · 단6 · 탄68 · 지1</span></a><a class="row" href="kcal/현미밥.html"><b>현미밥</b><span>300kcal · 단6 · 탄64 · 지2</span></a><a class="row" href="kcal/아메리카노.html"><b>아메리카노</b><span>5kcal · 단0 · 탄1 · 지0</span></a><a class="row" href="kcal/카페라떼.html"><b>카페라떼</b><span>180kcal · 단8 · 탄15 · 지9</span></a><a class="row" href="kcal/편의점도시락.html"><b>편의점도시락</b><span>700kcal · 단25 · 탄95 · 지22</span></a><a class="row" href="kcal/제육볶음.html"><b>제육볶음</b><span>550kcal · 단30 · 탄20 · 지38</span></a><a class="row" href="kcal/불고기.html"><b>불고기</b><span>400kcal · 단32 · 탄15 · 지22</span></a><a class="row" href="kcal/치킨.html"><b>치킨</b><span>900kcal · 단60 · 탄45 · 지52</span></a><a class="row" href="kcal/양념치킨.html"><b>양념치킨</b><span>1000kcal · 단55 · 탄70 · 지55</span></a><a class="row" href="kcal/후라이드치킨.html"><b>후라이드치킨</b><span>900kcal · 단60 · 탄45 · 지52</span></a><a class="row" href="kcal/떡볶이.html"><b>떡볶이</b><span>550kcal · 단10 · 탄105 · 지8</span></a><a class="row" href="kcal/짜장면.html"><b>짜장면</b><span>800kcal · 단18 · 탄120 · 지25</span></a><a class="row" href="kcal/짬뽕.html"><b>짬뽕</b><span>700kcal · 단25 · 탄90 · 지25</span></a><a class="row" href="kcal/비빔밥.html"><b>비빔밥</b><span>560kcal · 단16 · 탄85 · 지15</span></a><a class="row" href="kcal/삼겹살.html"><b>삼겹살</b><span>660kcal · 단35 · 탄2 · 지58</span></a><a class="row" href="kcal/계란.html"><b>계란</b><span>78kcal · 단6 · 탄1 · 지5</span></a><a class="row" href="kcal/삶은계란.html"><b>삶은계란</b><span>78kcal · 단6 · 탄1 · 지5</span></a><a class="row" href="kcal/계란후라이.html"><b>계란후라이</b><span>110kcal · 단7 · 탄1 · 지9</span></a><a class="row" href="kcal/프로틴쉐이크.html"><b>프로틴쉐이크</b><span>120kcal · 단24 · 탄3 · 지2</span></a><a class="row" href="kcal/그릭요거트.html"><b>그릭요거트</b><span>130kcal · 단12 · 탄8 · 지5</span></a><a class="row" href="kcal/샐러드.html"><b>샐러드</b><span>250kcal · 단8 · 탄15 · 지17</span></a><a class="row" href="kcal/닭가슴살샐러드.html"><b>닭가슴살샐러드</b><span>300kcal · 단30 · 탄12 · 지14</span></a><a class="row" href="kcal/돈까스.html"><b>돈까스</b><span>700kcal · 단32 · 탄55 · 지38</span></a><a class="row" href="kcal/햄버거.html"><b>햄버거</b><span>600kcal · 단25 · 탄45 · 지35</span></a><a class="row" href="kcal/피자.html"><b>피자</b><span>550kcal · 단22 · 탄60 · 지25</span></a><a class="row" href="kcal/초밥.html"><b>초밥</b><span>450kcal · 단25 · 탄70 · 지7</span></a><a class="row" href="kcal/회.html"><b>회</b><span>300kcal · 단40 · 탄2 · 지14</span></a><a class="row" href="kcal/김치볶음밥.html"><b>김치볶음밥</b><span>580kcal · 단12 · 탄78 · 지23</span></a><a class="row" href="kcal/컵밥.html"><b>컵밥</b><span>550kcal · 단15 · 탄85 · 지15</span></a><a class="row" href="kcal/핫바.html"><b>핫바</b><span>200kcal · 단10 · 탄15 · 지11</span></a><a class="row" href="kcal/바나나.html"><b>바나나</b><span>105kcal · 단1 · 탄27 · 지0</span></a><a class="row" href="kcal/사과.html"><b>사과</b><span>95kcal · 단0 · 탄25 · 지0</span></a><a class="row" href="kcal/고구마.html"><b>고구마</b><span>130kcal · 단2 · 탄30 · 지0</span></a><a class="row" href="kcal/오트밀.html"><b>오트밀</b><span>150kcal · 단5 · 탄27 · 지3</span></a><a class="row" href="kcal/제로콜라.html"><b>제로콜라</b><span>0kcal · 단0 · 탄0 · 지0</span></a><a class="row" href="kcal/국밥.html"><b>국밥</b><span>500kcal · 단25 · 탄55 · 지18</span></a><a class="row" href="kcal/삼계탕.html"><b>삼계탕</b><span>900kcal · 단55 · 탄40 · 지55</span></a><a class="row" href="kcal/냉면.html"><b>냉면</b><span>480kcal · 단15 · 탄90 · 지5</span></a><a class="row" href="kcal/칼국수.html"><b>칼국수</b><span>550kcal · 단18 · 탄95 · 지10</span></a><a class="row" href="kcal/마라탕.html"><b>마라탕</b><span>700kcal · 단30 · 탄50 · 지42</span></a><a class="row" href="kcal/족발.html"><b>족발</b><span>800kcal · 단50 · 탄15 · 지58</span></a><a class="row" href="kcal/보쌈.html"><b>보쌈</b><span>700kcal · 단45 · 탄10 · 지52</span></a><a class="row" href="kcal/토스트.html"><b>토스트</b><span>350kcal · 단12 · 탄40 · 지16</span></a><a class="row" href="kcal/샌드위치.html"><b>샌드위치</b><span>400kcal · 단18 · 탄42 · 지17</span></a><a class="row" href="kcal/프로틴음료.html"><b>프로틴음료</b><span>180kcal · 단20 · 탄10 · 지5</span></a><a class="row" href="kcal/훈제닭가슴살.html"><b>훈제닭가슴살</b><span>110kcal · 단22 · 탄1 · 지2</span></a><a class="row" href="kcal/즉석밥.html"><b>즉석밥</b><span>300kcal · 단6 · 탄66 · 지1</span></a><a class="row" href="kcal/미역국.html"><b>미역국</b><span>150kcal · 단8 · 탄10 · 지8</span></a><a class="row" href="kcal/스크램블.html"><b>스크램블</b><span>180kcal · 단12 · 탄2 · 지14</span></a>
+</div>
+<p class="src">1회 제공량 기준 추정치입니다. 더 많은 품목은 식약처 식품영양성분 DB(약 3.7만종)로 앱에서 검색하세요. 일반적 영양 정보이며 의학적 조언이 아닙니다.</p>
+<script src="fooddb.js" defer></script>
+<script>
+const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function chosung(str){
+  let r='';
+  for(const ch of str){ const c=ch.charCodeAt(0);
+    r += (c>=0xAC00 && c<=0xD7A3) ? CHO[Math.floor((c-0xAC00)/588)] : ch; }
+  return r;
+}
+const builtin = {"참치김밥": [530, 18, 75, 17], "김밥": [480, 12, 75, 14], "삼각김밥": [170, 4, 35, 2], "참치마요삼각김밥": [220, 6, 35, 6], "김치찌개": [450, 20, 25, 28], "된장찌개": [400, 22, 28, 20], "순두부찌개": [300, 18, 15, 18], "부대찌개": [550, 25, 45, 28], "라면": [500, 10, 75, 17], "신라면": [500, 10, 79, 16], "컵라면": [380, 8, 55, 14], "불닭볶음면": [530, 12, 85, 13], "닭가슴살": [115, 23, 0, 2], "흰쌀밥": [310, 6, 68, 1], "현미밥": [300, 6, 64, 2], "아메리카노": [5, 0, 1, 0], "카페라떼": [180, 8, 15, 9], "편의점도시락": [700, 25, 95, 22], "제육볶음": [550, 30, 20, 38], "불고기": [400, 32, 15, 22], "치킨": [900, 60, 45, 52], "양념치킨": [1000, 55, 70, 55], "후라이드치킨": [900, 60, 45, 52], "떡볶이": [550, 10, 105, 8], "짜장면": [800, 18, 120, 25], "짬뽕": [700, 25, 90, 25], "비빔밥": [560, 16, 85, 15], "삼겹살": [660, 35, 2, 58], "계란": [78, 6, 1, 5], "삶은계란": [78, 6, 1, 5], "계란후라이": [110, 7, 1, 9], "프로틴쉐이크": [120, 24, 3, 2], "그릭요거트": [130, 12, 8, 5], "샐러드": [250, 8, 15, 17], "닭가슴살샐러드": [300, 30, 12, 14], "돈까스": [700, 32, 55, 38], "햄버거": [600, 25, 45, 35], "피자": [550, 22, 60, 25], "초밥": [450, 25, 70, 7], "회": [300, 40, 2, 14], "김치볶음밥": [580, 12, 78, 23], "컵밥": [550, 15, 85, 15], "핫바": [200, 10, 15, 11], "바나나": [105, 1, 27, 0], "사과": [95, 0, 25, 0], "고구마": [130, 2, 30, 0], "오트밀": [150, 5, 27, 3], "제로콜라": [0, 0, 0, 0], "국밥": [500, 25, 55, 18], "삼계탕": [900, 55, 40, 55], "냉면": [480, 15, 90, 5], "칼국수": [550, 18, 95, 10], "마라탕": [700, 30, 50, 42], "족발": [800, 50, 15, 58], "보쌈": [700, 45, 10, 52], "토스트": [350, 12, 40, 16], "샌드위치": [400, 18, 42, 17], "프로틴음료": [180, 20, 10, 5], "훈제닭가슴살": [110, 22, 1, 2], "즉석밥": [300, 6, 66, 1], "미역국": [150, 8, 10, 8], "스크램블": [180, 12, 2, 14]};
+const qel = document.getElementById('q');
+const live = document.getElementById('live');
+qel.addEventListener('input', ()=>{
+  const raw = qel.value.trim();
+  if(!raw){ live.innerHTML=''; return; }
+  const nq = raw.replace(/\s/g,'');
+  const isCho = /^[ㄱ-ㅎ]+$/.test(nq);
+  const hits = [];
+  for(const [n,v] of Object.entries(builtin)){
+    const hay = isCho ? chosung(n) : n.replace(/\s/g,'');
+    if(hay.startsWith(nq) || hay.includes(nq)) hits.push([n,v,2]);
+  }
+  if(window.FOODDB_RAW){
+    const lines = window.FOODDB_RAW.split('\n');
+    for(const line of lines){
+      const a = line.split('|');
+      if(a.length<5) continue;
+      const n = a[0];
+      const hay = isCho ? chosung(n.replace(/\s/g,'')) : n.replace(/\s/g,'');
+      if(!(hay.startsWith(nq) || hay.indexOf(nq)>=0)) continue;
+      hits.push([n, [+a[1],+a[2],+a[3],+a[4]], 1]);
+      if(hits.length>40) break;
+    }
+  }
+  hits.sort((a,b)=>b[2]-a[2]);
+  const seen = new Set();
+  live.innerHTML = '<h2>검색 결과</h2>' + hits.filter(([n])=>{ if(seen.has(n)) return false; seen.add(n); return true; }).slice(0,20).map(([n,v])=>{
+    const href = builtin[n] ? ('kcal/'+encodeURIComponent(n)+'.html') : ('./?add='+encodeURIComponent(n));
+    return '<a class="row" href="'+href+'"><b>'+n+'</b><span>'+v[0]+'kcal · 단'+v[1]+' · 탄'+v[2]+' · 지'+v[3]+'</span></a>';
+  }).join('') || '<div class="lead">찾는 이름이 없으면 앱에서 직접 추가할 수 있어요.</div>';
+});
+</script>
+</body>
+</html>
