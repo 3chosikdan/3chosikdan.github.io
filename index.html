@@ -9,8 +9,8 @@
 <script>
 (function(){
   try{
-    var t=(JSON.parse(localStorage.getItem('foodspot')||'{}').theme)||'system';
-    var dark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var t=(JSON.parse(localStorage.getItem('foodspot')||'{}').theme)||'light';
+    var dark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
     if(dark) document.documentElement.classList.add('dark');
   }catch(e){}
 })();
@@ -484,7 +484,6 @@
       <div class="mrow"><div class="mname">지방</div><div class="mbar"><div id="barF"></div></div><div class="mval" id="valF"></div></div>
     </div>
     <div class="cond-row" id="condRow"></div>
-    <button type="button" id="trainBtn" class="train-btn hidden" onclick="toggleTrain()">오늘 운동함 · 탄수 +200kcal</button>
     <div class="reco" id="reco"></div>
     <div id="fillBox" class="fill"></div>
     <div class="reco hidden" id="dayWrap" style="background:#111;color:#e5e5ea;"></div>
@@ -1180,7 +1179,9 @@ S.slots = S.slots || ["아침","점심","저녁","간식"]; // 끼니 자유 추
 S.sets = S.sets || {};        // 자주 먹는 콤보 { '점심 세트': [{name,kcal,p,c,f},...] }
 S.condition = S.condition || {}; // { date: 'good'|'tired'|'stress'|'refeed' }
 S.train = S.train || {};         // { date: true } 운동한 날
-S.theme = S.theme || 'system';
+S.theme = S.theme || 'light';   // 첫 방문 기본값 = 밝게
+if(S.theme === 'system' && !S.themeSeen){ S.theme = 'light'; }  // 예전 자동 'system' 저장분 1회 정리
+S.themeSeen = 1;
 /* ============ 데이터 보존 3중 장치 ============
    ① storage.persist() — 브라우저에 "이 데이터 지우지 마" 요청 (iOS 7일 삭제 방어)
    ② IndexedDB 미러 — localStorage가 날아가도 IDB 복사본으로 자동 복구
@@ -1219,8 +1220,8 @@ const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+String(d
 const keyOffset = n => { const d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 
 function isDark(){
-  const t = S.theme || 'system';
-  return t==='dark' || (t!=='light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const t = S.theme || 'light';
+  return t==='dark' || (t==='system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 }
 function applyTheme(){
   const dark = isDark();
@@ -1229,7 +1230,7 @@ function applyTheme(){
   if(m) m.content = dark ? '#000000' : '#ffffff';
   const b = document.getElementById('themeBtn');
   if(b){
-    const t = S.theme || 'system';
+    const t = S.theme || 'light';
     b.textContent = t==='light' ? '☀' : t==='dark' ? '☾' : '◐';
     b.title = t==='light' ? '밝게' : t==='dark' ? '어둡게' : '시스템';
   }
@@ -1315,7 +1316,6 @@ function goalAdjust(){ // 어제 과식 → 오늘 자동 차감 (절반, 최대
 function currentGoal(){
   let g = baseGoal() + goalAdjust();
   if(S.condition[todayKey()]==='refeed') g = Math.round(g*1.1); // 리피드 데이 +10%
-  if(S.train[todayKey()]) g += 200; // 운동한 날 탄수 예산
   return Math.max(1100, g);
 }
 /* 단백질: 체지방률을 알면 제지방량(LBM) 기준 — 감량기 근손실 방지에 더 정확 */
@@ -2098,7 +2098,6 @@ function recommend(){
   const adj = goalAdjust();
 
   let prefix = '';
-  if(S.train[todayKey()]) prefix = `오늘 운동함 — 목표 +200kcal. `;
   if(adj < 0) prefix += `어제 과식 반영 — 오늘 목표 <b>${-adj} kcal</b> 자동 차감. 하루가 아니라 주 평균으로 이기면 됩니다. `;
   if(cond==='refeed') prefix += `리피드 데이 🍚 목표 +10%, 탄수 위주로. 죄책감 금지 — 이건 전략입니다. `;
   else if(cond==='tired') prefix += `피곤한 날 — 비타민B·철분 위주로 드세요. `;
@@ -2326,13 +2325,6 @@ function render(){
   const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'🌙 생리'} : {})};
   document.getElementById('condRow').innerHTML = (!isToday || !S.profile) ? '' : Object.entries(condList).map(([k,label])=>
     `<button class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
-  const tb = document.getElementById('trainBtn');
-  if(tb){
-    const showT = isToday && !!S.profile;
-    tb.classList.toggle('hidden', !showT);
-    tb.classList.toggle('on', !!S.train[todayKey()]);
-    tb.textContent = S.train[todayKey()] ? '오늘 운동함 ✓ · 목표 +200kcal' : '오늘 운동함 · 탄수 +200kcal';
-  }
 
   document.getElementById('reco').innerHTML = !isToday
     ? `📅 지난 날짜를 보는 중입니다 — 지금 기록하면 <b>이 날짜</b>에 추가됩니다. <b style="color:#007aff;cursor:pointer;" onclick="backToToday()">오늘로 돌아가기</b>`
