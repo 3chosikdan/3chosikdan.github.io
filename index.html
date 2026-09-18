@@ -365,12 +365,6 @@
     font-size:12px; padding:6px 10px; border-radius:8px; cursor:pointer;
   }
   .edit-btn { border:none; background:#f2f2f7; color:#111; font-size:14px; font-weight:700; padding:10px 14px; border-radius:10px; cursor:pointer; margin-right:6px; }
-  .train-btn {
-    display:block; width:calc(100% - 48px); margin:10px 24px 0; padding:10px;
-    border-radius:12px; border:1.5px solid #e5e5ea; background:#fff;
-    font-size:13px; font-weight:700; color:#3a3a3c; cursor:pointer;
-  }
-  .train-btn.on { background:#111; border-color:#111; color:#fff; }
   .fill { margin:10px 24px 0; }
   .fill-h { font-size:12px; font-weight:800; color:#3a3a3c; margin-bottom:8px; }
   .fill-row { display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
@@ -494,10 +488,10 @@
   html.dark .slot-head { border-bottom-color:#f2f2f7; }
   html.dark .meal, html.dark .faq details, html.dark .match, html.dark .cart-item,
   html.dark .cart-wrap, html.dark .mrow { border-color:#2c2c2e; }
-  html.dark .cond-chip, html.dark .chip, html.dark .train-btn, html.dark .portion,
+  html.dark .cond-chip, html.dark .chip, html.dark .portion,
   html.dark .search-input, html.dark .txt-input, html.dark .rp-chip, html.dark .rp-step, html.dark .rp-num,
   html.dark .ex-btn, html.dark .yest-chip { background:#1c1c1e; border-color:#3a3a3c; color:#e5e5ea; }
-  html.dark .cond-chip.on, html.dark .chip.on, html.dark .train-btn.on, html.dark .rp-chip.on,
+  html.dark .cond-chip.on, html.dark .chip.on, html.dark .rp-chip.on,
   html.dark .tab.on { background:#f2f2f7; border-color:#f2f2f7; color:#000; }
   html.dark .fab, html.dark .photo-btn, html.dark .save-btn, html.dark .cart-btn, html.dark .rp-add,
   html.dark .yest-all, html.dark .mini-btn, html.dark .inst-btn { background:#f2f2f7; color:#000; }
@@ -608,7 +602,6 @@
       <div class="mrow"><div class="mname">지방</div><div class="mbar"><div id="barF"></div></div><div class="mval" id="valF"></div></div>
     </div>
     <div class="cond-row" id="condRow"></div>
-    <button type="button" id="trainBtn" class="train-btn hidden" onclick="toggleTrain()">오늘 운동함 · 탄수 +200kcal</button>
     <div class="reco" id="reco"></div>
     <div id="fillBox" class="fill"></div>
     <div class="reco hidden" id="dayWrap" style="background:#111;color:#e5e5ea;"></div>
@@ -1062,7 +1055,8 @@ const FOODS = {
   "치즈버거":[300,15,30,13],"불고기버거":[400,17,42,17],"새우버거":[420,14,50,17],"와퍼":[650,28,50,37],"빅맥":[500,25,45,25],
   "치킨버거":[450,22,45,20],"콤비네이션피자":[600,25,65,26],"페퍼로니피자":[620,26,60,30],"고구마피자":[650,22,80,26],
   /* --- 단백질/헬스 제품 --- */
-  "WPI쉐이크":[110,25,1,1],"게이너쉐이크":[600,30,100,8],"BCAA":[10,2,0,0],"크레아틴":[0,0,0,0],"프로틴빵":[250,15,30,8],
+  "WPI쉐이크":[110,25,1,1],"WPC쉐이크":[120,24,4,2],"카제인":[110,24,3,1],"게이너쉐이크":[600,30,100,8],"BCAA":[10,2,0,0],"크레아틴":[0,0,0,0],"프로틴빵":[250,15,30,8],
+  "코티지치즈":[90,11,3,4],"템페":[190,19,9,11],"렌틸":[160,12,27,1],"우둔살":[160,28,0,5],"설도":[155,27,0,5],"대구":[80,18,0,1],"명태포":[80,18,0,1],"닭다리살":[180,22,0,10],
   "프로틴아이스크림":[150,10,18,4],"닭가슴살큐브":[100,18,2,2],"소고기육포":[150,20,8,4],"참치캔":[110,25,0,1],"연어캔":[150,22,0,7],
   "곤약밥":[150,3,35,0],"두부면":[100,10,3,5],"오트밀죽":[200,7,35,4],"단백질두부":[120,12,4,6],
   /* --- 과일/야채 확장 --- */
@@ -1572,16 +1566,15 @@ function goalAdjust(){ // 어제 과식 → 오늘 자동 차감 (절반, 최대
 function currentGoal(){
   let g = baseGoal() + goalAdjust();
   if(S.condition[todayKey()]==='refeed') g = Math.round(g*1.1); // 리피드 데이 +10%
-  if(S.train[todayKey()]) g += 200; // 운동한 날 탄수 예산
   return Math.max(1100, g);
 }
 /* 단백질: 체지방률을 알면 제지방량(LBM) 기준 — 감량기 근손실 방지에 더 정확 */
 function proteinCalc(w, bf, adjust){
   if(bf > 0){
     const lbm = w*(1-bf/100);
-    return Math.round(lbm * (adjust<0 ? 2.4 : adjust>0 ? 2.2 : 2.0)); // LBM 기준
+    return Math.round(lbm * (adjust<0 ? 2.4 : adjust>0 ? 2.2 : 2.0)); // LBM 2.0~2.4
   }
-  return Math.round(w * (adjust<0 ? 2.2 : adjust>0 ? 2.0 : 1.8));      // 체중 기준 폴백
+  return Math.round(w * (adjust<0 ? 2.3 : adjust>0 ? 2.0 : 2.0));      // 체중 2.0~2.3
 }
 function proteinTarget(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
@@ -1589,15 +1582,30 @@ function proteinTarget(){
   if(!S.profile) return Math.round(w*1.6);
   return proteinCalc(w, bf, S.profile.adjust);
 }
-/* 매크로: 단백질 g/kg 우선 확보 → 남은 kcal을 스타일 비율로 탄수/지방 분배 */
-const CARB_RATIO = { balanced:0.5, lowcarb:0.25, hicarb:0.65 };
+/* 매크로: 단백질 → 지방(0.5g/kg 하한) → 남은 kcal 전부 탄수 */
+function fatGrams(w, adjust, style, goal, pT){
+  const floor = Math.round(w * 0.5);
+  let per = adjust<0 ? 0.7 : 0.9;
+  if(style==='lowcarb') per += 0.25;
+  if(style==='hicarb') per = Math.max(0.5, per - 0.2);
+  let f = Math.round(w * per);
+  f = Math.max(f, floor, Math.round(goal * 0.15 / 9));
+  const remAfterP = goal - pT*4;
+  const maxF = Math.max(floor, Math.round(Math.max(remAfterP - 80, 0)/9));
+  return Math.min(Math.max(f, floor), maxF);
+}
+function macrosFor(goal, w, bf, adjust, style){
+  const pT = proteinCalc(w, bf||0, adjust||0);
+  const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT);
+  const cT = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
+  return { p:pT, c:cT, f:fT };
+}
 function macroTargets(){
-  const goal = currentGoal();
-  const pT = proteinTarget();
+  const w = lastWeight() || (S.profile && S.profile.weight) || 70;
+  const bf = latestBf() || (S.profile && S.profile.bf) || 0;
+  const adj = S.profile ? S.profile.adjust : 0;
   const style = (S.profile && S.profile.macro) || 'balanced';
-  const rem = Math.max(goal - pT*4, 200);
-  const r = CARB_RATIO[style];
-  return { p:pT, c:Math.round(rem*r/4), f:Math.round(rem*(1-r)/9) };
+  return macrosFor(currentGoal(), w, bf, adj, style);
 }
 
 /* ============ 날짜 탐색 — ‹ › · 달력 시트 · 스와이프 · 과거 소급 기록 ============ */
@@ -1985,12 +1993,6 @@ function setCond(c){
   S.condition[k] = (S.condition[k]===c) ? null : c;
   save(); render();
 }
-function toggleTrain(){
-  const k = todayKey();
-  S.train[k] = S.train[k] ? null : true;
-  save(); render();
-  toast(S.train[k] ? '운동한 날 · 오늘 +200kcal' : '운동 표시 해제');
-}
 let pendingDel = null;
 function tapMeal(id){ pendingDel = (pendingDel===id) ? null : id; render(); }
 function deleteMeal(id, ev){
@@ -2257,7 +2259,9 @@ function renderMatches(){
   const qty = parsed.qty;
   const ALIAS = {"삼김":"삼각김밥","아아":"아메리카노","뜨아":"아메리카노","라면땅":"라면","닭가슴":"닭가슴살","프쉐":"프로틴쉐이크","혼밥":"도시락","컵반":"컵밥","샌드":"샌드위치","불닭":"불닭볶음면","돈가스":"돈까스","계란프라이":"계란후라이",
     "난백":"계란흰자","흰자":"계란흰자","달걀흰자":"계란흰자","에그화이트":"계란흰자","난백분리":"계란흰자",
-    "난황":"계란노른자","노른자":"계란노른자","달걀노른자":"계란노른자"};
+    "난황":"계란노른자","노른자":"계란노른자","달걀노른자":"계란노른자",
+    "wpi":"WPI쉐이크","WPI":"WPI쉐이크","분리유청":"WPI쉐이크","유청":"WPI쉐이크","wpc":"WPC쉐이크","WPC":"WPC쉐이크",
+    "카제인파우더":"카제인","코티지":"코티지치즈","우둔":"우둔살","닭다릿살":"닭다리살","명태":"명태포"};
   let nq = q.replace(/\s/g,'');
   nq = ALIAS[nq] || nq;
   const isCho = /^[ㄱ-ㅎ]+$/.test(nq);
@@ -2374,7 +2378,8 @@ function renderMatches(){
   let html = '';
   if(!total){
     const safe = q.replace(/['"<>]/g,"");
-    html = `<button class="add-big" onclick="customAdd('${safe}')"><b>"${safe}" 직접 추가하기</b><span>칼로리·탄단지를 넣고 내 음식으로 저장합니다</span></button>`;
+    customAdd(safe, !EXT_N);
+    return;
   } else {
     shownGroups.forEach(g=>{
       html += `<div class="db-div">${g.title}${g.extra?` · ${g.extra>=4000?'4000+':g.extra}건`:''}</div>`;
@@ -2401,11 +2406,13 @@ function quickPick(name, qty){
   const label = (base && !UNITS[name]) ? `${name} ${base}g` : name;
   addMeal(label, k, p, c, f, null, true);
 }
-function customAdd(name){
+function customAdd(name, dbLoading){
   const safe = String(name||'').replace(/['"<>]/g,"");
   document.getElementById('matches').innerHTML = `
     <div style="padding:14px 0">
-      <div style="font-size:15px;font-weight:700;margin-bottom:10px;">"${safe}" 직접 추가</div>
+      ${dbLoading ? '<p style="font-size:12px;color:#8e8e93;margin:0 0 10px;">식품DB를 불러오는 중이면 잠깐 뒤 다시 검색해 보세요. 브랜드·조리는 원래 없는 경우가 많습니다.</p>' : ''}
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px;">"${safe}" 직접 추가</div>
+      <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 10px;">포장지 뒷면 영양성분표. 기준량만 맞추면 됩니다. 칼로리를 비우면 탄단지로 계산합니다. 한 번 넣으면 다음에 바로 나옵니다.</p>
       <div class="flabel"><label for="cName">음식 이름</label></div>
       <input class="txt-input" id="cName" value="${safe}" aria-label="음식 이름">
       <div class="frow" style="margin-top:10px;">
@@ -2426,17 +2433,21 @@ function customAdd(name){
       </div>
       <button class="photo-btn" style="margin:12px 0 0" onclick="saveCustom()">내 음식으로 저장하고 기록</button>
     </div>`;
-  setTimeout(()=>{ const el=document.getElementById('cKcal'); if(el) el.focus(); }, 100);
+  setTimeout(()=>{
+    if(document.activeElement && document.activeElement.id==='searchInput') return;
+    const el=document.getElementById('cKcal'); if(el) el.focus();
+  }, 100);
 }
 function saveCustom(){
   const name = (document.getElementById('cName').value||'').trim().replace(/['"<>]/g,"") || '내 음식';
   const amt = parseFloat(document.getElementById('cAmt').value) || 100;
   const unitBtn = document.querySelector('#cUnit button.on');
   const unit = (unitBtn && unitBtn.dataset.v) || 'g';
-  const k = parseInt(document.getElementById('cKcal').value,10) || 0;
   const p = parseFloat(document.getElementById('cProt').value) || 0;
   const c = parseFloat(document.getElementById('cCarb').value) || 0;
   const f = parseFloat(document.getElementById('cFat').value) || 0;
+  let k = parseInt(document.getElementById('cKcal').value,10) || 0;
+  if(!k && (p||c||f)) k = Math.round(p*4 + c*4 + f*9);
   const food = {
     id: 'my_'+Date.now(),
     name, baseAmount: amt, unit,
@@ -2697,7 +2708,6 @@ function recommend(){
   const adj = goalAdjust();
 
   let prefix = '';
-  if(S.train[todayKey()]) prefix = `오늘 운동함 — 목표 +200kcal. `;
   if(adj < 0) prefix += `어제 과식 반영 — 오늘 목표 <b>${-adj} kcal</b> 자동 차감. 하루가 아니라 주 평균으로 이기면 됩니다. `;
   if(cond==='refeed') prefix += `리피드 데이 🍚 목표 +10%, 탄수 위주로. 죄책감 금지 — 이건 전략입니다. `;
   else if(cond==='tired') prefix += `피곤한 날 — 비타민B·철분 위주로 드세요. `;
@@ -2732,12 +2742,6 @@ const PAIR_ADD = {
   '떡볶이':{add:'삶은계란', why:'단백질 +6g'},
   '토스트':{add:'삶은계란', why:'단백질 +6g'}
 };
-const FILL_LOG = [
-  { name:'훈제닭가슴살', why:'단 22g · 110kcal', shop:'chicken' },
-  { name:'프로틴쉐이크', why:'단 24g · 120kcal', shop:'shake' },
-  { name:'그릭요거트', why:'단 12g · 130kcal', shop:'yogurt' },
-  { name:'삶은계란2개', why:'단 12g · 156kcal', shop:'egg' }
-];
 function foodBase(name){
   const keys = Object.keys(FOODS);
   return keys.find(n => name===n || name.startsWith(n+' ')) || name;
@@ -2765,7 +2769,7 @@ function renderFill(isToday, s){
       .filter(([n,d]) => (d.p||0) >= 8 && !logged.has(foodBase(n)))
       .slice(0,3)
       .map(([n,d])=>({ name:n, why:`단 ${Math.round(d.p)}g · ${d.kcal}kcal`, shop:null }));
-    const items = (mine.length ? mine : FILL_LOG.filter(x => !logged.has(foodBase(x.name)))).slice(0,3);
+    const items = mine.slice(0,3);
     if(items.length){
       html += `<div class="fill-h">단백질 ${Math.round(pLeft)}g 부족 · 탭하면 바로 기록</div><div class="fill-row">`;
       html += items.map(it=>{
@@ -2937,13 +2941,6 @@ function render(){
   const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'🌙 생리'} : {})};
   document.getElementById('condRow').innerHTML = (!isToday || !S.profile) ? '' : Object.entries(condList).map(([k,label])=>
     `<button class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
-  const tb = document.getElementById('trainBtn');
-  if(tb){
-    const showT = isToday && !!S.profile;
-    tb.classList.toggle('hidden', !showT);
-    tb.classList.toggle('on', !!S.train[todayKey()]);
-    tb.textContent = S.train[todayKey()] ? '오늘 운동함 ✓ · 목표 +200kcal' : '오늘 운동함 · 탄수 +200kcal';
-  }
 
   document.getElementById('reco').innerHTML = !isToday ? '' : recommend();
   const recoEl = document.getElementById('reco');
@@ -3567,7 +3564,7 @@ function readForm(){
   const activity = parseInt(document.getElementById('pActivity').value);
   const mode = segVal('segMode');
   const adjust = mode==='cut' ? (parseInt(segVal('segCut')) || -500) : mode==='bulk' ? 300 : 0;
-  const macro = CARB_RATIO[segVal('segMacro')] !== undefined ? segVal('segMacro') : 'balanced';
+  const macro = ['balanced','lowcarb','hicarb'].includes(segVal('segMacro')) ? segVal('segMacro') : 'balanced';
   if(!sex || !age || !height || !weight) return null;
   return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro };
 }
@@ -3582,11 +3579,10 @@ function previewTDEE(){
   document.getElementById('tvGoal').textContent = goal.toLocaleString();
 
   const pT = proteinCalc(p.weight, p.bf, p.adjust);
-  const rem = Math.max(goal - pT*4, 200);
-  const rr = CARB_RATIO[p.macro];
-  document.getElementById('tvP').textContent = pT+'g';
-  document.getElementById('tvC').textContent = Math.round(rem*rr/4)+'g';
-  document.getElementById('tvF').textContent = Math.round(rem*(1-rr)/9)+'g';
+  const m = macrosFor(goal, p.weight, p.bf, p.adjust, p.macro);
+  document.getElementById('tvP').textContent = m.p+'g';
+  document.getElementById('tvC').textContent = m.c+'g';
+  document.getElementById('tvF').textContent = m.f+'g';
 
   const bmi = Math.round(p.weight/Math.pow(p.height/100,2)*10)/10;
   let eta = '';
