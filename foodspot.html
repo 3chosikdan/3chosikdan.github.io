@@ -3433,7 +3433,7 @@ const GUIDE_MAIN = `
       근육은 바에 적힌 kg을 세지 않습니다. <b>장력 · 실패에 가까운 반복 · 회복</b>입니다.<br>
       · 워밍업·피더는 안 적습니다. 종목당 <b>탑세트 1 + 백오프 1</b><br>
       · 탑 6~9회 RIR 0~1 후 2분 30초~3분, 백오프는 탑에서 20~25% 감량해 10~12회 RIR 0<br>
-      · 남성 5일(수·일 휴식) / 여성은 둔근 독립 + 등 너비·측면 어깨<br>
+      · 5일 분할(수·일 휴식) / 무분할 주 3 / 상하체 주 4 / 여성 모래시계는 둔근 독립 + 등 너비·측면 어깨<br>
       · 고강도 주 4회 이하. 백오프 정체면 디로드<br><br>
       운동 화면의 <b>원리</b>를 누르면 방해 없이 펼칩니다. 의학적 조언이 아닙니다.
     </div>
@@ -3953,7 +3953,7 @@ function mkEx(name, muscle, type, setup){
     name, muscle, type, setup: setup||'', defaultRir: defaultRir(type) };
 }
 const WK_PRESETS = [
-  { id:'m_5day', sex:'m', backoffPct:75, name:'남성 5일 분할', blurb:'월 가슴·화 등·목 하체·금 어깨·토 후면/팔 · 수·일 휴식',
+  { id:'split5_now', backoffPct:75, name:'5일 분할', blurb:'월 가슴·측면·삼두 / 화 등·이두·후면 / 수 쉼 / 목 대퇴사두 / 금 어깨·등 상부 / 토 후면사슬·팔 / 일 쉼',
     routines: [
       { id:'m_mon', name:'월 가슴·측면·삼두', light:false, note:'유효 12세트. 워밍업·피더는 적지 않습니다.', items:[
         ['인클라인 머신 프레스','가슴','machine_compound',''],
@@ -4022,6 +4022,49 @@ const WK_PRESETS = [
         ['45도 백 익스텐션','둔근','machine_isolation',''],
         ['워킹 런지','둔근','free_compound','']
       ]}
+    ]},
+  { id:'full_3', backoffPct:75, name:'무분할 주 3회', blurb:'입문 · 월·수·금 전신. 종목은 가져온 뒤 바꿔도 됩니다',
+    routines: [{ id:'full', name:'전신', light:false, note:'전신 한 판. 워밍업·피더는 적지 않습니다.', items:[
+      ['레그프레스','대퇴사두','machine_compound',''],
+      ['체스트프레스','가슴','machine_compound',''],
+      ['랫풀다운','등','machine_compound',''],
+      ['숄더프레스','어깨','machine_compound',''],
+      ['레그컬','햄스트링','machine_isolation',''],
+      ['케이블 컬','이두','cable',''],
+      ['푸시다운','삼두','cable','']
+    ]}]},
+  { id:'upper_lower', backoffPct:75, name:'상하체 2분할 주 4회', blurb:'상체A · 하체A · 상체B · 하체B. 주 4회 고강도',
+    routines: [
+      { id:'upper_a', name:'상체 A', light:false, note:'등·가슴 메인. 워밍업·피더는 적지 않습니다.', items:[
+        ['체스트 서포트 로우','등','machine_compound',''],
+        ['인클라인 머신 프레스','가슴','machine_compound',''],
+        ['랫풀다운','등','machine_compound',''],
+        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['오버헤드 케이블 익스텐션','삼두','cable',''],
+        ['인클라인 덤벨 컬','이두','free_isolation','']
+      ]},
+      { id:'lower_a', name:'하체 A', light:false, note:'대퇴사두 위주.', items:[
+        ['핵스쿼트','대퇴사두','machine_compound',''],
+        ['레그프레스','대퇴사두','machine_compound',''],
+        ['레그 익스텐션','대퇴사두','machine_isolation',''],
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
+        ['카프 레이즈','종아리','machine_isolation','']
+      ]},
+      { id:'upper_b', name:'상체 B', light:false, note:'어깨·가슴 플랫·등 수평.', items:[
+        ['시티드 숄더프레스','어깨','machine_compound',''],
+        ['딥 체스트 프레스','가슴','machine_compound',''],
+        ['시티드 로우','등','machine_compound',''],
+        ['리어델트 플라이','어깨','machine_isolation',''],
+        ['케이블 컬','이두','cable',''],
+        ['푸시다운','삼두','cable','']
+      ]},
+      { id:'lower_b', name:'하체 B', light:false, note:'햄스트링·둔근 위주.', items:[
+        ['루마니안 데드리프트','햄스트링','free_compound',''],
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
+        ['레그프레스','대퇴사두','machine_compound',''],
+        ['힙 어덕션','내전','machine_isolation',''],
+        ['카프 레이즈','종아리','machine_isolation','']
+      ]}
     ]}
 ];
 
@@ -4059,8 +4102,10 @@ function openWhy(){
     <div class="g-body">당일 최고 하중 6~9회. 자력 100%, RIR 0~1, 보조 없음. 끝나면 <b>2분 30초~3분</b> 쉽니다. 신경계를 되돌리기 위해서입니다.</div></div>
     <div class="g-sec"><div class="g-title">4 · 백오프</div>
     <div class="g-body">탑에서 20~25% 감량(기본 탑의 75%) 후 10~12회, RIR 0. 보조는 올릴 때만 최대 2회. 폼이 무너지면 이미 지나친 것입니다. 디로드 판단은 이 세트 기록으로 합니다.</div></div>
-    <div class="g-sec"><div class="g-title">남성 5일</div>
+    <div class="g-sec"><div class="g-title">5일 분할</div>
     <div class="g-body">월 가슴·측면·삼두 → 화 등·이두·후면 → 수 휴식 → 목 대퇴사두 → 금 어깨·등 상부 → 토 후면사슬·팔 → 일 휴식.<br>세션당 본세트 12~14. 종목을 더하고 싶으면 세트를 늘리지 말고 같은 종목의 탑·백오프에 쏟으세요.</div></div>
+    <div class="g-sec"><div class="g-title">무분할 · 상하체</div>
+    <div class="g-body">무분할은 주 3회 전신, 상하체는 주 4회(상A·하A·상B·하B). 입문·시간 적을 때. 가져와서 종목만 바꿔도 됩니다.</div></div>
     <div class="g-sec"><div class="g-title">여성 모래시계</div>
     <div class="g-body">우선순위가 다릅니다. 둔근을 독립 세션으로 두고, 상체는 등 너비·측면 어깨에 모읍니다. 가슴 프레스·팔·승모 단독은 줄이거나 뺍니다.<br>월 둔근 → 화 등·어깨 → 수 휴식 → 목 대퇴사두·내전 → 금 햄스트링·둔근 밑선.<br>복합은 8~10회 탑, 고립은 12~15회와 수축 1~2초. 백오프 감량은 15~20%(탑의 80%)가 기본입니다. 고중량을 든다고 남성형으로 두꺼워지지 않습니다.</div></div>
     <p style="font-size:11px;color:#8e8e93;margin-top:8px;">일반적인 참고이며 의학적 조언이 아닙니다. <a href="hypert.html">긴 글</a></p>`;
@@ -4183,11 +4228,10 @@ function renderWork(){
   const exercises = loadStore(WK.ex, []);
   if(!routines.length){
     const sex = S.profile && S.profile.sex;
-    const presets = WK_PRESETS.slice().sort((a,b)=>{
-      if(sex==='f') return (b.sex==='f')-(a.sex==='f');
-      if(sex==='m') return (b.sex==='m')-(a.sex==='m');
-      return 0;
-    });
+    const order = (sex==='f')
+      ? ['f_hourglass','split5_now','full_3','upper_lower']
+      : ['split5_now','f_hourglass','full_3','upper_lower'];
+    const presets = WK_PRESETS.slice().sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
     box.innerHTML = `<h2 style="margin-bottom:8px;">내 루틴</h2>
       <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목은 직접 넣거나 아래 분할을 가져온 뒤 고치면 됩니다. 한 종목은 탑세트 1 + 백오프 1. 워밍업·피더는 적지 않습니다. <button type="button" class="helper-link" onclick="openWhy()">원리</button></p>
       <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>`
