@@ -570,7 +570,6 @@
   </div>
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="streak" id="streak"></span>
-    <button class="hdr-btn hidden" id="whoBtn" onclick="openSettings()" aria-label="회원 전환"></button>
     <button class="hdr-btn" id="themeBtn" onclick="cycleTheme()" aria-label="화면 밝기">☾</button>
     <button class="hdr-btn" onclick="openGuide()">가이드</button>
     <button class="hdr-btn" onclick="openSettings()">⚙︎ 목표</button>
@@ -802,10 +801,6 @@
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <h3 id="settingsTitle">내 목표 설정</h3>
 
-  <div class="flabel">누구의 기록</div>
-  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">PT면 회원마다 식단·운동이 갈립니다. 지금 열린 사람만 화면에 나옵니다.</p>
-  <div id="peopleBox"></div>
-
   <div class="flabel">화면</div>
   <div class="seg" id="segTheme">
     <button data-v="system" onclick="setTheme('system')">시스템</button>
@@ -932,13 +927,13 @@
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">📤 파일로 저장</button>
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="document.getElementById('importInput').click()">📥 불러오기</button>
   </div>
-  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">지금 열린 회원 기록이 들어갑니다. 카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기 기록이 백업 내용으로 바뀝니다.</div>
+  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기 기록이 백업 내용으로 바뀝니다.</div>
   <input type="file" id="importInput" accept=".json,application/json" class="hidden">
 
   <div class="flabel" style="margin-top:20px;">초기화</div>
-  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">지우기 전에 위에서 백업하세요. 이 버튼은 <b>지금 열린 회원만</b> 비웁니다.</p>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">루틴만 다시 짜려면 운동 탭에서 <b>새 루틴</b> 또는 <b>복사해서 새로</b>를 쓰세요. 식단은 안 지워집니다. 아래는 식단까지 전부 비웁니다. 그전에 백업하세요.</p>
   <button class="mini-btn" style="background:#f2f2f7;color:#111;margin-bottom:6px;" onclick="shareBackup()">먼저 백업하기</button>
-  <button type="button" class="rec-del" onclick="resetCurrentPerson()">이 회원 기록 지우기</button>
+  <button type="button" class="rec-del" onclick="resetAllData()">식단·운동 전부 지우기</button>
 
   <div class="flabel" style="margin-top:20px;">🔗 다른 기기로 옮기기 — 데스크탑에서 폰으로</div>
   <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="makeTransferLink()">🔗 이동 링크 만들기</button>
@@ -1617,11 +1612,11 @@ function renderWhoBtn(){
   const n = activePerson().name || '나';
   b.textContent = n.length>6 ? n.slice(0,6)+'…' : n;
 }
-function resetCurrentPerson(){
-  if(!confirm('지금 열린 회원의 식단·몸무게·운동 기록을 지울까요?\n다른 회원은 그대로입니다.')) return;
-  if(!confirm('백업은 하셨나요? 확인을 누르면 이 회원만 빈 상태가 됩니다.')) return;
+function resetAllData(){
+  if(!confirm('식단·몸무게·운동을 이 기기에서 지울까요?')) return;
+  if(!confirm('백업은 하셨나요? 확인을 누르면 빈 상태가 됩니다.')) return;
   LIVE_KEYS.forEach(k=>localStorage.removeItem(k));
-  snapshotPerson();
+  if(typeof snapshotPerson==='function') snapshotPerson();
   location.reload();
 }
 
@@ -3062,7 +3057,6 @@ function render(){
   }
   const st = streak();
   document.getElementById('streak').textContent = st>0 ? `🔥 ${st}일` : '';
-  if(typeof renderWhoBtn==='function') renderWhoBtn();
 
   const goal = isToday ? currentGoal() : baseGoal();
   const vMeals = S.meals[viewDate]||[];
@@ -3802,7 +3796,6 @@ function openSettings(){
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
   renderMyFoodList();
-  renderPeopleBox();
   const ss = document.getElementById('settingsSheet');
   ss.setAttribute('role','dialog');
   ss.setAttribute('aria-modal','true');
@@ -3818,7 +3811,7 @@ function exportData(){
   const blob = new Blob([JSON.stringify(snapshot())], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `3초식단-${(activePerson().name||'나').replace(/[\\/:*?"<>|]/g,'')}-${stamp}.json`;
+  a.download = `3초식단-백업-${stamp}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   S.lastBackupAt = Date.now(); save();
   toast('백업 파일 저장됨 📤 카톡 "나에게 보내기"로 보관하세요');
@@ -3827,7 +3820,7 @@ function exportData(){
 async function shareBackup(){
   const d = new Date();
   const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  const name = `3초식단-${(activePerson().name||'나').replace(/[\\/:*?"<>|]/g,'')}-${stamp}.json`;
+  const name = `3초식단-백업-${stamp}.json`;
   try{
     const file = new File([JSON.stringify(snapshot())], name, {type:'application/json'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
@@ -4276,6 +4269,52 @@ function startBare(){
   putTodayLog(day);
   renderWork();
   openRouSheet(r.id);
+  toast('새 루틴 · 이전 루틴은 목록에 남아 있습니다');
+}
+function currentRouId(){
+  const sheet = document.getElementById('rouSheet');
+  if(sheet && sheet.classList.contains('show') && window._rouEditId) return window._rouEditId;
+  return (document.getElementById('wkRouSel')||{}).value || todayLog().routineId;
+}
+function cloneRoutine(){
+  const rus = loadStore(WK.rou, []);
+  const src = rus.find(x=>x.id===currentRouId());
+  if(!src){ startBare(); return; }
+  const r = { id:'rou_'+Math.random().toString(36).slice(2,9), name:(src.name||'루틴')+' 2', exerciseIds:(src.exerciseIds||[]).slice(), light:!!src.light, note:src.note||'' };
+  rus.push(r);
+  saveStore(WK.rou, rus);
+  const day = todayLog();
+  day.routineId = r.id;
+  putTodayLog(day);
+  renderWork();
+  window._rouEditId = r.id;
+  if(document.getElementById('rouSheet').classList.contains('show')) renderRouBody();
+  else openRouSheet(r.id);
+  toast('복사됨 · 원래 루틴은 목록에 있습니다');
+}
+function rebuildRoutine(){
+  const rus = loadStore(WK.rou, []);
+  const r = rus.find(x=>x.id===currentRouId());
+  if(!r){ startBare(); return; }
+  if((r.exerciseIds||[]).length && !confirm('이 루틴 종목을 비울까요? 지난 운동 숫자와 식단은 남습니다.')) return;
+  r.exerciseIds = [];
+  saveStore(WK.rou, rus);
+  const day = todayLog();
+  day.entries = [];
+  day.routineId = r.id;
+  putTodayLog(day);
+  renderWork();
+  window._rouEditId = r.id;
+  if(document.getElementById('rouSheet').classList.contains('show')) renderRouBody();
+  else openRouSheet(r.id);
+}
+function clearTodayWork(){
+  if(!confirm('오늘 운동 숫자만 지울까요? 루틴 구성·식단은 남습니다.')) return;
+  const day = todayLog();
+  day.entries = [];
+  putTodayLog(day);
+  renderWork();
+  toast('오늘 운동만 지웠습니다');
 }
 function applyPreset(pid){
   const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
@@ -4417,10 +4456,16 @@ function renderWork(){
       <option value="">루틴 없이 기록</option>
       ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
     </select>
+    <p class="wk-hint" style="margin:6px 0 0;">루틴은 여러 개 둬도 됩니다. 위에서 바꿔 쓰면 됩니다. 기존 건 안 지워집니다.</p>
     <div class="frow" style="margin-top:8px;">
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">루틴 편집</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="startBare()">새 루틴</button>
-    </div>`;
+    </div>
+    <div class="frow" style="margin-top:8px;">
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="cloneRoutine()">복사해서 새로</button>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="rebuildRoutine()">종목 다시 짜기</button>
+    </div>
+    <button type="button" class="helper-link" style="margin-top:8px;" onclick="clearTodayWork()">오늘 운동 숫자만 지우기</button>`;
   if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
   html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
@@ -4509,7 +4554,7 @@ function renameRoutine(){
   renderWork();
 }
 function openRouSheet(id){
-  if(!id){ toast('루틴을 고르거나 새로 만드세요'); return; }
+  if(!id){ startBare(); return; }
   window._rouEditId = id;
   renderRouBody();
   document.getElementById('overlay').classList.add('show');
@@ -4550,6 +4595,10 @@ function renderRouBody(){
     <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="addExToRou(document.getElementById('rouAddSel').value)">이 종목 넣기</button>`;
   } else html += `<p class="empty">라이브러리 종목은 다 들어 있습니다.</p>`;
   html += `<button type="button" class="mini-btn" style="margin-top:8px;" onclick="openExSheetFromRou()">＋ 새 종목 만들기</button>
+    <div class="frow" style="margin-top:8px;">
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="cloneRoutine()">이 루틴 복사</button>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="rebuildRoutine()">종목 비우고 다시</button>
+    </div>
     <div class="flabel" style="margin-top:16px;">템플릿 더하기 (지금 루틴을 지우지 않습니다)</div>`;
   WK_PRESETS.forEach(p=>{
     html += `<button type="button" class="wk-pick" style="margin-bottom:8px;" onclick="applyPreset('${p.id}');closeSheet();"><b>${p.name}</b><span>${p.blurb}</span></button>`;
