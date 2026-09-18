@@ -4087,6 +4087,32 @@ function putTodayLog(day){
   log[viewDate] = day;
   saveStore(WK.log, log);
 }
+function setSleepHours(v){
+  const day = todayLog();
+  if(v==='' || v==null){ day.sleepHours = null; }
+  else {
+    const n = parseFloat(v);
+    if(isNaN(n) || n<0 || n>16){ toast('0~16시간으로 적으세요'); return; }
+    day.sleepHours = Math.round(n*10)/10;
+  }
+  putTodayLog(day);
+  const h = document.querySelector('#workPanel .wk-hint');
+  if(h && h.previousElementSibling && h.previousElementSibling.querySelector('#sleepIn')){
+    h.textContent = (day.sleepHours!=null && day.sleepHours<6)
+      ? '6시간 미만 — 정체면 무게보다 잠을 먼저 봅니다.'
+      : '정체 원인 추적. 전날 잔 시간입니다.';
+  }
+}
+function recentSleepAvg(){
+  const log = loadStore(WK.log, {});
+  const vals = [];
+  for(let i=0;i>=-6;i--){
+    const d = log[keyOffset(i)];
+    if(d && d.sleepHours>0) vals.push(d.sleepHours);
+  }
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
 function backoffHist(exId){
   const log = loadStore(WK.log, {});
   return Object.keys(log).sort().map(d=>{
@@ -4147,7 +4173,7 @@ function renderWork(){
     html += `<div class="wk-banner">디로드 ${dl.day}일차 · ${dl.left}일 남음 — 중량 유지, RIR 3~4에서 끝내세요.</div>`;
   } else if(stagnant.length>=2){
     const names = stagnant.map(id=>{ const e=exercises.find(x=>x.id===id); return e?e.name:id; }).join(', ');
-    html += `<div class="wk-banner">⚠ 백오프가 2세션 연속 정체입니다 (${names})<br><b>디로드를 권장합니다</b> — 중량은 유지하고 RIR 3~4에서 세트를 끝내세요. 5~7일.
+    html += `<div class="wk-banner">⚠ 백오프가 2세션 연속 정체입니다 (${names})<br><b>디로드를 권장합니다</b> — 중량은 유지하고 RIR 3~4에서 끝내세요. 5~7일.${(function(){ const a=recentSleepAvg(); return (a!=null && a<6) ? '<br>최근 수면 평균 '+a.toFixed(1)+'시간. 무게보다 잠을 먼저 보세요.' : ''; })()}
       <div class="frow" style="margin-top:8px;margin-bottom:0;">
         <button type="button" class="mini-btn" onclick="startDeload()">디로드 시작</button>
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="this.closest('.wk-banner').remove()">나중에</button>
@@ -4162,7 +4188,13 @@ function renderWork(){
     <div class="frow" style="margin-top:8px;">
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">루틴 편집</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="startBare()">새 루틴</button>
-    </div>`;
+    </div>
+    <div class="wk-row" style="margin:14px 0 2px;">
+      <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
+      <input class="wk-in" id="sleepIn" inputmode="decimal" aria-label="어제 수면 시간" value="${day.sleepHours!=null?day.sleepHours:''}" onchange="setSleepHours(this.value)" placeholder="5">
+      <span class="wk-unit">시간</span>
+    </div>
+    <div class="wk-hint">${day.sleepHours!=null && day.sleepHours<6 ? '6시간 미만 — 정체면 무게보다 잠을 먼저 봅니다.' : '정체 원인 추적. 전날 잔 시간입니다.'}</div>`;
   const light = !!(rou && rou.light && day.routineId);
   if(light) html += `<div class="wk-banner" style="margin-top:12px;">저강도 세션 — 탑세트 없이 백오프만. 고강도는 주 4회로 제한합니다.</div>`;
   const ids = day.routineId ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
@@ -4687,7 +4719,10 @@ function renderWkChart(){
   }
 
   let wtxt = `이번 주 훈련 ${sess}회 · 고강도 ${high}회`;
+  const sl = recentSleepAvg();
+  if(sl!=null) wtxt += ` · 수면 ${sl.toFixed(1)}시간`;
   if(high>4) wtxt += ' — 고강도 세션이 주 5회입니다. 신경계 회복이 부족할 수 있어요. 주 4회 이하를 권장합니다.';
+  if(sl!=null && sl<6) wtxt += ' 수면이 짧습니다. 정체면 잠을 먼저 보세요.';
   if(weekN) weekN.textContent = wtxt;
   if(typeof setSegOnly==='function') setSegOnly('wkChartMode', wkChartMode);
 
