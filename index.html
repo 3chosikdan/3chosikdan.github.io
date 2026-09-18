@@ -452,6 +452,24 @@
   .wk-pick b { display:block; font-size:15px; font-weight:800; margin-bottom:4px; }
   .wk-pick span { font-size:12px; color:#8e8e93; font-weight:600; line-height:1.45; }
   .home-mode { margin:10px 24px 0; }
+  .wk-cal { margin:8px 0 14px; }
+  .wk-cal-row { display:grid; grid-template-columns:28px repeat(7,1fr); gap:4px; align-items:center; margin-bottom:4px; }
+  .wk-cal-lab { font-size:10px; font-weight:700; color:#8e8e93; }
+  .wk-cal-cell { height:22px; border:none; border-radius:5px; background:#f2f2f7; padding:0; cursor:pointer; }
+  .wk-cal-cell.high { background:#111; }
+  .wk-cal-cell.light { background:#c7c7cc; }
+  .wk-cal-cell.today { box-shadow: inset 0 0 0 2px #30d158; }
+  .wk-mus-row { display:grid; grid-template-columns:72px 1fr 44px; gap:8px; align-items:center; margin-bottom:7px; font-size:12px; font-weight:700; }
+  .wk-mus-bar { height:8px; background:#f2f2f7; border-radius:100px; overflow:hidden; }
+  .wk-mus-fill { display:block; height:100%; background:#111; border-radius:100px; }
+  .wk-mus-prev { display:block; height:100%; background:#c7c7cc; border-radius:100px; margin-top:-8px; opacity:.55; }
+  .wk-exrow { width:100%; display:flex; align-items:center; gap:10px; padding:10px 2px; border:none; background:none; border-bottom:1px solid #f2f2f7; cursor:pointer; text-align:left; color:inherit; font-family:inherit; }
+  .wk-exrow.on { background:#f2f2f7; border-radius:10px; border-bottom-color:transparent; padding-left:8px; padding-right:8px; }
+  .wk-exrow .n { flex:1; min-width:0; font-size:13px; font-weight:800; }
+  .wk-exrow .v { font-size:11px; font-weight:700; color:#8e8e93; white-space:nowrap; }
+  .wk-card svg, .wk-exrow svg { color:#111; }
+  .wk-legend { display:flex; gap:12px; font-size:11px; font-weight:600; color:#8e8e93; margin:4px 0 10px; }
+  .wk-dot { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:middle; }
 
   /* dark */
   html.dark { color-scheme: dark; }
@@ -527,6 +545,14 @@
   html.dark .wk-banner { background:#2a2414; color:#e5e5ea; }
   html.dark .wk-banner b { color:#f2f2f7; }
   html.dark .wk-prev { color:#e5e5ea; }
+  html.dark .wk-cal-cell { background:#2c2c2e; }
+  html.dark .wk-cal-cell.high { background:#f2f2f7; }
+  html.dark .wk-cal-cell.light { background:#636366; }
+  html.dark .wk-mus-bar { background:#2c2c2e; }
+  html.dark .wk-mus-fill { background:#f2f2f7; }
+  html.dark .wk-exrow { border-color:#2c2c2e; }
+  html.dark .wk-exrow.on { background:#2c2c2e; }
+  html.dark .wk-card svg, html.dark .wk-exrow svg { color:#f2f2f7; }
 
 </style>
 </head>
@@ -640,12 +666,28 @@
       <div id="wkJudge" style="font-size:13.5px;line-height:1.55;font-weight:600;"></div>
     </div>
     <div class="chart-card" id="wkChartCard">
-      <h4>백오프 볼륨</h4>
-      <div class="sub">종목의 백오프(중량×횟수)입니다. 탑세트가 아닙니다.</div>
+      <h4>운동 시각화</h4>
+      <div class="sub">백오프 볼륨 = 회복. 탑세트 = 절대 강도. 체중과 겹쳐 보면 감량이 훈련을 깎는지 보입니다.</div>
+      <div class="stat-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;margin:12px 0 8px;">
+        <div class="stat"><div class="v" id="wkStatSess">–</div><div class="l">이번 주 훈련</div></div>
+        <div class="stat"><div class="v" id="wkStatHigh">–</div><div class="l">고강도</div></div>
+        <div class="stat"><div class="v" id="wkStatStag">–</div><div class="l">정체 종목</div></div>
+      </div>
+      <div class="wk-legend"><span><i class="wk-dot" style="background:#111"></i>고강도</span><span><i class="wk-dot" style="background:#c7c7cc"></i>저강도</span><span><i class="wk-dot" style="background:#f2f2f7;box-shadow:inset 0 0 0 1px #e5e5ea"></i>휴식</span></div>
+      <div id="wkCal" class="wk-cal"></div>
+      <h4 style="margin:4px 0 8px;">부위 볼륨 · 이번 주</h4>
+      <div id="wkMuscles"></div>
+      <h4 style="margin:16px 0 6px;">종목 백오프</h4>
+      <div class="sub">중량 × 횟수. 탑세트가 아닙니다.</div>
       <select class="txt-input" id="wkExSel" onchange="renderWkChart()" aria-label="종목 선택"></select>
-      <div id="wkChartNote" class="sub" style="margin-top:8px;"></div>
+      <div class="seg" id="wkChartMode" style="margin:10px 0;">
+        <button type="button" class="on" data-v="bo" onclick="setWkChartMode('bo')">백오프</button>
+        <button type="button" data-v="overlay" onclick="setWkChartMode('overlay')">체중 겹치기</button>
+      </div>
+      <div id="wkChartNote" class="sub" style="margin-top:4px;"></div>
       <div id="wkChart"></div>
       <div id="wkWeekNote" class="sub" style="margin-top:8px;"></div>
+      <div id="wkExList"></div>
     </div>
     <button class="photo-btn" style="margin-bottom:12px;" onclick="shareCard()">📤 주간 리포트 카드 만들기</button>
   </section>
@@ -4107,6 +4149,7 @@ function workCardHtml(exId, day, light){
     </div>
     <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight? ent.backoff.weight+'kg':'탑세트 넣으면 75%가 자동'}</div>
     <div class="wk-prev">${cmp}</div>
+    ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
 }
 function pickRoutine(id){
@@ -4293,21 +4336,124 @@ function renderWkJudge(){
   }
   el.innerHTML = `${msg}<div style="font-size:11px;color:#8e8e93;margin-top:6px;font-weight:600;">이번 주 체중 ${pct>=0?'+':''}${pct.toFixed(2)}% · 백오프 하락 ${down}종목. 일반적인 참고 정보이며 의학적 조언이 아닙니다.</div>`;
 }
+function sparkSvg(vals, w, h){
+  if(!vals || vals.length<2) return '';
+  const mn=Math.min(...vals), mx=Math.max(...vals), span=(mx-mn)||1;
+  const pts=vals.map((v,i)=>{
+    const x = vals.length===1? w/2 : (i/(vals.length-1))*w;
+    const y = h-2 - (h-4)*((v-mn)/span);
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" style="flex-shrink:0"><polyline fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" points="${pts}"/></svg>`;
+}
+function topHist(exId){
+  const log = loadStore(WK.log, {});
+  return Object.keys(log).sort().map(d=>{
+    const e = (log[d].entries||[]).find(x=>x.exerciseId===exId);
+    if(!e || !e.top || !(e.top.weight>0)) return null;
+    return { date:d, w:e.top.weight, r:e.top.reps };
+  }).filter(Boolean);
+}
+function muscleWeekVol(fromKey, toKey){
+  const log = loadStore(WK.log, {});
+  const exs = loadStore(WK.ex, []);
+  const map = {};
+  Object.keys(log).forEach(d=>{
+    if(d<fromKey || d>toKey) return;
+    (log[d].entries||[]).forEach(e=>{
+      if(!e.backoff || !(e.backoff.weight>0) || !(e.backoff.reps>0)) return;
+      const ex = exs.find(x=>x.id===e.exerciseId);
+      const m = (ex && ex.muscle) || '기타';
+      map[m] = (map[m]||0) + e.backoff.weight*e.backoff.reps;
+    });
+  });
+  return map;
+}
+let wkChartMode = 'bo';
+function setWkChartMode(v){
+  wkChartMode = v==='overlay' ? 'overlay' : 'bo';
+  setSegOnly('wkChartMode', wkChartMode);
+  renderWkChart();
+}
+function goWorkDay(k){
+  if(!k || k>todayKey()) return;
+  goToDate(k);
+  showView('home');
+  setHomeMode('lift');
+}
 function renderWkChart(){
   const sel = document.getElementById('wkExSel');
   const note = document.getElementById('wkChartNote');
   const chart = document.getElementById('wkChart');
   const weekN = document.getElementById('wkWeekNote');
+  const cal = document.getElementById('wkCal');
+  const mus = document.getElementById('wkMuscles');
+  const list = document.getElementById('wkExList');
   if(!sel) return;
   const exercises = loadStore(WK.ex, []);
-  if(sel.options.length===0){
-    sel.innerHTML = exercises.map(e=>`<option value="${e.id}">${e.name}</option>`).join('') || '<option>종목 없음</option>';
+  const log = loadStore(WK.log, {});
+  const prevId = sel.value;
+  sel.innerHTML = exercises.length
+    ? exercises.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')
+    : '<option value="">종목 없음</option>';
+  if(prevId && exercises.some(e=>e.id===prevId)) sel.value = prevId;
+
+  let sess=0, high=0;
+  weekKeys().forEach(k=>{
+    const kind = wkSessionKind(log[k]);
+    if(kind){ sess++; if(kind==='high') high++; }
+  });
+  const stagN = exercises.filter(e=>isStagnantEx(e.id)).length;
+  const ss=document.getElementById('wkStatSess'); if(ss) ss.textContent = sess? sess+'회':'–';
+  const sh=document.getElementById('wkStatHigh'); if(sh) sh.textContent = high? high+'회':'–';
+  const st=document.getElementById('wkStatStag'); if(st) st.textContent = stagN? stagN+'개':'0';
+
+  if(cal){
+    const dow=['월','화','수','목','금','토','일'];
+    let html = `<div class="wk-cal-row"><span></span>${dow.map(d=>`<span class="wk-cal-lab" style="text-align:center">${d}</span>`).join('')}</div>`;
+    const today = todayKey();
+    const t = new Date(today+'T00:00:00');
+    const mondayOffset = (t.getDay()+6)%7;
+    for(let w=7; w>=0; w--){
+      const start = keyFrom(today, -(mondayOffset + w*7));
+      const lab = start.slice(5).replace('-','.');
+      html += `<div class="wk-cal-row"><span class="wk-cal-lab">${lab}</span>`;
+      for(let i=0;i<7;i++){
+        const k = keyFrom(start, i);
+        if(k>today){ html += `<span></span>`; continue; }
+        const kind = wkSessionKind(log[k]);
+        const cls = kind==='high'?' high': kind==='light'?' light':'';
+        const todayCls = k===today?' today':'';
+        const label = k + (kind==='high'?' 고강도':kind==='light'?' 저강도':' 휴식');
+        html += `<button type="button" class="wk-cal-cell${cls}${todayCls}" aria-label="${label}" onclick="goWorkDay('${k}')"></button>`;
+      }
+      html += `</div>`;
+    }
+    cal.innerHTML = html;
   }
+
+  if(mus){
+    const thisM = muscleWeekVol(keyOffset(-6), todayKey());
+    const lastM = muscleWeekVol(keyOffset(-13), keyOffset(-7));
+    const names = Object.keys(thisM).concat(Object.keys(lastM).filter(n=>!(n in thisM)));
+    const mx = Math.max(1, ...names.map(n=>Math.max(thisM[n]||0, lastM[n]||0)));
+    if(!names.length) mus.innerHTML = `<div class="empty" style="padding:8px 0">운동을 적으면 부위별 볼륨이 쌓입니다.</div>`;
+    else mus.innerHTML = names.sort((a,b)=>(thisM[b]||0)-(thisM[a]||0)).map(n=>{
+      const now=thisM[n]||0, prev=lastM[n]||0;
+      const d = prev ? Math.round((now-prev)/prev*100) : 0;
+      return `<div class="wk-mus-row"><span>${n}</span>
+        <div class="wk-mus-bar"><i class="wk-mus-fill" style="width:${Math.round(now/mx*100)}%"></i></div>
+        <span style="color:${d>0?'#30d158':d<0?'#ff3b30':'#8e8e93'}">${d>0?'+':''}${d||0}%</span></div>`;
+    }).join('');
+  }
+
   const id = sel.value || (exercises[0]&&exercises[0].id);
   const h = id ? backoffHist(id) : [];
+  const dark = typeof isDark==='function' && isDark();
+  const line = dark ? '#f2f2f7' : '#111';
   if(h.length<2){
     if(note) note.textContent = '같은 종목을 2번 이상 적으면 그래프가 그려집니다.';
-    if(chart) chart.innerHTML = '';
+    if(chart) chart.innerHTML = `<div class="empty" style="padding:16px 0">백오프를 두 세션만 적어도 회복이 숫자로 보입니다.</div>`;
   } else {
     const last4 = h.slice(-4);
     const first=last4[0].vol, last=last4[last4.length-1].vol;
@@ -4316,24 +4462,63 @@ function renderWkChart(){
     if(note) note.textContent = stag
       ? '최근 2세션 정체 중입니다 — 디로드를 권장합니다'
       : `최근 ${last4.length}세션 백오프 볼륨이 ${pct>=0?'+':''}${pct}% ${pct>=0?'상승':'하락'}했습니다`;
-    const W=320,H=90,P=8;
-    const mx = Math.max(...h.map(x=>x.vol),1);
-    const pts = h.map((x,i)=>{
-      const px = P + (W-2*P)*(h.length===1?0.5:i/(h.length-1));
-      const py = H-P - (H-2*P)*(x.vol/mx);
-      return px.toFixed(1)+','+py.toFixed(1);
-    }).join(' ');
-    if(chart) chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%"><polyline fill="none" stroke="#111" stroke-width="2.5" points="${pts}"/></svg>`;
+    const shown = h.slice(-12);
+    const W=320, H=150, L=36, R=12, T=16, B=28;
+    const vols = shown.map(x=>x.vol);
+    let mn=Math.min(...vols), mx=Math.max(...vols);
+    if(mx===mn){ mx+=10; mn=Math.max(0,mn-10); }
+    else { const p=(mx-mn)*0.15; mx+=p; mn=Math.max(0,mn-p); }
+    const x=i=> L + (W-L-R)*(shown.length===1?0.5:i/(shown.length-1));
+    const y=v=> T + (H-T-B)*(1-(v-mn)/(mx-mn));
+    const pts = shown.map((p,i)=>x(i).toFixed(1)+','+y(p.vol).toFixed(1)).join(' ');
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="백오프 볼륨 그래프">`;
+    svg += `<text x="${L}" y="12" font-size="10" fill="#8e8e93">${Math.round(mx)}</text>`;
+    svg += `<text x="${L}" y="${H-14}" font-size="10" fill="#8e8e93">${Math.round(mn)}</text>`;
+    if(wkChartMode==='overlay'){
+      const wts = shown.map(p=> S.weights[p.date]).filter(v=>v>0);
+      if(wts.length>=2){
+        const wmn=Math.min(...wts), wmx=Math.max(...wts);
+        const span = (wmx-wmn)||0.4;
+        const wy=v=> T + (H-T-B)*(1-(v-(wmn-span*0.1))/(span*1.2));
+        const wpts = shown.map((p,i)=> S.weights[p.date] ? x(i).toFixed(1)+','+wy(S.weights[p.date]).toFixed(1) : null).filter(Boolean).join(' ');
+        svg += `<polyline fill="none" stroke="#8e8e93" stroke-width="1.6" stroke-dasharray="5 4" points="${wpts}"/>`;
+        svg += `<text x="${W-R}" y="12" font-size="10" fill="#8e8e93" text-anchor="end">체중 ${wts[wts.length-1]}kg</text>`;
+      }
+    }
+    svg += `<polyline fill="none" stroke="${line}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${pts}"/>`;
+    shown.forEach((p,i)=>{
+      svg += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.vol).toFixed(1)}" r="3.4" fill="${line}"/>`;
+      if(i===shown.length-1 || i===0 || i===Math.floor(shown.length/2)){
+        svg += `<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="9" fill="#8e8e93" text-anchor="middle">${p.date.slice(5).replace('-','.')}</text>`;
+      }
+    });
+    const lastP = shown[shown.length-1];
+    svg += `<text x="${x(shown.length-1).toFixed(1)}" y="${(y(lastP.vol)-8).toFixed(1)}" font-size="10" font-weight="700" fill="${line}" text-anchor="end">${Math.round(lastP.vol)}</text>`;
+    svg += `</svg>`;
+    if(chart) chart.innerHTML = svg;
   }
-  const log = loadStore(WK.log, {});
-  let sess=0, high=0;
-  weekKeys().forEach(k=>{
-    const kind = wkSessionKind(log[k]);
-    if(kind){ sess++; if(kind==='high') high++; }
-  });
+
   let wtxt = `이번 주 훈련 ${sess}회 · 고강도 ${high}회`;
   if(high>4) wtxt += ' — 고강도 세션이 주 5회입니다. 신경계 회복이 부족할 수 있어요. 주 4회 이하를 권장합니다.';
   if(weekN) weekN.textContent = wtxt;
+  if(typeof setSegOnly==='function') setSegOnly('wkChartMode', wkChartMode);
+
+  if(list){
+    if(!exercises.length){ list.innerHTML=''; }
+    else {
+      list.innerHTML = `<div class="flabel" style="margin-top:14px;">종목별 백오프</div>` + exercises.map(ex=>{
+        const hh = backoffHist(ex.id);
+        const last = hh.length ? hh[hh.length-1] : null;
+        const on = ex.id===id ? ' on' : '';
+        const badge = isStagnantEx(ex.id) ? '<span class="wk-badge">정체</span>' : '';
+        const sp = sparkSvg(hh.slice(-8).map(x=>x.vol), 56, 18);
+        return `<button type="button" class="wk-exrow${on}" onclick="document.getElementById('wkExSel').value='${ex.id}';renderWkChart()">
+          <div class="n">${ex.name}${badge}<div class="v">${ex.muscle}${last?` · ${last.w}kg × ${last.r}`:' · 기록 없음'}</div></div>
+          ${sp}
+        </button>`;
+      }).join('');
+    }
+  }
 }
 
 
