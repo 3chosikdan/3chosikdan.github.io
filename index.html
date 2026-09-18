@@ -980,7 +980,7 @@
   <div class="flabel">부위</div>
   <select class="txt-input" id="exMuscle" aria-label="부위">
     <option>가슴</option><option>등</option><option>어깨</option><option>이두</option><option>삼두</option>
-    <option>대퇴사두</option><option>햄스트링</option><option>둔근</option><option>종아리</option><option>복부</option>
+    <option>대퇴사두</option><option>햄스트링</option><option>둔근</option><option>내전</option><option>종아리</option><option>복부</option>
   </select>
   <div class="flabel">종류</div>
   <select class="txt-input" id="exType" aria-label="종류">
@@ -1001,6 +1001,13 @@
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <h3 id="rouTitle">루틴 편집</h3>
   <div id="rouBody"></div>
+</div>
+
+<div class="sheet" id="whySheet" role="dialog" aria-modal="true" aria-labelledby="whyTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="whyTitle">왜 이렇게 하나</h3>
+  <div id="whyBody" style="font-size:13.5px;line-height:1.6;"></div>
 </div>
 
 <div id="toast"></div>
@@ -3268,6 +3275,8 @@ function closeSheet(){
   if(exs) exs.classList.remove('show');
   const rs = document.getElementById('rouSheet');
   if(rs) rs.classList.remove('show');
+  const ws = document.getElementById('whySheet');
+  if(ws) ws.classList.remove('show');
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -3422,12 +3431,11 @@ const GUIDE_MAIN = `
     <div class="g-title">7 · 근비대 — 왜 탑세트 하나인가</div>
     <div class="g-body">
       근육은 바에 적힌 kg을 세지 않습니다. <b>장력 · 실패에 가까운 반복 · 회복</b>입니다.<br>
-      · 종목당 <b>탑세트 1 + 백오프 1</b>. 같은 무게 5세트보다 유효 반복 대비 피로가 낮습니다<br>
-      · 탑세트 6~10회 RIR 0~1, 백오프는 탑의 75%로 12~15회. 횟수는 직접 적습니다<br>
-      · 머신·고립 RIR 0, 프리 복합은 1~2. 디로드는 3~4<br>
-      · 고강도는 주 4회 이하. 백오프 볼륨이 2세션 정체면 디로드<br>
-      · 단백질은 체중 kg당 대략 1.6g이 많은 연구의 분기점<br><br>
-      긴 설명은 <b>근비대 원리</b> 페이지에 있습니다. 의학적 조언이 아닙니다.
+      · 워밍업·피더는 안 적습니다. 종목당 <b>탑세트 1 + 백오프 1</b><br>
+      · 탑 6~9회 RIR 0~1 후 2분 30초~3분, 백오프는 탑에서 20~25% 감량해 10~12회 RIR 0<br>
+      · 남성 5일(수·일 휴식) / 여성은 둔근 독립 + 등 너비·측면 어깨<br>
+      · 고강도 주 4회 이하. 백오프 정체면 디로드<br><br>
+      운동 화면의 <b>원리</b>를 누르면 방해 없이 펼칩니다. 의학적 조언이 아닙니다.
     </div>
   </div>
 
@@ -3945,86 +3953,78 @@ function mkEx(name, muscle, type, setup){
     name, muscle, type, setup: setup||'', defaultRir: defaultRir(type) };
 }
 const WK_PRESETS = [
-  { id:'full_3', name:'무분할 주 3회', blurb:'입문 ~6개월 · 월·수·금 전신',
-    routines: [{ id:'full', name:'전신', light:false, items:[
-      ['레그프레스','대퇴사두','machine_compound',''],
-      ['체스트프레스','가슴','machine_compound',''],
-      ['랫풀다운','등','machine_compound',''],
-      ['숄더프레스','어깨','machine_compound',''],
-      ['레그컬','햄스트링','machine_isolation',''],
-      ['케이블 컬','이두','cable',''],
-      ['푸시다운','삼두','cable','']
-    ]}]},
-  { id:'upper_lower', name:'상하체 2분할 주 4회', blurb:'권장 기본값',
+  { id:'m_5day', sex:'m', backoffPct:75, name:'남성 5일 분할', blurb:'월 가슴·화 등·목 하체·금 어깨·토 후면/팔 · 수·일 휴식',
     routines: [
-      { id:'upper_a', name:'상체 A', light:false, items:[
-        ['체스트 서포트 로우','등','machine_compound',''],
+      { id:'m_mon', name:'월 가슴·측면·삼두', light:false, note:'유효 12세트. 워밍업·피더는 적지 않습니다.', items:[
         ['인클라인 머신 프레스','가슴','machine_compound',''],
-        ['랫풀다운','등','machine_compound',''],
+        ['플랫 머신 프레스','가슴','machine_compound',''],
+        ['케이블 플라이','가슴','cable',''],
         ['케이블 라테랄 레이즈','어깨','cable',''],
-        ['오버헤드 케이블 익스텐션','삼두','cable',''],
-        ['인클라인 덤벨 컬','이두','free_isolation','']
-      ]},
-      { id:'lower_a', name:'하체 A', light:false, items:[
-        ['핵스쿼트','대퇴사두','machine_compound',''],
-        ['레그프레스','대퇴사두','machine_compound',''],
-        ['레그 익스텐션','대퇴사두','machine_isolation',''],
-        ['시티드 레그컬','햄스트링','machine_isolation',''],
-        ['카프 레이즈','종아리','machine_isolation','']
-      ]},
-      { id:'upper_b', name:'상체 B', light:false, items:[
-        ['시티드 숄더프레스','어깨','machine_compound',''],
-        ['딥 체스트 프레스','가슴','machine_compound',''],
-        ['시티드 로우','등','machine_compound',''],
-        ['리어델트 플라이','어깨','machine_isolation',''],
-        ['케이블 컬','이두','cable',''],
-        ['푸시다운','삼두','cable','']
-      ]},
-      { id:'lower_b', name:'하체 B', light:false, items:[
-        ['루마니안 데드리프트','햄스트링','free_compound',''],
-        ['시티드 레그컬','햄스트링','machine_isolation',''],
-        ['레그프레스','대퇴사두','machine_compound',''],
-        ['힙 어덕션','둔근','machine_isolation',''],
-        ['카프 레이즈','종아리','machine_isolation','']
-      ]}
-    ]},
-  { id:'split5', name:'강도 계층화 5분할', blurb:'예시일 뿐입니다. 내 루틴으로 바꿔도 됩니다',
-    routines: [
-      { id:'d_mon', name:'월 가슴+삼두', light:false, items:[
-        ['인클라인 머신 프레스','가슴','machine_compound',''],
-        ['딥 체스트 프레스','가슴','machine_compound',''],
-        ['푸시다운','삼두','cable',''],
+        ['케이블 푸시다운','삼두','cable',''],
         ['오버헤드 케이블 익스텐션','삼두','cable','']
       ]},
-      { id:'d_tue', name:'화 등', light:false, items:[
+      { id:'m_tue', name:'화 등·이두·후면', light:false, note:'등 4종목 + 이두 + 후면. 본세트만 적습니다.', items:[
         ['랫풀다운','등','machine_compound',''],
-        ['체스트 서포트 로우','등','machine_compound',''],
-        ['시티드 로우','등','machine_compound','']
+        ['원암 풀다운','등','cable',''],
+        ['언더그립 시티드 로우','등','machine_compound',''],
+        ['T바 로우','등','free_compound',''],
+        ['프리처 컬','이두','machine_isolation',''],
+        ['케이블 컬','이두','cable',''],
+        ['리버스 펙덱 플라이','어깨','machine_isolation','']
       ]},
-      { id:'d_wed', name:'수 어깨+이두', light:true, items:[
-        ['시티드 숄더프레스','어깨','machine_compound',''],
-        ['케이블 라테랄 레이즈','어깨','cable',''],
-        ['리어델트 플라이','어깨','machine_isolation',''],
-        ['케이블 컬','이두','cable','']
-      ]},
-      { id:'d_thu', name:'목 하체', light:false, items:[
+      { id:'m_thu', name:'목 하체 대퇴사두', light:false, note:'레그컬은 예열. 메인은 핵스쿼트·프레스·익스텐션.', items:[
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
         ['핵스쿼트','대퇴사두','machine_compound',''],
         ['레그프레스','대퇴사두','machine_compound',''],
-        ['루마니안 데드리프트','햄스트링','free_compound',''],
-        ['시티드 레그컬','햄스트링','machine_isolation','']
+        ['레그 익스텐션','대퇴사두','machine_isolation','']
       ]},
-      { id:'d_fri', name:'금 어깨+윗가슴', light:false, items:[
-        ['시티드 숄더프레스','어깨','machine_compound',''],
+      { id:'m_fri', name:'금 어깨·등 상부', light:false, note:'프레스 2 + 레이즈 2 + 후면 + 등 상부.', items:[
+        ['머신 숄더프레스','어깨','machine_compound',''],
         ['인클라인 머신 프레스','가슴','machine_compound',''],
-        ['케이블 라테랄 레이즈','어깨','cable','']
+        ['덤벨 사이드 레터럴 레이즈','어깨','free_isolation',''],
+        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['리버스 펙덱 플라이','어깨','machine_isolation',''],
+        ['와이드 랫풀다운','등','machine_compound','']
       ]},
-      { id:'d_sat', name:'토 팔+뒷다리', light:true, items:[
-        ['푸시다운','삼두','cable',''],
-        ['케이블 컬','이두','cable',''],
-        ['시티드 레그컬','햄스트링','machine_isolation','']
+      { id:'m_sat', name:'토 후면사슬·팔', light:false, note:'햄·둔근 후 팔 4종목. 고강도 주 4회를 이미 채운 다음 날입니다.', items:[
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
+        ['스티프 레그 데드리프트','햄스트링','free_compound',''],
+        ['45도 백 익스텐션','둔근','machine_isolation',''],
+        ['케이블 푸시다운','삼두','cable',''],
+        ['오버헤드 케이블 익스텐션','삼두','cable',''],
+        ['프리처 컬','이두','machine_isolation',''],
+        ['케이블 컬','이두','cable','']
+      ]}
+    ]},
+  { id:'f_hourglass', sex:'f', backoffPct:80, name:'여성 모래시계 5일', blurb:'둔근 독립 + 등 너비·측면 어깨. 가슴·팔·승모는 줄입니다',
+    routines: [
+      { id:'f_mon', name:'월 둔근 집중', light:false, note:'앞벅지 개입 끄기. 힙 쓰러스트가 메인 과부하입니다.', items:[
+        ['시티드 힙 어브덕션','둔근','machine_isolation',''],
+        ['힙 쓰러스트','둔근','free_compound',''],
+        ['불가리안 스플릿 스쿼트','둔근','free_compound',''],
+        ['케이블 힙 킥백','둔근','cable','']
+      ]},
+      { id:'f_tue', name:'화 등 너비·측면 어깨', light:false, note:'가슴·팔은 안 넣습니다. 허리 대비를 위한 프레임.', items:[
+        ['와이드 그립 랫풀다운','등','machine_compound',''],
+        ['뉴트럴 그립 시티드 로우','등','machine_compound',''],
+        ['덤벨 사이드 레터럴 레이즈','어깨','free_isolation',''],
+        ['페이스 풀','어깨','cable','']
+      ]},
+      { id:'f_thu', name:'목 대퇴사두·내전', light:false, note:'앞벅지와 안쪽 라인. 핵스쿼트가 메인.', items:[
+        ['레그 익스텐션','대퇴사두','machine_isolation',''],
+        ['핵스쿼트','대퇴사두','machine_compound',''],
+        ['와이드 스탠스 레그프레스','대퇴사두','machine_compound',''],
+        ['힙 어덕션','내전','machine_isolation','']
+      ]},
+      { id:'f_fri', name:'금 햄스트링·둔근 밑선', light:false, note:'힙과 허벅지 경계. RDL이 메인.', items:[
+        ['라잉 레그컬','햄스트링','machine_isolation',''],
+        ['스티프 레그 데드리프트','햄스트링','free_compound',''],
+        ['45도 백 익스텐션','둔근','machine_isolation',''],
+        ['워킹 런지','둔근','free_compound','']
       ]}
     ]}
 ];
+
 function setHomeMode(v){
   homeMode = v==='lift' ? 'lift' : 'diet';
   setSegOnly('homeMode', homeMode);
@@ -4045,6 +4045,27 @@ function setHomeMode(v){
   const fab = document.querySelector('.fab');
   if(fab) fab.setAttribute('aria-label', lift ? '종목 추가' : '식단 기록 추가');
   if(lift) renderWork();
+}
+function openWhy(){
+  const box = document.getElementById('whyBody');
+  if(box) box.innerHTML = `
+    <div class="g-sec"><div class="g-title">적는 것 / 안 적는 것</div>
+    <div class="g-body">워밍업(8~12회)과 피더(본세트 75~80%로 3~4회)는 관절·궤적 확인입니다. 피로 내면 탑세트가 죽습니다. <b>적지 마세요.</b> 적는 것은 탑세트와 백오프뿐입니다.</div></div>
+    <div class="g-sec"><div class="g-title">1 · 가벼운 웜업</div>
+    <div class="g-body">가벼운 무게 8~12회. 관절 예열, 궤적 체크.</div></div>
+    <div class="g-sec"><div class="g-title">2 · 피더 세트</div>
+    <div class="g-body">본세트 하중의 75~80%로 <b>딱 3~4회</b>. 지치지 않게, 무게감만.</div></div>
+    <div class="g-sec"><div class="g-title">3 · 탑세트</div>
+    <div class="g-body">당일 최고 하중 6~9회. 자력 100%, RIR 0~1, 보조 없음. 끝나면 <b>2분 30초~3분</b> 쉽니다. 신경계를 되돌리기 위해서입니다.</div></div>
+    <div class="g-sec"><div class="g-title">4 · 백오프</div>
+    <div class="g-body">탑에서 20~25% 감량(기본 탑의 75%) 후 10~12회, RIR 0. 보조는 올릴 때만 최대 2회. 폼이 무너지면 이미 지나친 것입니다. 디로드 판단은 이 세트 기록으로 합니다.</div></div>
+    <div class="g-sec"><div class="g-title">남성 5일</div>
+    <div class="g-body">월 가슴·측면·삼두 → 화 등·이두·후면 → 수 휴식 → 목 대퇴사두 → 금 어깨·등 상부 → 토 후면사슬·팔 → 일 휴식.<br>세션당 본세트 12~14. 종목을 더하고 싶으면 세트를 늘리지 말고 같은 종목의 탑·백오프에 쏟으세요.</div></div>
+    <div class="g-sec"><div class="g-title">여성 모래시계</div>
+    <div class="g-body">우선순위가 다릅니다. 둔근을 독립 세션으로 두고, 상체는 등 너비·측면 어깨에 모읍니다. 가슴 프레스·팔·승모 단독은 줄이거나 뺍니다.<br>월 둔근 → 화 등·어깨 → 수 휴식 → 목 대퇴사두·내전 → 금 햄스트링·둔근 밑선.<br>복합은 8~10회 탑, 고립은 12~15회와 수축 1~2초. 백오프 감량은 15~20%(탑의 80%)가 기본입니다. 고중량을 든다고 남성형으로 두꺼워지지 않습니다.</div></div>
+    <p style="font-size:11px;color:#8e8e93;margin-top:8px;">일반적인 참고이며 의학적 조언이 아닙니다. <a href="hypert.html">긴 글</a></p>`;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('whySheet').classList.add('show');
 }
 function startBare(){
   const rus = loadStore(WK.rou, []);
@@ -4068,14 +4089,19 @@ function applyPreset(pid){
       exercises.push(ex);
       return ex.id;
     });
-    routines.push({ id:r.id+'_'+tag, name:r.name, exerciseIds:ids, light:!!r.light });
+    routines.push({ id:r.id+'_'+tag, name:r.name, exerciseIds:ids, light:!!r.light, note:r.note||'' });
   });
   saveStore(WK.ex, exercises);
   saveStore(WK.rou, routines);
+  if(p.backoffPct){
+    const s = wkSettings();
+    s.backoffPct = p.backoffPct;
+    saveStore(WK.settings, s);
+  }
   const day = todayLog();
   day.routineId = routines[routines.length-p.routines.length].id;
   putTodayLog(day);
-  toast(p.name+' 추가됨 · 이름·종목은 자유롭게 고치세요');
+  toast(p.name+' 넣음 · 종목은 언제든 고치세요');
   renderWork();
 }
 function todayLog(){
@@ -4156,11 +4182,16 @@ function renderWork(){
   const routines = loadStore(WK.rou, []);
   const exercises = loadStore(WK.ex, []);
   if(!routines.length){
+    const sex = S.profile && S.profile.sex;
+    const presets = WK_PRESETS.slice().sort((a,b)=>{
+      if(sex==='f') return (b.sex==='f')-(a.sex==='f');
+      if(sex==='m') return (b.sex==='m')-(a.sex==='m');
+      return 0;
+    });
     box.innerHTML = `<h2 style="margin-bottom:8px;">내 루틴</h2>
-      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목을 직접 넣고 요일·분할은 마음대로입니다. 한 종목은 탑세트 1 + 백오프 1입니다. <a href="hypert.html" class="helper-link">왜 이 구조인지</a></p>
-      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>
-      <div class="flabel" style="margin-top:8px;">원하면 템플릿으로 시작 · 이후 전부 고칠 수 있습니다</div>`
-      + WK_PRESETS.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
+      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목은 직접 넣거나 아래 분할을 가져온 뒤 고치면 됩니다. 한 종목은 탑세트 1 + 백오프 1. 워밍업·피더는 적지 않습니다. <button type="button" class="helper-link" onclick="openWhy()">원리</button></p>
+      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>`
+      + presets.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
     return;
   }
   const day = todayLog();
@@ -4180,16 +4211,20 @@ function renderWork(){
       </div></div>`;
   }
   const pct = backoffPct();
-  html += `<div class="flabel">오늘 루틴</div>
-    <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="루틴 선택">
+  html += `<div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <div class="flabel" style="margin:0">오늘 루틴</div>
+      <button type="button" class="helper-link" onclick="openWhy()">원리</button>
+    </div>
+    <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="루틴 선택" style="margin-top:8px;">
       <option value="">루틴 없이 기록</option>
       ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
     </select>
     <div class="frow" style="margin-top:8px;">
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">루틴 편집</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="startBare()">새 루틴</button>
-    </div>
-    <div class="wk-row" style="margin:14px 0 2px;">
+    </div>`;
+  if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
+  html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
       <input class="wk-in" id="sleepIn" inputmode="decimal" aria-label="어제 수면 시간" value="${day.sleepHours!=null?day.sleepHours:''}" onchange="setSleepHours(this.value)" placeholder="5">
       <span class="wk-unit">시간</span>
@@ -4203,7 +4238,7 @@ function renderWork(){
   (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
-    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트 중량 × <b style="color:inherit">${pct}%</b> 후 <b style="color:inherit">2.5kg</b> 단위로 반올림합니다. 횟수는 자동으로 넣지 않습니다. 숫자는 탭해서 고칠 수 있습니다.</p>
+    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. 그다음 2.5kg 반올림. 횟수는 안 넣습니다. 워밍업·피더는 여기 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
       <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
       <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
@@ -4241,14 +4276,14 @@ function workCardHtml(exId, day, light){
         <span class="wk-unit">회 RIR</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">
       </div>
-      <div class="wk-hint">자력 반복만 입력</div>
+      <div class="wk-hint">6~9회 · 자력만 · RIR 0~1 · 후 2분 30초~3분</div>
     </div>
     <div class="wk-row"><span class="wk-lab">백오프</span>
       <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
       <span class="wk-unit">kg ×</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 횟수" value="${ent.backoff&&ent.backoff.reps!=null?ent.backoff.reps:''}" oninput="patchEnt('${sid}','backoff','reps',this.value)">
       <span class="wk-unit">회 RIR</span>
-      <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
+      <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:0}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
     </div>
     <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}kg` : ent.backoff.weight+'kg') : `탑세트 × ${backoffPct()}% → 2.5kg 반올림`}</div>
     <div class="wk-prev">${cmp}</div>
@@ -4384,7 +4419,7 @@ function ensureEnt(exId){
   let e = day.entries.find(x=>x.exerciseId===exId);
   const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
   if(!e){
-    e = { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, memo:'' };
+    e = { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:0}, memo:'' };
     day.entries.push(e);
   }
   if(!e.top) e.top = {weight:'',reps:'',rir:1};
