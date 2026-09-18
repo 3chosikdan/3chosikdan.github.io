@@ -429,7 +429,9 @@
   .myfood-item .k { font-size:11px; color:#8e8e93; font-weight:600; margin-top:2px; }
   .db-more { width:100%; margin:8px 0; padding:12px; border:none; background:#f2f2f7; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; color:#111; }
   .wk-card { background:#f2f2f7; border-radius:16px; padding:14px; margin-bottom:10px; text-align:left; }
-  .wk-card h4 { font-size:15px; font-weight:800; margin-bottom:2px; }
+  .wk-card h4 { font-size:15px; font-weight:800; margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+  .wk-card h4 .nm { flex:1; min-width:0; }
+  .wk-card h4 .arr { width:32px; height:32px; flex-shrink:0; border:none; border-radius:10px; background:#f2f2f7; font-size:14px; font-weight:800; cursor:pointer; color:#111; }
   .wk-setup { display:block; width:100%; border:none; background:none; text-align:left; font-size:12px; font-weight:600; color:#8e8e93; padding:0 0 10px; cursor:pointer; }
   .wk-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
   .wk-lab { width:48px; font-size:12px; font-weight:800; flex-shrink:0; }
@@ -551,7 +553,7 @@
   html.dark .wk-exrow.on { background:#2c2c2e; }
   html.dark .wk-card svg, html.dark .wk-exrow svg { color:#f2f2f7; }
   html.dark .rou-row { border-color:#2c2c2e; }
-  html.dark .rou-row .arr { background:#2c2c2e; color:#f2f2f7; }
+  html.dark .rou-row .arr, html.dark .wk-card h4 .arr { background:#2c2c2e; color:#f2f2f7; }
 
 </style>
 </head>
@@ -568,6 +570,7 @@
   </div>
   <div style="display:flex; align-items:center; gap:8px;">
     <span class="streak" id="streak"></span>
+    <button class="hdr-btn hidden" id="whoBtn" onclick="openSettings()" aria-label="회원 전환"></button>
     <button class="hdr-btn" id="themeBtn" onclick="cycleTheme()" aria-label="화면 밝기">☾</button>
     <button class="hdr-btn" onclick="openGuide()">가이드</button>
     <button class="hdr-btn" onclick="openSettings()">⚙︎ 목표</button>
@@ -799,6 +802,10 @@
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <h3 id="settingsTitle">내 목표 설정</h3>
 
+  <div class="flabel">누구의 기록</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">PT면 회원마다 식단·운동이 갈립니다. 지금 열린 사람만 화면에 나옵니다.</p>
+  <div id="peopleBox"></div>
+
   <div class="flabel">화면</div>
   <div class="seg" id="segTheme">
     <button data-v="system" onclick="setTheme('system')">시스템</button>
@@ -925,8 +932,13 @@
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">📤 파일로 저장</button>
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="document.getElementById('importInput').click()">📥 불러오기</button>
   </div>
-  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기의 기록이 백업 내용으로 교체됩니다.</div>
+  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">지금 열린 회원 기록이 들어갑니다. 카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기 기록이 백업 내용으로 바뀝니다.</div>
   <input type="file" id="importInput" accept=".json,application/json" class="hidden">
+
+  <div class="flabel" style="margin-top:20px;">초기화</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">지우기 전에 위에서 백업하세요. 이 버튼은 <b>지금 열린 회원만</b> 비웁니다.</p>
+  <button class="mini-btn" style="background:#f2f2f7;color:#111;margin-bottom:6px;" onclick="shareBackup()">먼저 백업하기</button>
+  <button type="button" class="rec-del" onclick="resetCurrentPerson()">이 회원 기록 지우기</button>
 
   <div class="flabel" style="margin-top:20px;">🔗 다른 기기로 옮기기 — 데스크탑에서 폰으로</div>
   <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="makeTransferLink()">🔗 이동 링크 만들기</button>
@@ -1418,6 +1430,7 @@ const save = () => {
     const j = JSON.stringify(S);
     localStorage.setItem('foodspot', j);
     idbMirror.write(j);
+    if(typeof snapshotPerson==='function') snapshotPerson();
   } catch(_){
     try { toast('저장 공간이 부족합니다. 백업 후 오래된 기록을 지워주세요'); } catch(__){}
   }
@@ -1456,17 +1469,160 @@ function snapshot(){
   o['3cho:workout:routines'] = loadStore('3cho:workout:routines', []);
   o['3cho:workout:deload'] = loadStore('3cho:workout:deload', null);
   o['3cho:workout:settings'] = loadStore('3cho:workout:settings', {});
+  o['3cho:people'] = loadStore('3cho:people', []);
+  o['3cho:activePerson'] = localStorage.getItem('3cho:activePerson');
+  o._stores = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('::')>0 && (k.startsWith('foodspot') || k.startsWith('3cho:')))
+        o._stores[k] = localStorage.getItem(k);
+    }
+  }catch(_){}
   return o;
 }
 function applySnapshot(data, replaceAll){
   if(!data || typeof data !== 'object') return;
-  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'].forEach(k=>{
+  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings','3cho:people'].forEach(k=>{
     if(data[k] !== undefined) saveStore(k, data[k]);
   });
-  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1 };
+  if(data['3cho:activePerson']) localStorage.setItem('3cho:activePerson', data['3cho:activePerson']);
+  if(data._stores && typeof data._stores==='object'){
+    Object.keys(data._stores).forEach(k=>{
+      if(data._stores[k]==null) localStorage.removeItem(k);
+      else localStorage.setItem(k, data._stores[k]);
+    });
+  }
+  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
   if(replaceAll){
     Object.keys(data).forEach(k=>{ if(!skip[k]) S[k] = data[k]; });
   }
+}
+
+const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'];
+function peopleList(){ return loadStore('3cho:people', []); }
+function activePersonId(){
+  const list = peopleList();
+  let id = localStorage.getItem('3cho:activePerson');
+  if(list.length && id && list.some(p=>p.id===id)) return id;
+  return list.length ? list[0].id : 'p_me';
+}
+function activePerson(){
+  const id = activePersonId();
+  return peopleList().find(p=>p.id===id) || { id, name:'나' };
+}
+function snapshotPerson(pid){
+  pid = pid || activePersonId();
+  LIVE_KEYS.forEach(k=>{
+    const v = localStorage.getItem(k);
+    if(v==null) localStorage.removeItem(k+'::'+pid);
+    else localStorage.setItem(k+'::'+pid, v);
+  });
+}
+function loadPersonStores(pid){
+  LIVE_KEYS.forEach(k=>{
+    const v = localStorage.getItem(k+'::'+pid);
+    if(v==null) localStorage.removeItem(k);
+    else localStorage.setItem(k, v);
+  });
+}
+function ensurePeople(){
+  let list = peopleList();
+  if(!list.length){
+    list = [{ id:'p_me', name:'나' }];
+    saveStore('3cho:people', list);
+    localStorage.setItem('3cho:activePerson', 'p_me');
+    snapshotPerson('p_me');
+  } else if(!localStorage.getItem('3cho:activePerson')){
+    localStorage.setItem('3cho:activePerson', list[0].id);
+  }
+}
+ensurePeople();
+function renderPeopleBox(){
+  const box = document.getElementById('peopleBox');
+  if(!box) return;
+  const list = peopleList();
+  const cur = activePersonId();
+  let html = '';
+  list.forEach(p=>{
+    const on = p.id===cur ? 'on' : '';
+    const nm = String(p.name||'나').replace(/['"<>]/g,'');
+    html += `<div class="rou-row">
+      <button type="button" class="mini-btn ${on?'':' '}" style="background:${p.id===cur?'#111':'#f2f2f7'};color:${p.id===cur?'#fff':'#111'};" onclick="switchPerson('${p.id}')">${nm}${p.id===cur?' · 지금':''}</button>
+      <button type="button" class="helper-link" onclick="renamePerson('${p.id}')">이름</button>
+      ${list.length>1?`<button type="button" class="helper-link" onclick="deletePerson('${p.id}')">삭제</button>`:''}
+    </div>`;
+  });
+  html += `<div class="frow" style="margin-top:8px;">
+    <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="addPerson()">＋ 회원 추가</button>
+  </div>`;
+  box.innerHTML = html;
+}
+function switchPerson(pid){
+  if(!pid || pid===activePersonId()) return;
+  snapshotPerson();
+  loadPersonStores(pid);
+  localStorage.setItem('3cho:activePerson', pid);
+  location.reload();
+}
+function addPerson(){
+  const n = peopleList().length+1;
+  const name = (prompt('회원 이름', '피티회원'+n)||'').trim();
+  if(!name) return;
+  const copy = confirm('지금 쓰는 루틴·종목을 이 회원에게도 넣을까요?\n식단·몸무게·운동 숫자는 복사하지 않습니다.');
+  const cur = activePersonId();
+  snapshotPerson(cur);
+  const p = { id:'p_'+Math.random().toString(36).slice(2,9), name: name.replace(/['"<>]/g,'') };
+  const list = peopleList(); list.push(p); saveStore('3cho:people', list);
+  LIVE_KEYS.forEach(k=>localStorage.removeItem(k));
+  if(copy){
+    ['3cho:workout:exercises','3cho:workout:routines','3cho:workout:settings'].forEach(k=>{
+      const v = localStorage.getItem(k+'::'+cur);
+      if(v) localStorage.setItem(k, v);
+    });
+  }
+  localStorage.setItem('3cho:activePerson', p.id);
+  snapshotPerson(p.id);
+  location.reload();
+}
+function renamePerson(pid){
+  const list = peopleList();
+  const p = list.find(x=>x.id===pid); if(!p) return;
+  const name = prompt('이름', p.name); if(name==null) return;
+  p.name = (name||'').trim().replace(/['"<>]/g,'') || p.name;
+  saveStore('3cho:people', list);
+  renderPeopleBox();
+  renderWhoBtn();
+  toast('이름 저장');
+}
+function deletePerson(pid){
+  const list = peopleList();
+  if(list.length<2){ toast('마지막 회원은 못 지웁니다'); return; }
+  if(!confirm('이 회원의 기록을 기기에서 지울까요? 백업은 먼저 하세요.')) return;
+  if(pid===activePersonId()){
+    const next = list.find(x=>x.id!==pid);
+    loadPersonStores(next.id);
+    localStorage.setItem('3cho:activePerson', next.id);
+  }
+  LIVE_KEYS.forEach(k=>localStorage.removeItem(k+'::'+pid));
+  saveStore('3cho:people', list.filter(x=>x.id!==pid));
+  location.reload();
+}
+function renderWhoBtn(){
+  const b = document.getElementById('whoBtn');
+  if(!b) return;
+  const list = peopleList();
+  if(list.length<2){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  const n = activePerson().name || '나';
+  b.textContent = n.length>6 ? n.slice(0,6)+'…' : n;
+}
+function resetCurrentPerson(){
+  if(!confirm('지금 열린 회원의 식단·몸무게·운동 기록을 지울까요?\n다른 회원은 그대로입니다.')) return;
+  if(!confirm('백업은 하셨나요? 확인을 누르면 이 회원만 빈 상태가 됩니다.')) return;
+  LIVE_KEYS.forEach(k=>localStorage.removeItem(k));
+  snapshotPerson();
+  location.reload();
 }
 
 function isDark(){
@@ -2906,6 +3062,7 @@ function render(){
   }
   const st = streak();
   document.getElementById('streak').textContent = st>0 ? `🔥 ${st}일` : '';
+  if(typeof renderWhoBtn==='function') renderWhoBtn();
 
   const goal = isToday ? currentGoal() : baseGoal();
   const vMeals = S.meals[viewDate]||[];
@@ -3645,6 +3802,7 @@ function openSettings(){
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
   renderMyFoodList();
+  renderPeopleBox();
   const ss = document.getElementById('settingsSheet');
   ss.setAttribute('role','dialog');
   ss.setAttribute('aria-modal','true');
@@ -3660,7 +3818,7 @@ function exportData(){
   const blob = new Blob([JSON.stringify(snapshot())], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `3초식단-백업-${stamp}.json`;
+  a.download = `3초식단-${(activePerson().name||'나').replace(/[\\/:*?"<>|]/g,'')}-${stamp}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   S.lastBackupAt = Date.now(); save();
   toast('백업 파일 저장됨 📤 카톡 "나에게 보내기"로 보관하세요');
@@ -3669,7 +3827,7 @@ function exportData(){
 async function shareBackup(){
   const d = new Date();
   const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  const name = `3초식단-백업-${stamp}.json`;
+  const name = `3초식단-${(activePerson().name||'나').replace(/[\\/:*?"<>|]/g,'')}-${stamp}.json`;
   try{
     const file = new File([JSON.stringify(snapshot())], name, {type:'application/json'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
@@ -3748,7 +3906,7 @@ async function tryLoadFromHash(){
     const cnt = data.meals ? Object.keys(data.meals).length : 0;
     if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 올릴까요?\n지금 이 기기의 기록은 교체됩니다.`)) return false;
     applySnapshot(data, false);
-    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1 };
+    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
     const clean = {};
     Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
     localStorage.setItem('foodspot', JSON.stringify(clean));
@@ -4306,7 +4464,10 @@ function workCardHtml(exId, day, light){
   const sid = ex.id.replace(/['"]/g,'');
   const topHide = light ? 'hidden' : '';
   return `<div class="wk-card" id="wkc_${sid}">
-    <h4>${ex.name}${stag} <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
+    <h4><span class="nm">${ex.name}${stag}</span>
+      <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
+      <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
+      <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${ent.setupUsed||ex.setup||'세팅 없음 · 탭해서 적기'}</button>
     <div class="${topHide}">
       <div class="wk-row"><span class="wk-lab">탑세트</span>
@@ -4411,6 +4572,24 @@ function toggleRouLight(on){
   const { rus, r } = rouCur(); if(!r) return;
   r.light = !!on;
   saveStore(WK.rou, rus);
+  renderWork();
+}
+function moveExOnDay(exId, dir){
+  const day = todayLog();
+  const rus = loadStore(WK.rou, []);
+  const r = rus.find(x=>x.id===day.routineId);
+  const list = r ? (r.exerciseIds||[]).slice() : (day.entries||[]).map(e=>e.exerciseId);
+  const i = list.indexOf(exId);
+  const j = i+dir;
+  if(i<0 || j<0 || j>=list.length) return;
+  const t=list[i]; list[i]=list[j]; list[j]=t;
+  if(r){ r.exerciseIds = list; saveStore(WK.rou, rus); }
+  if(day.entries && day.entries.length){
+    const order = {};
+    list.forEach((id,idx)=>{ order[id]=idx; });
+    day.entries.sort((a,b)=>(order[a.exerciseId]!=null?order[a.exerciseId]:99)-(order[b.exerciseId]!=null?order[b.exerciseId]:99));
+    putTodayLog(day);
+  }
   renderWork();
 }
 function moveExInRou(i, dir){
