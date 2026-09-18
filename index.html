@@ -412,12 +412,17 @@
   .freq-h { font-size:12px; font-weight:800; color:#8e8e93; margin:12px 2px 8px; }
   .freq-row { display:flex; flex-wrap:wrap; gap:8px; }
   .freq-chip {
-    border:1.5px solid #e5e5ea; background:#fff; border-radius:100px;
-    padding:8px 12px; font-size:13px; font-weight:700; color:#111; cursor:pointer;
-    -webkit-touch-callout:none; user-select:none; touch-action:manipulation;
+    position:relative; border:1.5px solid #e5e5ea; background:#fff; border-radius:100px;
+    padding:8px 28px 8px 12px; font-size:13px; font-weight:700; color:#111; cursor:pointer;
+    -webkit-touch-callout:none; user-select:none; touch-action:manipulation; text-align:left;
   }
   .freq-chip:active { background:#f2f2f7; }
   .freq-chip small { display:block; font-size:10px; font-weight:600; color:#8e8e93; margin-top:1px; }
+  .freq-chip .freq-x {
+    position:absolute; top:50%; right:4px; transform:translateY(-50%);
+    width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+    color:#c7c7cc; font-size:14px; font-weight:800; line-height:1;
+  }
   .add-big {
     width:100%; margin:18px 0 8px; padding:22px 16px; border-radius:16px;
     border:2px dashed #d1d1d6; background:#fafafa; cursor:pointer; text-align:center;
@@ -539,6 +544,7 @@
   html.dark .cal-cell.on { background:#f2f2f7; color:#000; }
   html.dark .cal-cell.today:not(.on) { background:#2c2c2e; }
   html.dark .freq-chip { background:#1c1c1e; border-color:#3a3a3c; color:#f2f2f7; }
+  html.dark .freq-chip .freq-x { color:#636366; }
   html.dark .add-big { background:#1c1c1e; border-color:#3a3a3c; }
   html.dark .myfood-item { border-color:#2c2c2e; }
   html.dark .db-more { background:#2c2c2e; color:#f2f2f7; }
@@ -907,6 +913,14 @@
     <button data-v="hicarb" onclick="setSeg('segMacro','hicarb')">고탄수</button>
   </div>
   <div class="seg-help" id="macroHelp"></div>
+
+  <div class="flabel">지방 g/kg — 체지방이 낮을수록 따로</div>
+  <p class="seg-help" style="margin-top:0;">단백질 다음 지방을 확보합니다. 한 자릿수 체지방이면 호르몬 때문에 지방을 더 남기고, 줄어든 칼로리는 탄수에서 뺍니다. 비워 두면 자동입니다.</p>
+  <div class="frow">
+    <div><div class="flabel">기본</div><input class="txt-input" id="pFatPer" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.7" oninput="previewTDEE()"></div>
+    <div><div class="flabel">10% 이하</div><input class="txt-input" id="pFat10" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.8" oninput="previewTDEE()"></div>
+    <div><div class="flabel">7% 이하</div><input class="txt-input" id="pFat7" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="1.0" oninput="previewTDEE()"></div>
+  </div>
 
   <div class="tdee-box">
     <div><div class="tv" id="tvBmr">–</div><div class="tl">BMR 기초대사</div></div>
@@ -1738,23 +1752,39 @@ function proteinTarget(){
   if(!S.profile) return Math.round(w*1.6);
   return proteinCalc(w, bf, S.profile.adjust);
 }
-/* 매크로: 단백질 → 지방(0.5g/kg 하한) → 남은 kcal 전부 탄수 */
-function fatGrams(w, adjust, style, goal, pT){
-  const floor = Math.round(w * 0.5);
-  let per = adjust<0 ? 0.7 : 0.9;
-  if(style==='lowcarb') per += 0.25;
-  if(style==='hicarb') per = Math.max(0.5, per - 0.2);
+/* 매크로: 단백질 → 지방(체지방 구간별 g/kg) → 남은 kcal 전부 탄수 */
+function fatPerKg(w, adjust, style, bf, cfg){
+  cfg = cfg || {};
+  let per = cfg.fatPer > 0 ? +cfg.fatPer : (adjust<0 ? 0.7 : 0.9);
+  if(!(cfg.fatPer > 0)){
+    if(style==='lowcarb') per += 0.25;
+    if(style==='hicarb') per -= 0.2;
+  }
+  if(bf > 0 && bf <= 7){
+    per = cfg.fatPer7 > 0 ? +cfg.fatPer7 : Math.max(per, 1.0);
+  } else if(bf > 0 && bf <= 10){
+    per = cfg.fatPer10 > 0 ? +cfg.fatPer10 : Math.max(per, 0.8);
+  }
+  return Math.max(0.4, Math.min(1.8, per));
+}
+function fatGrams(w, adjust, style, goal, pT, bf, cfg){
+  const per = fatPerKg(w, adjust, style, bf||0, cfg);
+  const floor = Math.round(w * 0.4);
   let f = Math.round(w * per);
-  f = Math.max(f, floor, Math.round(goal * 0.15 / 9));
+  if(!(cfg && (cfg.fatPer>0 || ((bf||0)<=10 && (cfg.fatPer10>0 || cfg.fatPer7>0))))){
+    f = Math.max(f, Math.round(w * 0.5), Math.round(goal * 0.15 / 9));
+  }
+  f = Math.max(f, floor);
   const remAfterP = goal - pT*4;
   const maxF = Math.max(floor, Math.round(Math.max(remAfterP - 80, 0)/9));
   return Math.min(Math.max(f, floor), maxF);
 }
-function macrosFor(goal, w, bf, adjust, style){
+function macrosFor(goal, w, bf, adjust, style, cfg){
+  cfg = cfg || S.profile || {};
   const pT = proteinCalc(w, bf||0, adjust||0);
-  const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT);
+  const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT, bf||0, cfg);
   const cT = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
-  return { p:pT, c:cT, f:fT };
+  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg) };
 }
 function macroTargets(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
@@ -2661,13 +2691,14 @@ function renderFreqChips(){
     const label = (st.lastName || id).replace(/['"<>]/g,"");
     const amt = st.lastUnit==='x' ? (st.lastAmount===1?'1인분':st.lastAmount+'인분') : (st.lastAmount+st.lastUnit);
     const sid = id.replace(/['"<>]/g,"");
-    return `<button type="button" class="freq-chip" data-id="${sid}" aria-label="${label} ${amt}, 탭하면 바로 기록, 길게 누르면 분량"
+    return `<button type="button" class="freq-chip" data-id="${sid}" aria-label="${label} ${amt}, 탭하면 바로 기록, 길게 누르면 분량, 엑스면 목록에서 빼기"
       onclick="tapFreqChip('${sid}')" onpointerdown="freqPtrDown(event,'${sid}')" onpointerup="freqPtrUp()" onpointerleave="freqPtrUp()" oncontextmenu="event.preventDefault()">
+      <span class="freq-x" role="button" aria-label="${label} 최근에서 빼기" onpointerdown="event.stopPropagation();freqPtrUp();" onclick="delFreqChip('${sid}',event)">✕</span>
       ${label}<small>${amt} · ${st.lastKcal||0}kcal</small></button>`;
   };
   let html = `<div class="freq-h">최근</div><div class="freq-row">${recent.map(chip).join('')}</div>`;
   if(freq.length) html += `<div class="freq-h">자주</div><div class="freq-row">${freq.map(chip).join('')}</div>`;
-  html += `<div class="freq-h" style="font-weight:600;">탭하면 마지막 분량 그대로 기록 · 길게 누르면 분량 조절</div>`;
+  html += `<div class="freq-h" style="font-weight:600;">탭하면 마지막 분량 그대로 기록 · 길게 누르면 분량 · ✕ 목록에서 빼기</div>`;
   box.innerHTML = html;
 }
 let _freqLp = null, _freqLpFired = false;
@@ -2680,6 +2711,16 @@ function freqPtrUp(){ clearTimeout(_freqLp); }
 function tapFreqChip(id){
   if(_freqLpFired){ _freqLpFired=false; return; }
   logNowFromStats(id);
+}
+function delFreqChip(id, ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  clearTimeout(_freqLp);
+  _freqLpFired = false;
+  const stats = loadStore('3cho:foodstats', {});
+  delete stats[id];
+  saveStore('3cho:foodstats', stats);
+  renderFreqChips();
+  toast('목록에서 뺐습니다');
 }
 function lookupFoodNutri(id){
   const my = loadStore('3cho:myfoods', []).find(f=>f.id===id || f.name===id);
@@ -3507,7 +3548,7 @@ const GUIDE_MAIN = `
       ① 칼로리 예산 — ⚙︎에서 자동 계산<br>
       ② <b>단백질부터 확보</b> — 단백질은 목표, 나머지는 예산<br>
       ③ 탄수화물 — 양은 남은 예산, <b>종류는 시간대</b>로<br>
-      ④ 지방 — <b>75%는 생선·아보카도·견과류</b>에서
+      ④ 지방 — <b>75%는 생선·아보카도·견과류</b>에서. 체지방 10% 이하·7% 이하는 ⚙︎에서 g/kg을 따로 둘 수 있습니다
     </div>
   </div>
 
@@ -3721,8 +3762,11 @@ function readForm(){
   const mode = segVal('segMode');
   const adjust = mode==='cut' ? (parseInt(segVal('segCut')) || -500) : mode==='bulk' ? 300 : 0;
   const macro = ['balanced','lowcarb','hicarb'].includes(segVal('segMacro')) ? segVal('segMacro') : 'balanced';
+  const fatPer = parseFloat(document.getElementById('pFatPer').value) || 0;
+  const fatPer10 = parseFloat(document.getElementById('pFat10').value) || 0;
+  const fatPer7 = parseFloat(document.getElementById('pFat7').value) || 0;
   if(!sex || !age || !height || !weight) return null;
-  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro };
+  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro, fatPer, fatPer10, fatPer7 };
 }
 function previewTDEE(){
   const p = readForm();
@@ -3735,7 +3779,7 @@ function previewTDEE(){
   document.getElementById('tvGoal').textContent = goal.toLocaleString();
 
   const pT = proteinCalc(p.weight, p.bf, p.adjust);
-  const m = macrosFor(goal, p.weight, p.bf, p.adjust, p.macro);
+  const m = macrosFor(goal, p.weight, p.bf, p.adjust, p.macro, p);
   document.getElementById('tvP').textContent = m.p+'g';
   document.getElementById('tvC').textContent = m.c+'g';
   document.getElementById('tvF').textContent = m.f+'g';
@@ -3744,6 +3788,9 @@ function previewTDEE(){
   let eta = '';
   if(goal <= r.bmr) eta += `<span style="color:#ff3b30;font-weight:700;">⚠️ 목표가 기초대사량(${r.bmr.toLocaleString()}) 아래입니다 — 감량 강도를 낮추세요. 근손실·요요의 지름길입니다.</span><br>`;
   if(p.bf > 0) eta += `단백질은 제지방량(LBM ${Math.round(p.weight*(1-p.bf/100))}kg) 기준으로 계산됩니다<br>`;
+  if(p.bf > 0 && p.bf <= 7) eta += `체지방 ${p.bf}% · <b>7% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
+  else if(p.bf > 0 && p.bf <= 10) eta += `체지방 ${p.bf}% · <b>10% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
+  else eta += `지방 ${m.fatPer}g/kg · 체지방 10%·7% 이하이면 칸을 따로 씁니다<br>`;
   eta += `BMI ${bmi} · ${bmi<18.5?'저체중':bmi<23?'정상':bmi<25?'과체중':'비만'} (아시아 기준)`;
   const perWeek = p.adjust*7/7700; // kg/주 (음수면 감량)
   if(p.adjust!==0){
@@ -3793,10 +3840,16 @@ function openSettings(){
     setSeg('segCut', p.adjust<0 ? String(p.adjust) : '-500');
     setSeg('segMacro', p.macro || 'balanced');
     setSeg('segGoalType', p.goalType || 'weight');
+    document.getElementById('pFatPer').value = p.fatPer || '';
+    document.getElementById('pFat10').value = p.fatPer10 || '';
+    document.getElementById('pFat7').value = p.fatPer7 || '';
   } else {
     setSeg('segSex','m'); setSeg('segMode','cut'); setSeg('segCut','-500'); setSeg('segMacro','balanced'); setSeg('segGoalType','weight');
     const lw = lastWeight();
     if(lw) document.getElementById('pWeight').value = lw;
+    document.getElementById('pFatPer').value = '';
+    document.getElementById('pFat10').value = '';
+    document.getElementById('pFat7').value = '';
   }
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
