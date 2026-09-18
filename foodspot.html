@@ -630,6 +630,7 @@
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
     <a href="micro.html">미세영양소</a>
+    <a href="hypert.html">근비대 원리</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
@@ -638,7 +639,7 @@
       <details><summary>가입해야 하나요?</summary><p>아니요. 계정이 없습니다. 기록은 이 폰 브라우저에만 남습니다.</p></details>
       <details><summary>데이터는 어디에 저장되나요?</summary><p>서버로 보내지 않습니다. 기기를 바꾸면 목표 화면에서 백업(파일·카톡)하거나 이동 링크를 만드세요.</p></details>
       <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식마다 비타민 값은 아직 없습니다.</p></details>
-      <details><summary>한식·편의점도 나오나요?</summary><p>김치찌개, 현미밥부터 식약처 DB 3.7만종까지 검색됩니다. 초성만 쳐도 됩니다.</p></details>
+      <details><summary>근비대는 어떻게 기록하나요?</summary><p>운동 탭에서 종목마다 탑세트와 백오프만 적습니다. 원리는 근비대 원리 페이지에 있습니다. 자력 반복만 세고, 고강도는 주 4회를 넘기지 않는 쪽입니다.</p></details>
     </div>
   </footer>
 </div>
@@ -700,6 +701,7 @@
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
     <a href="micro.html">미세영양소</a>
+    <a href="hypert.html">근비대 원리</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
@@ -3416,6 +3418,19 @@ const GUIDE_MAIN = `
     </div>
   </div>
 
+  <div class="g-sec">
+    <div class="g-title">7 · 근비대 — 왜 탑세트 하나인가</div>
+    <div class="g-body">
+      근육은 바에 적힌 kg을 세지 않습니다. <b>장력 · 실패에 가까운 반복 · 회복</b>입니다.<br>
+      · 종목당 <b>탑세트 1 + 백오프 1</b>. 같은 무게 5세트보다 유효 반복 대비 피로가 낮습니다<br>
+      · 탑세트 6~10회 RIR 0~1, 백오프는 탑의 75%로 12~15회. 횟수는 직접 적습니다<br>
+      · 머신·고립 RIR 0, 프리 복합은 1~2. 디로드는 3~4<br>
+      · 고강도는 주 4회 이하. 백오프 볼륨이 2세션 정체면 디로드<br>
+      · 단백질은 체중 kg당 대략 1.6g이 많은 연구의 분기점<br><br>
+      긴 설명은 <b>근비대 원리</b> 페이지에 있습니다. 의학적 조언이 아닙니다.
+    </div>
+  </div>
+
   <div class="g-sec" style="background:#111;color:#fff;">
     <div class="g-title" style="color:#30d158;">💡 3초식단 사용법</div>
     <div class="g-body" style="color:#e5e5ea;">
@@ -4116,7 +4131,7 @@ function renderWork(){
   const exercises = loadStore(WK.ex, []);
   if(!routines.length){
     box.innerHTML = `<h2 style="margin-bottom:8px;">내 루틴</h2>
-      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목을 직접 넣고 요일·분할은 마음대로입니다. 한 종목은 탑세트 1 + 백오프 1입니다.</p>
+      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목을 직접 넣고 요일·분할은 마음대로입니다. 한 종목은 탑세트 1 + 백오프 1입니다. <a href="hypert.html" class="helper-link">왜 이 구조인지</a></p>
       <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>
       <div class="flabel" style="margin-top:8px;">원하면 템플릿으로 시작 · 이후 전부 고칠 수 있습니다</div>`
       + WK_PRESETS.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
