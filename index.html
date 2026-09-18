@@ -434,6 +434,24 @@
   .myfood-item .n { flex:1; min-width:0; font-size:14.5px; font-weight:700; }
   .myfood-item .k { font-size:11px; color:#8e8e93; font-weight:600; margin-top:2px; }
   .db-more { width:100%; margin:8px 0; padding:12px; border:none; background:#f2f2f7; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; color:#111; }
+  .wk-card { background:#f2f2f7; border-radius:16px; padding:14px; margin-bottom:10px; text-align:left; }
+  .wk-card h4 { font-size:15px; font-weight:800; margin-bottom:2px; }
+  .wk-setup { display:block; width:100%; border:none; background:none; text-align:left; font-size:12px; font-weight:600; color:#8e8e93; padding:0 0 10px; cursor:pointer; }
+  .wk-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .wk-lab { width:48px; font-size:12px; font-weight:800; flex-shrink:0; }
+  .wk-in { width:58px; padding:8px 6px; border-radius:10px; border:1.5px solid #e5e5ea; background:#fff; font-size:16px; font-weight:800; text-align:center; }
+  .wk-in:focus { outline:none; border-color:#111; }
+  .wk-unit { font-size:12px; font-weight:700; color:#8e8e93; }
+  .wk-hint { font-size:11px; color:#8e8e93; font-weight:600; margin:-2px 0 8px 48px; }
+  .wk-prev { font-size:12px; font-weight:600; color:#3a3a3c; margin-top:4px; }
+  .wk-prev .up { color:#30d158; } .wk-prev .dn { color:#ff3b30; }
+  .wk-badge { display:inline-block; font-size:10px; font-weight:800; background:#fff8e6; color:#c93400; border-radius:6px; padding:2px 6px; margin-left:6px; }
+  .wk-banner { margin:0 0 12px; padding:12px 14px; border-radius:14px; background:#fff8e6; font-size:13px; line-height:1.5; font-weight:600; color:#3a3a3c; }
+  .wk-banner b { color:#111; }
+  .wk-pick { width:100%; margin-bottom:10px; padding:16px; border-radius:16px; border:1.5px solid #e5e5ea; background:#fff; text-align:left; cursor:pointer; }
+  .wk-pick b { display:block; font-size:15px; font-weight:800; margin-bottom:4px; }
+  .wk-pick span { font-size:12px; color:#8e8e93; font-weight:600; line-height:1.45; }
+  .home-mode { margin:10px 24px 0; }
 
   /* dark */
   html.dark { color-scheme: dark; }
@@ -503,6 +521,12 @@
   html.dark .add-big { background:#1c1c1e; border-color:#3a3a3c; }
   html.dark .myfood-item { border-color:#2c2c2e; }
   html.dark .db-more { background:#2c2c2e; color:#f2f2f7; }
+  html.dark .wk-card { background:#1c1c1e; }
+  html.dark .wk-in { background:#111; border-color:#3a3a3c; color:#f2f2f7; }
+  html.dark .wk-pick { background:#1c1c1e; border-color:#3a3a3c; }
+  html.dark .wk-banner { background:#2a2414; color:#e5e5ea; }
+  html.dark .wk-banner b { color:#f2f2f7; }
+  html.dark .wk-prev { color:#e5e5ea; }
 
 </style>
 </head>
@@ -528,9 +552,13 @@
 <!-- HOME -->
 <div id="viewHome">
   <div id="pastBanner" class="past-banner hidden"></div>
+  <div class="seg home-mode" id="homeMode">
+    <button type="button" class="on" data-v="diet" onclick="setHomeMode('diet')">식단</button>
+    <button type="button" data-v="lift" onclick="setHomeMode('lift')">운동</button>
+  </div>
   <div id="setupBanner" class="hidden" style="margin:8px 24px 0;"></div>
   <div id="installTip" class="hidden" style="margin:10px 24px 0;"></div>
-  <div class="hero">
+  <div id="dietChrome" class="hero">
     <div class="ring-wrap">
       <svg width="190" height="190" viewBox="0 0 190 190">
         <circle id="ringBg" cx="95" cy="95" r="82" fill="none" stroke="#f2f2f7" stroke-width="13"/>
@@ -561,11 +589,12 @@
     <div id="bfArea" style="margin-top:10px;"></div>
   </section>
 
-  <section>
+  <section id="diarySection">
     <h2>다이어리</h2>
     <div id="yestBox"></div>
     <div id="mealList"></div>
   </section>
+  <div id="workPanel" class="hidden" style="padding:16px 24px 0;"></div>
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
     <a href="calc.html">하루 권장 칼로리</a>
@@ -605,6 +634,19 @@
       <h4>칼로리</h4><div class="sub">최근 7일 · 선 = 목표</div>
       <div id="kcalChart"></div>
     </div>
+    <div class="chart-card" id="wkJudgeCard">
+      <h4>식단 × 운동</h4>
+      <div class="sub">체중 변화와 백오프를 같이 봅니다. 일반적인 참고이며 의학적 조언이 아닙니다.</div>
+      <div id="wkJudge" style="font-size:13.5px;line-height:1.55;font-weight:600;"></div>
+    </div>
+    <div class="chart-card" id="wkChartCard">
+      <h4>백오프 볼륨</h4>
+      <div class="sub">종목의 백오프(중량×횟수)입니다. 탑세트가 아닙니다.</div>
+      <select class="txt-input" id="wkExSel" onchange="renderWkChart()" aria-label="종목 선택"></select>
+      <div id="wkChartNote" class="sub" style="margin-top:8px;"></div>
+      <div id="wkChart"></div>
+      <div id="wkWeekNote" class="sub" style="margin-top:8px;"></div>
+    </div>
     <button class="photo-btn" style="margin-bottom:12px;" onclick="shareCard()">📤 주간 리포트 카드 만들기</button>
   </section>
   <footer class="site-foot">
@@ -617,7 +659,7 @@
 </div>
 
 <nav>
-  <button class="tab on" id="tabHome" onclick="showView('home')"><span class="ico">●</span>오늘</button>
+  <button class="tab on" id="tabHome" onclick="showView('home')"><span class="ico">●</span>식단</button>
   <button class="fab" onclick="openSheet()" aria-label="식단 기록 추가">+</button>
   <button class="tab" id="tabTrend" onclick="showView('trend')"><span class="ico">◐</span>추이</button>
 </nav>
@@ -878,6 +920,31 @@
   <div class="cal-dow"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
   <div class="cal-grid" id="calGrid"></div>
   <button class="save-btn" id="calTodayBtn" onclick="backToToday();closeSheet();">오늘로</button>
+</div>
+
+<div class="sheet" id="exSheet" role="dialog" aria-modal="true" aria-labelledby="exTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="exTitle">종목</h3>
+  <div class="flabel"><label for="exName">이름</label></div>
+  <input class="txt-input" id="exName" aria-label="종목 이름">
+  <div class="flabel">부위</div>
+  <select class="txt-input" id="exMuscle" aria-label="부위">
+    <option>가슴</option><option>등</option><option>어깨</option><option>이두</option><option>삼두</option>
+    <option>대퇴사두</option><option>햄스트링</option><option>둔근</option><option>종아리</option><option>복부</option>
+  </select>
+  <div class="flabel">종류</div>
+  <select class="txt-input" id="exType" aria-label="종류">
+    <option value="machine_compound">머신 복합</option>
+    <option value="machine_isolation">머신 고립</option>
+    <option value="free_compound">프리 복합</option>
+    <option value="free_isolation">프리 고립</option>
+    <option value="cable">케이블</option>
+  </select>
+  <div class="flabel"><label for="exSetup">기구 세팅</label></div>
+  <input class="txt-input" id="exSetup" placeholder="시트 3, 핸들 중간" aria-label="기구 세팅">
+  <button class="save-btn" style="margin-top:14px;" onclick="saveExSheet()">저장</button>
+  <button type="button" class="rec-del hidden" id="exDelBtn" onclick="delExFromSheet()">종목 삭제</button>
 </div>
 
 <div id="toast"></div>
@@ -1327,13 +1394,18 @@ function snapshot(){
   Object.keys(S).forEach(k=>{ o[k] = S[k]; });
   o['3cho:foodstats'] = loadStore('3cho:foodstats', {});
   o['3cho:myfoods'] = loadStore('3cho:myfoods', []);
+  o['3cho:workout:exercises'] = loadStore('3cho:workout:exercises', []);
+  o['3cho:workout:log'] = loadStore('3cho:workout:log', {});
+  o['3cho:workout:routines'] = loadStore('3cho:workout:routines', []);
+  o['3cho:workout:deload'] = loadStore('3cho:workout:deload', null);
   return o;
 }
 function applySnapshot(data, replaceAll){
   if(!data || typeof data !== 'object') return;
-  if(data['3cho:foodstats'] !== undefined) saveStore('3cho:foodstats', data['3cho:foodstats']||{});
-  if(data['3cho:myfoods'] !== undefined) saveStore('3cho:myfoods', data['3cho:myfoods']||[]);
-  const skip = { '3cho:foodstats':1, '3cho:myfoods':1 };
+  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload'].forEach(k=>{
+    if(data[k] !== undefined) saveStore(k, data[k]);
+  });
+  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1 };
   if(replaceAll){
     Object.keys(data).forEach(k=>{ if(!skip[k]) S[k] = data[k]; });
   }
@@ -3089,6 +3161,8 @@ function renderTrend(){
   });
   b+=`<line x1="${P}" y1="${gy.toFixed(1)}" x2="${W-P}" y2="${gy.toFixed(1)}" stroke="#8e8e93" stroke-width="1" stroke-dasharray="4 4"/></svg>`;
   document.getElementById('kcalChart').innerHTML=b;
+  if(typeof setHomeMode==='function') setHomeMode(homeMode);
+  if(typeof renderWkJudge==='function'){ try{ renderWkJudge(); renderWkChart(); }catch(_){} }
 }
 
 /* ============ 뷰/시트 ============ */
@@ -3099,6 +3173,7 @@ function showView(v){
   document.getElementById('tabTrend').classList.toggle('on', v==='trend');
 }
 function openSheet(){
+  if(homeMode==='lift'){ openExSheet(); return; }
   curSlot = autoSlot();
   cart = [];
   renderCart();
@@ -3132,6 +3207,8 @@ function closeSheet(){
   document.getElementById('guideSheet').classList.remove('show');
   const cal = document.getElementById('calSheet');
   if(cal) cal.classList.remove('show');
+  const exs = document.getElementById('exSheet');
+  if(exs) exs.classList.remove('show');
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -3595,7 +3672,7 @@ async function tryLoadFromHash(){
     const cnt = data.meals ? Object.keys(data.meals).length : 0;
     if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 올릴까요?\n지금 이 기기의 기록은 교체됩니다.`)) return false;
     applySnapshot(data, false);
-    const skip = { '3cho:foodstats':1, '3cho:myfoods':1 };
+    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1 };
     const clean = {};
     Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
     localStorage.setItem('foodspot', JSON.stringify(clean));
@@ -3755,6 +3832,511 @@ function tryAddQuery(){
     }, 80);
   }catch(_){}
 }
+/* ============ 운동 — 탑세트 + 백오프만. 범용 세트 입력기 아님 ============ */
+let homeMode = 'diet';
+const WK = {
+  ex: '3cho:workout:exercises',
+  log: '3cho:workout:log',
+  rou: '3cho:workout:routines',
+  deload: '3cho:workout:deload'
+};
+function defaultRir(type){
+  if(type==='machine_isolation' || type==='cable') return 0;
+  if(type==='free_compound') return 2;
+  return 1;
+}
+function round2p5(n){ return Math.round((+n||0)/2.5)*2.5; }
+function mkEx(name, muscle, type, setup){
+  return { id:'ex_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4),
+    name, muscle, type, setup: setup||'', defaultRir: defaultRir(type) };
+}
+const WK_PRESETS = [
+  { id:'full_3', name:'무분할 주 3회', blurb:'입문 ~6개월 · 월·수·금 전신',
+    routines: [{ id:'full', name:'전신', light:false, items:[
+      ['레그프레스','대퇴사두','machine_compound',''],
+      ['체스트프레스','가슴','machine_compound',''],
+      ['랫풀다운','등','machine_compound',''],
+      ['숄더프레스','어깨','machine_compound',''],
+      ['레그컬','햄스트링','machine_isolation',''],
+      ['케이블 컬','이두','cable',''],
+      ['푸시다운','삼두','cable','']
+    ]}]},
+  { id:'upper_lower', name:'상하체 2분할 주 4회', blurb:'권장 기본값',
+    routines: [
+      { id:'upper_a', name:'상체 A', light:false, items:[
+        ['체스트 서포트 로우','등','machine_compound',''],
+        ['인클라인 머신 프레스','가슴','machine_compound',''],
+        ['랫풀다운','등','machine_compound',''],
+        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['오버헤드 케이블 익스텐션','삼두','cable',''],
+        ['인클라인 덤벨 컬','이두','free_isolation','']
+      ]},
+      { id:'lower_a', name:'하체 A', light:false, items:[
+        ['핵스쿼트','대퇴사두','machine_compound',''],
+        ['레그프레스','대퇴사두','machine_compound',''],
+        ['레그 익스텐션','대퇴사두','machine_isolation',''],
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
+        ['카프 레이즈','종아리','machine_isolation','']
+      ]},
+      { id:'upper_b', name:'상체 B', light:false, items:[
+        ['시티드 숄더프레스','어깨','machine_compound',''],
+        ['딥 체스트 프레스','가슴','machine_compound',''],
+        ['시티드 로우','등','machine_compound',''],
+        ['리어델트 플라이','어깨','machine_isolation',''],
+        ['케이블 컬','이두','cable',''],
+        ['푸시다운','삼두','cable','']
+      ]},
+      { id:'lower_b', name:'하체 B', light:false, items:[
+        ['루마니안 데드리프트','햄스트링','free_compound',''],
+        ['시티드 레그컬','햄스트링','machine_isolation',''],
+        ['레그프레스','대퇴사두','machine_compound',''],
+        ['힙 어덕션','둔근','machine_isolation',''],
+        ['카프 레이즈','종아리','machine_isolation','']
+      ]}
+    ]},
+  { id:'split5', name:'강도 계층화 5분할', blurb:'고급 · 고강도는 주 4회만',
+    routines: [
+      { id:'d_mon', name:'월 가슴+삼두', light:false, items:[
+        ['인클라인 머신 프레스','가슴','machine_compound',''],
+        ['딥 체스트 프레스','가슴','machine_compound',''],
+        ['푸시다운','삼두','cable',''],
+        ['오버헤드 케이블 익스텐션','삼두','cable','']
+      ]},
+      { id:'d_tue', name:'화 등', light:false, items:[
+        ['랫풀다운','등','machine_compound',''],
+        ['체스트 서포트 로우','등','machine_compound',''],
+        ['시티드 로우','등','machine_compound','']
+      ]},
+      { id:'d_wed', name:'수 어깨+이두', light:true, items:[
+        ['시티드 숄더프레스','어깨','machine_compound',''],
+        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['리어델트 플라이','어깨','machine_isolation',''],
+        ['케이블 컬','이두','cable','']
+      ]},
+      { id:'d_thu', name:'목 하체', light:false, items:[
+        ['핵스쿼트','대퇴사두','machine_compound',''],
+        ['레그프레스','대퇴사두','machine_compound',''],
+        ['루마니안 데드리프트','햄스트링','free_compound',''],
+        ['시티드 레그컬','햄스트링','machine_isolation','']
+      ]},
+      { id:'d_fri', name:'금 어깨+윗가슴', light:false, items:[
+        ['시티드 숄더프레스','어깨','machine_compound',''],
+        ['인클라인 머신 프레스','가슴','machine_compound',''],
+        ['케이블 라테랄 레이즈','어깨','cable','']
+      ]},
+      { id:'d_sat', name:'토 팔+뒷다리', light:true, items:[
+        ['푸시다운','삼두','cable',''],
+        ['케이블 컬','이두','cable',''],
+        ['시티드 레그컬','햄스트링','machine_isolation','']
+      ]}
+    ]}
+];
+function setHomeMode(v){
+  homeMode = v==='lift' ? 'lift' : 'diet';
+  setSegOnly('homeMode', homeMode);
+  const lift = homeMode==='lift';
+  const d = document.getElementById('dietChrome');
+  const b = document.getElementById('bodySection');
+  const di = document.getElementById('diarySection');
+  const w = document.getElementById('workPanel');
+  if(d) d.classList.toggle('hidden', lift);
+  if(di) di.classList.toggle('hidden', lift);
+  if(w) w.classList.toggle('hidden', !lift);
+  if(lift && b) b.classList.add('hidden');
+  else if(b){
+    const totalMeals = Object.values(S.meals).flat().length;
+    const hasBody = Object.keys(S.weights).length || Object.keys(S.bodyfat).length || totalMeals > 0 || S.profile;
+    b.classList.toggle('hidden', viewDate===todayKey() && !hasBody);
+  }
+  const fab = document.querySelector('.fab');
+  if(fab) fab.setAttribute('aria-label', lift ? '종목 추가' : '식단 기록 추가');
+  if(lift) renderWork();
+}
+function startBare(){
+  saveStore(WK.ex, []);
+  saveStore(WK.rou, [{ id:'free', name:'루틴 없이', exerciseIds:[], light:false }]);
+  const day = todayLog();
+  day.routineId = 'free';
+  putTodayLog(day);
+  renderWork();
+}
+function applyPreset(pid){
+  const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
+  const exercises = [];
+  const routines = p.routines.map(r=>{
+    const ids = r.items.map(it=>{
+      const ex = mkEx(it[0], it[1], it[2], it[3]||'');
+      exercises.push(ex);
+      return ex.id;
+    });
+    return { id:r.id, name:r.name, exerciseIds:ids, light:!!r.light };
+  });
+  saveStore(WK.ex, exercises);
+  saveStore(WK.rou, routines);
+  toast(p.name+' 루틴 저장됨');
+  renderWork();
+}
+function todayLog(){
+  const log = loadStore(WK.log, {});
+  return log[viewDate] || { schemaVersion:1, routineId:null, entries:[], durationMin:null };
+}
+function putTodayLog(day){
+  const log = loadStore(WK.log, {});
+  log[viewDate] = day;
+  saveStore(WK.log, log);
+}
+function backoffHist(exId){
+  const log = loadStore(WK.log, {});
+  return Object.keys(log).sort().map(d=>{
+    const e = (log[d].entries||[]).find(x=>x.exerciseId===exId);
+    if(!e || !e.backoff || !(e.backoff.weight>0)) return null;
+    return { date:d, w:e.backoff.weight, r:e.backoff.reps, vol:e.backoff.weight*e.backoff.reps };
+  }).filter(Boolean);
+}
+function isStagnantEx(exId){
+  const h = backoffHist(exId);
+  if(h.length<3) return false;
+  const a=h[h.length-1], b=h[h.length-2], c=h[h.length-3];
+  return a.vol <= b.vol && b.vol <= c.vol;
+}
+function lastBackoff(exId){
+  const h = backoffHist(exId).filter(x=>x.date < viewDate);
+  return h.length ? h[h.length-1] : null;
+}
+function deloadState(){
+  const d = loadStore(WK.deload, null);
+  if(!d || !d.start) return null;
+  const start = new Date(d.start+'T00:00:00');
+  const now = new Date(todayKey()+'T00:00:00');
+  const day = Math.floor((now-start)/86400000)+1;
+  if(day>7) return null;
+  return { start:d.start, day, left: 8-day };
+}
+function startDeload(){
+  saveStore(WK.deload, { start: todayKey() });
+  toast('디로드 시작 · 7일간 RIR 3~4');
+  renderWork();
+}
+function effectiveRir(ex){
+  const dl = deloadState();
+  if(dl) return 4;
+  return ex.defaultRir != null ? ex.defaultRir : defaultRir(ex.type);
+}
+function renderWork(){
+  const box = document.getElementById('workPanel');
+  if(!box || homeMode!=='lift') return;
+  const routines = loadStore(WK.rou, []);
+  const exercises = loadStore(WK.ex, []);
+  if(!routines.length){
+    box.innerHTML = `<h2 style="margin-bottom:8px;">루틴 고르기</h2>
+      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">한 종목은 탑세트 1 + 백오프 1입니다. 자력 반복만 적습니다.</p>`
+      + WK_PRESETS.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('')
+      + `<button type="button" class="wk-pick" onclick="startBare()"><b>루틴 없이 시작</b><span>종목을 직접 넣습니다</span></button>`;
+    return;
+  }
+  const day = todayLog();
+  const rou = routines.find(r=>r.id===day.routineId) || routines[0];
+  if(!day.routineId){ day.routineId = rou.id; putTodayLog(day); }
+  const stagnant = (rou.exerciseIds||[]).filter(isStagnantEx);
+  const dl = deloadState();
+  let html = '';
+  if(dl){
+    html += `<div class="wk-banner">디로드 ${dl.day}일차 · ${dl.left}일 남음 — 중량 유지, RIR 3~4에서 끝내세요.</div>`;
+  } else if(stagnant.length>=2){
+    const names = stagnant.map(id=>{ const e=exercises.find(x=>x.id===id); return e?e.name:id; }).join(', ');
+    html += `<div class="wk-banner">⚠ 백오프가 2세션 연속 정체입니다 (${names})<br><b>디로드를 권장합니다</b> — 중량은 유지하고 RIR 3~4에서 세트를 끝내세요. 5~7일.
+      <div class="frow" style="margin-top:8px;margin-bottom:0;">
+        <button type="button" class="mini-btn" onclick="startDeload()">디로드 시작</button>
+        <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="this.closest('.wk-banner').remove()">나중에</button>
+      </div></div>`;
+  }
+  html += `<div class="flabel">오늘 루틴</div>
+    <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="루틴 선택">
+      <option value="">루틴 없이 기록</option>
+      ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
+    </select>`;
+  const light = !!(rou && rou.light && day.routineId);
+  if(light) html += `<div class="wk-banner" style="margin-top:12px;">저강도 세션 — 탑세트 없이 백오프만. 고강도는 주 4회로 제한합니다.</div>`;
+  const ids = day.routineId ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
+  const seen = new Set();
+  ids.forEach(id=>{ if(!seen.has(id)){ seen.add(id); html += workCardHtml(id, day, light); } });
+  (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
+  html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
+    <div class="flabel" style="margin-top:16px;">루틴 이름 바꾸기</div>
+    <div class="frow"><input class="txt-input" id="rouRename" value="${(rou&&day.routineId)?rou.name.replace(/"/g,''):''}" aria-label="루틴 이름">
+    <button type="button" class="mini-btn" style="width:auto;padding:0 14px;margin:0;" onclick="renameRoutine()">저장</button></div>
+    <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
+  box.innerHTML = html;
+}
+function workCardHtml(exId, day, light){
+  const exercises = loadStore(WK.ex, []);
+  const ex = exercises.find(x=>x.id===exId);
+  if(!ex) return '';
+  const ent = (day.entries||[]).find(e=>e.exerciseId===exId) || { exerciseId:exId, setupUsed:ex.setup, top:{weight:'',reps:'',rir:effectiveRir(ex)}, backoff:{weight:'',reps:'',rir:effectiveRir(ex)}, memo:'' };
+  const prev = lastBackoff(exId);
+  const curVol = (ent.backoff && ent.backoff.weight && ent.backoff.reps) ? ent.backoff.weight*ent.backoff.reps : null;
+  let cmp = '';
+  if(prev){
+    const dVol = curVol==null ? 0 : curVol - prev.vol;
+    const cls = dVol>0?'up':dVol<0?'dn':'';
+    const arrow = dVol>0?('▲+'+Math.round(dVol)):dVol<0?('▼'+Math.round(dVol)):'–';
+    cmp = `지난 세션 백오프: ${prev.w}kg × ${prev.r}회 <span class="${cls}">${curVol==null?'':arrow}</span>`;
+  } else cmp = '지난 세션 백오프: 아직 없음';
+  const stag = isStagnantEx(exId) ? `<span class="wk-badge">2세션 정체</span>` : '';
+  const sid = ex.id.replace(/['"]/g,'');
+  const topHide = light ? 'hidden' : '';
+  return `<div class="wk-card" id="wkc_${sid}">
+    <h4>${ex.name}${stag} <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
+    <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${ent.setupUsed||ex.setup||'세팅 없음 · 탭해서 적기'}</button>
+    <div class="${topHide}">
+      <div class="wk-row"><span class="wk-lab">탑세트</span>
+        <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 탑세트 중량" value="${ent.top&&ent.top.weight!=null?ent.top.weight:''}" oninput="onTopW('${sid}',this.value)">
+        <span class="wk-unit">kg ×</span>
+        <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 횟수" value="${ent.top&&ent.top.reps!=null?ent.top.reps:''}" oninput="patchEnt('${sid}','top','reps',this.value)">
+        <span class="wk-unit">회 RIR</span>
+        <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">
+      </div>
+      <div class="wk-hint">자력 반복만 입력</div>
+    </div>
+    <div class="wk-row"><span class="wk-lab">백오프</span>
+      <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
+      <span class="wk-unit">kg ×</span>
+      <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 횟수" value="${ent.backoff&&ent.backoff.reps!=null?ent.backoff.reps:''}" oninput="patchEnt('${sid}','backoff','reps',this.value)">
+      <span class="wk-unit">회 RIR</span>
+      <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
+    </div>
+    <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight? ent.backoff.weight+'kg':'탑세트 넣으면 75%가 자동'}</div>
+    <div class="wk-prev">${cmp}</div>
+  </div>`;
+}
+function pickRoutine(id){
+  const day = todayLog();
+  day.routineId = id || null;
+  putTodayLog(day);
+  renderWork();
+}
+function renameRoutine(){
+  const el = document.getElementById('rouRename'); if(!el) return;
+  const name = el.value.trim(); if(!name) return;
+  const day = todayLog(); if(!day.routineId) return;
+  const list = loadStore(WK.rou, []);
+  const r = list.find(x=>x.id===day.routineId); if(!r) return;
+  r.name = name.replace(/['"<>]/g,'');
+  saveStore(WK.rou, list);
+  toast('루틴 이름 저장');
+  renderWork();
+}
+function ensureEnt(exId){
+  const day = todayLog();
+  day.entries = day.entries || [];
+  let e = day.entries.find(x=>x.exerciseId===exId);
+  const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
+  if(!e){
+    e = { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, memo:'' };
+    day.entries.push(e);
+  }
+  if(!e.top) e.top = {weight:'',reps:'',rir:1};
+  if(!e.backoff) e.backoff = {weight:'',reps:'',rir:1};
+  return { day, e, ex };
+}
+function patchEnt(exId, which, field, val){
+  const { day, e } = ensureEnt(exId);
+  const n = val==='' ? '' : (field==='weight' ? parseFloat(val) : parseInt(val,10));
+  e[which][field] = isNaN(n) ? val : n;
+  putTodayLog(day);
+  if(which==='backoff' && (field==='weight'||field==='reps')){
+    const card = document.getElementById('wkc_'+exId);
+    if(card){
+      const prev = lastBackoff(exId);
+      const vol = (e.backoff.weight>0 && e.backoff.reps>0) ? e.backoff.weight*e.backoff.reps : null;
+      const el = card.querySelector('.wk-prev');
+      if(el && prev){
+        const dVol = vol==null?0:vol-prev.vol;
+        const cls = dVol>0?'up':dVol<0?'dn':'';
+        const arrow = dVol>0?('▲+'+Math.round(dVol)):dVol<0?('▼'+Math.round(dVol)):'–';
+        el.innerHTML = `지난 세션 백오프: ${prev.w}kg × ${prev.r}회 <span class="${cls}">${vol==null?'':arrow}</span>`;
+      }
+    }
+  }
+}
+function onTopW(exId, val){
+  patchEnt(exId, 'top', 'weight', val);
+  const w = parseFloat(val);
+  if(!(w>0)) return;
+  const bo = round2p5(w*0.75);
+  const { day, e } = ensureEnt(exId);
+  e.backoff.weight = bo;
+  putTodayLog(day);
+  const inp = document.getElementById('boW_'+exId);
+  if(inp) inp.value = bo;
+  const h = document.getElementById('boHint_'+exId);
+  if(h) h.textContent = bo+'kg 자동 입력됨 · 고칠 수 있어요';
+}
+function editSetup(exId){
+  const { day, e, ex } = ensureEnt(exId);
+  const cur = e.setupUsed || (ex&&ex.setup) || '';
+  const v = prompt('오늘 기구 세팅', cur);
+  if(v==null) return;
+  e.setupUsed = v;
+  putTodayLog(day);
+  if(ex && v && v!==ex.setup){
+    if(confirm('라이브러리 세팅도 이 값으로 바꿀까요?')){
+      const list = loadStore(WK.ex, []);
+      const x = list.find(a=>a.id===exId);
+      if(x){ x.setup = v; saveStore(WK.ex, list); }
+    }
+  }
+  renderWork();
+}
+let _exEditId = null;
+function openExSheet(id){
+  _exEditId = id || null;
+  const ex = id ? loadStore(WK.ex, []).find(x=>x.id===id) : null;
+  document.getElementById('exTitle').textContent = ex ? '종목 수정' : '종목 추가';
+  document.getElementById('exName').value = ex ? ex.name : '';
+  document.getElementById('exMuscle').value = ex ? ex.muscle : '가슴';
+  document.getElementById('exType').value = ex ? ex.type : 'machine_compound';
+  document.getElementById('exSetup').value = ex ? (ex.setup||'') : '';
+  document.getElementById('exDelBtn').classList.toggle('hidden', !ex);
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('exSheet').classList.add('show');
+  setTimeout(()=>document.getElementById('exName').focus(), 50);
+}
+function saveExSheet(){
+  const name = document.getElementById('exName').value.trim().replace(/['"<>]/g,'');
+  if(!name){ toast('이름을 입력하세요'); return; }
+  const muscle = document.getElementById('exMuscle').value;
+  const type = document.getElementById('exType').value;
+  const setup = document.getElementById('exSetup').value.trim();
+  const list = loadStore(WK.ex, []);
+  if(_exEditId){
+    const x = list.find(a=>a.id===_exEditId);
+    if(x){ x.name=name; x.muscle=muscle; x.type=type; x.setup=setup; x.defaultRir=defaultRir(type); }
+  } else {
+    const ex = mkEx(name, muscle, type, setup);
+    list.push(ex);
+    const day = todayLog();
+    const rus = loadStore(WK.rou, []);
+    const r = rus.find(x=>x.id===day.routineId);
+    if(r){ r.exerciseIds.push(ex.id); saveStore(WK.rou, rus); }
+    else {
+      day.entries = day.entries||[];
+      day.entries.push({ exerciseId:ex.id, setupUsed:setup, top:{weight:'',reps:'',rir:ex.defaultRir}, backoff:{weight:'',reps:'',rir:ex.defaultRir}, memo:'' });
+      putTodayLog(day);
+    }
+  }
+  saveStore(WK.ex, list);
+  closeSheet();
+  renderWork();
+  toast('종목 저장');
+}
+function delExFromSheet(){
+  if(!_exEditId) return;
+  if(!confirm('이 종목을 라이브러리에서 지울까요? 지난 기록은 남습니다.')) return;
+  saveStore(WK.ex, loadStore(WK.ex, []).filter(x=>x.id!==_exEditId));
+  const rus = loadStore(WK.rou, []);
+  rus.forEach(r=>{ r.exerciseIds = (r.exerciseIds||[]).filter(id=>id!==_exEditId); });
+  saveStore(WK.rou, rus);
+  closeSheet();
+  renderWork();
+  toast('종목 삭제');
+}
+function weekKeys(){
+  const keys=[]; for(let i=-6;i<=0;i++) keys.push(keyOffset(i)); return keys;
+}
+function wkSessionKind(day){
+  if(!day) return null;
+  const rus = loadStore(WK.rou, []);
+  const r = rus.find(x=>x.id===day.routineId);
+  if(r && r.light) return 'light';
+  const hasTop = (day.entries||[]).some(e=>e.top && e.top.weight>0);
+  return hasTop ? 'high' : ((day.entries||[]).some(e=>e.backoff && e.backoff.weight>0) ? 'light' : null);
+}
+function renderWkJudge(){
+  const el = document.getElementById('wkJudge');
+  if(!el) return;
+  const ks = Object.keys(S.weights||{}).sort();
+  const log = loadStore(WK.log, {});
+  const logDates = Object.keys(log).filter(d=>(log[d].entries||[]).some(e=>e.backoff&&e.backoff.weight>0));
+  if(ks.length<8 || logDates.length<2){
+    el.textContent = '판정하려면 2주치 체중과 운동 기록이 필요해요.';
+    return;
+  }
+  const avg = (arr)=> arr.reduce((a,b)=>a+b,0)/arr.length;
+  const thisW = ks.filter(k=>k>=keyOffset(-6)).map(k=>S.weights[k]);
+  const lastW = ks.filter(k=>k>=keyOffset(-13)&&k<keyOffset(-6)).map(k=>S.weights[k]);
+  if(thisW.length<3 || lastW.length<3){
+    el.textContent = '판정하려면 2주치 체중과 운동 기록이 필요해요.';
+    return;
+  }
+  const a=avg(thisW), b=avg(lastW);
+  const pct = (a-b)/b*100;
+  const thisLog = Object.keys(log).filter(d=>d>=keyOffset(-6));
+  let down=0;
+  loadStore(WK.ex, []).forEach(ex=>{
+    const h = backoffHist(ex.id).filter(x=>thisLog.includes(x.date));
+    if(h.length>=2 && h[h.length-1].vol < h[0].vol) down++;
+  });
+  let msg;
+  if(pct < -1){
+    msg = down>=2
+      ? '⚠ 감량이 너무 빠릅니다. 제지방이 함께 빠지고 있을 가능성이 있어요. 탄수화물을 하루 25~30g 늘려보세요.'
+      : '감량 속도가 빠른 편입니다. 훈련 기록은 아직 유지되고 있어요. 다음 주 백오프를 주의해서 보세요.';
+  } else if(pct <= -0.5){
+    msg = '✓ 적정 감량 속도입니다.';
+  } else if(pct > -0.2 && pct < 0.2){
+    msg = '감량이 멈췄습니다. 칼로리를 줄이기 전에 걸음 수부터 확인해보세요.';
+  } else if(pct >= 0.2 && down===0){
+    msg = '✓ 증량 중이고 훈련 기록도 오르고 있습니다.';
+  } else {
+    msg = '체중과 백오프를 같이 보고 있습니다. 한 주 더 쌓이면 더 분명해집니다.';
+  }
+  el.innerHTML = `${msg}<div style="font-size:11px;color:#8e8e93;margin-top:6px;font-weight:600;">이번 주 체중 ${pct>=0?'+':''}${pct.toFixed(2)}% · 백오프 하락 ${down}종목. 일반적인 참고 정보이며 의학적 조언이 아닙니다.</div>`;
+}
+function renderWkChart(){
+  const sel = document.getElementById('wkExSel');
+  const note = document.getElementById('wkChartNote');
+  const chart = document.getElementById('wkChart');
+  const weekN = document.getElementById('wkWeekNote');
+  if(!sel) return;
+  const exercises = loadStore(WK.ex, []);
+  if(sel.options.length===0){
+    sel.innerHTML = exercises.map(e=>`<option value="${e.id}">${e.name}</option>`).join('') || '<option>종목 없음</option>';
+  }
+  const id = sel.value || (exercises[0]&&exercises[0].id);
+  const h = id ? backoffHist(id) : [];
+  if(h.length<2){
+    if(note) note.textContent = '같은 종목을 2번 이상 적으면 그래프가 그려집니다.';
+    if(chart) chart.innerHTML = '';
+  } else {
+    const last4 = h.slice(-4);
+    const first=last4[0].vol, last=last4[last4.length-1].vol;
+    const pct = first ? Math.round((last-first)/first*100) : 0;
+    const stag = isStagnantEx(id);
+    if(note) note.textContent = stag
+      ? '최근 2세션 정체 중입니다 — 디로드를 권장합니다'
+      : `최근 ${last4.length}세션 백오프 볼륨이 ${pct>=0?'+':''}${pct}% ${pct>=0?'상승':'하락'}했습니다`;
+    const W=320,H=90,P=8;
+    const mx = Math.max(...h.map(x=>x.vol),1);
+    const pts = h.map((x,i)=>{
+      const px = P + (W-2*P)*(h.length===1?0.5:i/(h.length-1));
+      const py = H-P - (H-2*P)*(x.vol/mx);
+      return px.toFixed(1)+','+py.toFixed(1);
+    }).join(' ');
+    if(chart) chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%"><polyline fill="none" stroke="#111" stroke-width="2.5" points="${pts}"/></svg>`;
+  }
+  const log = loadStore(WK.log, {});
+  let sess=0, high=0;
+  weekKeys().forEach(k=>{
+    const kind = wkSessionKind(log[k]);
+    if(kind){ sess++; if(kind==='high') high++; }
+  });
+  let wtxt = `이번 주 훈련 ${sess}회 · 고강도 ${high}회`;
+  if(high>4) wtxt += ' — 고강도 세션이 주 5회입니다. 신경계 회복이 부족할 수 있어요. 주 4회 이하를 권장합니다.';
+  if(weekN) weekN.textContent = wtxt;
+}
+
+
 try { migrateV1(); } catch(_){}
 render();
 tryAddQuery();
