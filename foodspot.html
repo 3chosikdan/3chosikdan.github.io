@@ -470,6 +470,9 @@
   .wk-card svg, .wk-exrow svg { color:#111; }
   .wk-legend { display:flex; gap:12px; font-size:11px; font-weight:600; color:#8e8e93; margin:4px 0 10px; }
   .wk-dot { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; vertical-align:middle; }
+  .rou-row { display:flex; align-items:center; gap:6px; padding:10px 0; border-bottom:1px solid #f2f2f7; }
+  .rou-row .n { flex:1; min-width:0; font-size:14px; font-weight:700; }
+  .rou-row .arr { width:36px; height:36px; border:none; border-radius:10px; background:#f2f2f7; font-size:16px; font-weight:800; cursor:pointer; color:#111; }
 
   /* dark */
   html.dark { color-scheme: dark; }
@@ -553,6 +556,8 @@
   html.dark .wk-exrow { border-color:#2c2c2e; }
   html.dark .wk-exrow.on { background:#2c2c2e; }
   html.dark .wk-card svg, html.dark .wk-exrow svg { color:#f2f2f7; }
+  html.dark .rou-row { border-color:#2c2c2e; }
+  html.dark .rou-row .arr { background:#2c2c2e; color:#f2f2f7; }
 
 </style>
 </head>
@@ -987,6 +992,13 @@
   <input class="txt-input" id="exSetup" placeholder="시트 3, 핸들 중간" aria-label="기구 세팅">
   <button class="save-btn" style="margin-top:14px;" onclick="saveExSheet()">저장</button>
   <button type="button" class="rec-del hidden" id="exDelBtn" onclick="delExFromSheet()">종목 삭제</button>
+</div>
+
+<div class="sheet" id="rouSheet" role="dialog" aria-modal="true" aria-labelledby="rouTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="rouTitle">루틴 편집</h3>
+  <div id="rouBody"></div>
 </div>
 
 <div id="toast"></div>
@@ -1440,14 +1452,15 @@ function snapshot(){
   o['3cho:workout:log'] = loadStore('3cho:workout:log', {});
   o['3cho:workout:routines'] = loadStore('3cho:workout:routines', []);
   o['3cho:workout:deload'] = loadStore('3cho:workout:deload', null);
+  o['3cho:workout:settings'] = loadStore('3cho:workout:settings', {});
   return o;
 }
 function applySnapshot(data, replaceAll){
   if(!data || typeof data !== 'object') return;
-  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload'].forEach(k=>{
+  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'].forEach(k=>{
     if(data[k] !== undefined) saveStore(k, data[k]);
   });
-  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1 };
+  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1 };
   if(replaceAll){
     Object.keys(data).forEach(k=>{ if(!skip[k]) S[k] = data[k]; });
   }
@@ -3251,6 +3264,8 @@ function closeSheet(){
   if(cal) cal.classList.remove('show');
   const exs = document.getElementById('exSheet');
   if(exs) exs.classList.remove('show');
+  const rs = document.getElementById('rouSheet');
+  if(rs) rs.classList.remove('show');
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -3714,7 +3729,7 @@ async function tryLoadFromHash(){
     const cnt = data.meals ? Object.keys(data.meals).length : 0;
     if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 올릴까요?\n지금 이 기기의 기록은 교체됩니다.`)) return false;
     applySnapshot(data, false);
-    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1 };
+    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1 };
     const clean = {};
     Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
     localStorage.setItem('foodspot', JSON.stringify(clean));
@@ -3880,8 +3895,30 @@ const WK = {
   ex: '3cho:workout:exercises',
   log: '3cho:workout:log',
   rou: '3cho:workout:routines',
-  deload: '3cho:workout:deload'
+  deload: '3cho:workout:deload',
+  settings: '3cho:workout:settings'
 };
+function wkSettings(){
+  const s = loadStore(WK.settings, {}) || {};
+  if(s.backoffPct == null) s.backoffPct = 75;
+  return s;
+}
+function backoffPct(){
+  const n = +wkSettings().backoffPct || 75;
+  return Math.min(90, Math.max(50, n));
+}
+function setBoPct(n){
+  const s = wkSettings();
+  s.backoffPct = +n;
+  saveStore(WK.settings, s);
+  toast('백오프 = 탑세트의 '+n+'% · 2.5kg 반올림');
+  renderWork();
+}
+function calcBackoff(topW){
+  const w = parseFloat(topW);
+  if(!(w>0)) return '';
+  return round2p5(w * backoffPct() / 100);
+}
 function defaultRir(type){
   if(type==='machine_isolation' || type==='cable') return 0;
   if(type==='free_compound') return 2;
@@ -3936,7 +3973,7 @@ const WK_PRESETS = [
         ['카프 레이즈','종아리','machine_isolation','']
       ]}
     ]},
-  { id:'split5', name:'강도 계층화 5분할', blurb:'고급 · 고강도는 주 4회만',
+  { id:'split5', name:'강도 계층화 5분할', blurb:'예시일 뿐입니다. 내 루틴으로 바꿔도 됩니다',
     routines: [
       { id:'d_mon', name:'월 가슴+삼두', light:false, items:[
         ['인클라인 머신 프레스','가슴','machine_compound',''],
@@ -3995,27 +4032,35 @@ function setHomeMode(v){
   if(lift) renderWork();
 }
 function startBare(){
-  saveStore(WK.ex, []);
-  saveStore(WK.rou, [{ id:'free', name:'루틴 없이', exerciseIds:[], light:false }]);
+  const rus = loadStore(WK.rou, []);
+  const r = { id:'rou_'+Math.random().toString(36).slice(2,9), name:'내 루틴', exerciseIds:[], light:false };
+  rus.push(r);
+  saveStore(WK.rou, rus);
   const day = todayLog();
-  day.routineId = 'free';
+  day.routineId = r.id;
   putTodayLog(day);
   renderWork();
+  openRouSheet(r.id);
 }
 function applyPreset(pid){
   const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
-  const exercises = [];
-  const routines = p.routines.map(r=>{
+  const exercises = loadStore(WK.ex, []);
+  const routines = loadStore(WK.rou, []);
+  const tag = Date.now().toString(36).slice(-3);
+  p.routines.forEach(r=>{
     const ids = r.items.map(it=>{
       const ex = mkEx(it[0], it[1], it[2], it[3]||'');
       exercises.push(ex);
       return ex.id;
     });
-    return { id:r.id, name:r.name, exerciseIds:ids, light:!!r.light };
+    routines.push({ id:r.id+'_'+tag, name:r.name, exerciseIds:ids, light:!!r.light });
   });
   saveStore(WK.ex, exercises);
   saveStore(WK.rou, routines);
-  toast(p.name+' 루틴 저장됨');
+  const day = todayLog();
+  day.routineId = routines[routines.length-p.routines.length].id;
+  putTodayLog(day);
+  toast(p.name+' 추가됨 · 이름·종목은 자유롭게 고치세요');
   renderWork();
 }
 function todayLog(){
@@ -4070,10 +4115,11 @@ function renderWork(){
   const routines = loadStore(WK.rou, []);
   const exercises = loadStore(WK.ex, []);
   if(!routines.length){
-    box.innerHTML = `<h2 style="margin-bottom:8px;">루틴 고르기</h2>
-      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">한 종목은 탑세트 1 + 백오프 1입니다. 자력 반복만 적습니다.</p>`
-      + WK_PRESETS.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('')
-      + `<button type="button" class="wk-pick" onclick="startBare()"><b>루틴 없이 시작</b><span>종목을 직접 넣습니다</span></button>`;
+    box.innerHTML = `<h2 style="margin-bottom:8px;">내 루틴</h2>
+      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목을 직접 넣고 요일·분할은 마음대로입니다. 한 종목은 탑세트 1 + 백오프 1입니다.</p>
+      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>
+      <div class="flabel" style="margin-top:8px;">원하면 템플릿으로 시작 · 이후 전부 고칠 수 있습니다</div>`
+      + WK_PRESETS.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
     return;
   }
   const day = todayLog();
@@ -4092,11 +4138,16 @@ function renderWork(){
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="this.closest('.wk-banner').remove()">나중에</button>
       </div></div>`;
   }
+  const pct = backoffPct();
   html += `<div class="flabel">오늘 루틴</div>
     <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="루틴 선택">
       <option value="">루틴 없이 기록</option>
       ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
-    </select>`;
+    </select>
+    <div class="frow" style="margin-top:8px;">
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">루틴 편집</button>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="startBare()">새 루틴</button>
+    </div>`;
   const light = !!(rou && rou.light && day.routineId);
   if(light) html += `<div class="wk-banner" style="margin-top:12px;">저강도 세션 — 탑세트 없이 백오프만. 고강도는 주 4회로 제한합니다.</div>`;
   const ids = day.routineId ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
@@ -4104,11 +4155,16 @@ function renderWork(){
   ids.forEach(id=>{ if(!seen.has(id)){ seen.add(id); html += workCardHtml(id, day, light); } });
   (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
-    <div class="flabel" style="margin-top:16px;">루틴 이름 바꾸기</div>
-    <div class="frow"><input class="txt-input" id="rouRename" value="${(rou&&day.routineId)?rou.name.replace(/"/g,''):''}" aria-label="루틴 이름">
-    <button type="button" class="mini-btn" style="width:auto;padding:0 14px;margin:0;" onclick="renameRoutine()">저장</button></div>
+    <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
+    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트 중량 × <b style="color:inherit">${pct}%</b> 후 <b style="color:inherit">2.5kg</b> 단위로 반올림합니다. 횟수는 자동으로 넣지 않습니다. 숫자는 탭해서 고칠 수 있습니다.</p>
+    <div class="seg" id="boPctSeg">
+      <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
+      <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
+      <button type="button" data-v="80" onclick="setBoPct(80)">80%</button>
+    </div>
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
+  setSegOnly('boPctSeg', String(pct));
 }
 function workCardHtml(exId, day, light){
   const exercises = loadStore(WK.ex, []);
@@ -4147,7 +4203,7 @@ function workCardHtml(exId, day, light){
       <span class="wk-unit">회 RIR</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
     </div>
-    <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight? ent.backoff.weight+'kg':'탑세트 넣으면 75%가 자동'}</div>
+    <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}kg` : ent.backoff.weight+'kg') : `탑세트 × ${backoffPct()}% → 2.5kg 반올림`}</div>
     <div class="wk-prev">${cmp}</div>
     ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
@@ -4169,6 +4225,112 @@ function renameRoutine(){
   toast('루틴 이름 저장');
   renderWork();
 }
+function openRouSheet(id){
+  if(!id){ toast('루틴을 고르거나 새로 만드세요'); return; }
+  window._rouEditId = id;
+  renderRouBody();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('rouSheet').classList.add('show');
+}
+function renderRouBody(){
+  const id = window._rouEditId;
+  const box = document.getElementById('rouBody');
+  if(!box) return;
+  const rus = loadStore(WK.rou, []);
+  const r = rus.find(x=>x.id===id);
+  if(!r){ box.innerHTML = '<p class="empty">루틴이 없습니다.</p>'; return; }
+  const exs = loadStore(WK.ex, []);
+  const ids = r.exerciseIds || [];
+  const unused = exs.filter(e=>!ids.includes(e.id));
+  let html = `<div class="flabel"><label for="rouNameIn">이름</label></div>
+    <input class="txt-input" id="rouNameIn" value="${(r.name||'').replace(/"/g,'')}" onchange="saveRouName(this.value)" aria-label="루틴 이름">
+    <label style="display:flex;align-items:center;gap:8px;margin:12px 0;font-size:14px;font-weight:700;">
+      <input type="checkbox" ${r.light?'checked':''} onchange="toggleRouLight(this.checked)"> 저강도 (탑세트 숨김)
+    </label>
+    <div class="flabel">종목 순서</div>`;
+  if(!ids.length) html += `<p class="empty">아직 종목이 없습니다. 아래에서 넣으세요.</p>`;
+  ids.forEach((eid,i)=>{
+    const ex = exs.find(x=>x.id===eid);
+    const n = ex ? ex.name : '(없는 종목)';
+    html += `<div class="rou-row">
+      <button type="button" class="arr" onclick="moveExInRou(${i},-1)" aria-label="위로">↑</button>
+      <button type="button" class="arr" onclick="moveExInRou(${i},1)" aria-label="아래로">↓</button>
+      <div class="n">${n}<div style="font-size:11px;color:#8e8e93;font-weight:600;">${ex?ex.muscle:''}</div></div>
+      <button type="button" class="helper-link" onclick="removeExFromRou('${eid}')">빼기</button>
+    </div>`;
+  });
+  html += `<div class="flabel" style="margin-top:12px;">있는 종목 넣기</div>`;
+  if(unused.length){
+    html += `<select class="txt-input" id="rouAddSel" aria-label="종목 선택">
+      ${unused.map(e=>`<option value="${e.id}">${e.name} · ${e.muscle}</option>`).join('')}
+    </select>
+    <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="addExToRou(document.getElementById('rouAddSel').value)">이 종목 넣기</button>`;
+  } else html += `<p class="empty">라이브러리 종목은 다 들어 있습니다.</p>`;
+  html += `<button type="button" class="mini-btn" style="margin-top:8px;" onclick="openExSheetFromRou()">＋ 새 종목 만들기</button>
+    <div class="flabel" style="margin-top:16px;">템플릿 더하기 (지금 루틴을 지우지 않습니다)</div>`;
+  WK_PRESETS.forEach(p=>{
+    html += `<button type="button" class="wk-pick" style="margin-bottom:8px;" onclick="applyPreset('${p.id}');closeSheet();"><b>${p.name}</b><span>${p.blurb}</span></button>`;
+  });
+  html += `<button type="button" class="rec-del" onclick="deleteRoutine()">이 루틴 삭제</button>`;
+  box.innerHTML = html;
+}
+function rouCur(){
+  const rus = loadStore(WK.rou, []);
+  const r = rus.find(x=>x.id===window._rouEditId);
+  return { rus, r };
+}
+function saveRouName(v){
+  const { rus, r } = rouCur(); if(!r) return;
+  r.name = (v||'').trim().replace(/['"<>]/g,'') || r.name;
+  saveStore(WK.rou, rus);
+  renderWork();
+}
+function toggleRouLight(on){
+  const { rus, r } = rouCur(); if(!r) return;
+  r.light = !!on;
+  saveStore(WK.rou, rus);
+  renderWork();
+}
+function moveExInRou(i, dir){
+  const { rus, r } = rouCur(); if(!r) return;
+  const ids = r.exerciseIds || [];
+  const j = i+dir;
+  if(j<0 || j>=ids.length) return;
+  const t = ids[i]; ids[i]=ids[j]; ids[j]=t;
+  r.exerciseIds = ids;
+  saveStore(WK.rou, rus);
+  renderRouBody();
+  renderWork();
+}
+function removeExFromRou(exId){
+  const { rus, r } = rouCur(); if(!r) return;
+  r.exerciseIds = (r.exerciseIds||[]).filter(id=>id!==exId);
+  saveStore(WK.rou, rus);
+  renderRouBody();
+  renderWork();
+}
+function addExToRou(exId){
+  const { rus, r } = rouCur(); if(!r || !exId) return;
+  r.exerciseIds = r.exerciseIds || [];
+  if(!r.exerciseIds.includes(exId)) r.exerciseIds.push(exId);
+  saveStore(WK.rou, rus);
+  renderRouBody();
+  renderWork();
+}
+function deleteRoutine(){
+  const { rus, r } = rouCur(); if(!r) return;
+  if(!confirm('「'+r.name+'」루틴을 지울까요? 운동 기록은 남습니다.')) return;
+  const next = rus.filter(x=>x.id!==r.id);
+  saveStore(WK.rou, next);
+  const day = todayLog();
+  if(day.routineId===r.id){
+    day.routineId = next[0] ? next[0].id : null;
+    putTodayLog(day);
+  }
+  closeSheet();
+  renderWork();
+  toast('루틴 삭제');
+}
 function ensureEnt(exId){
   const day = todayLog();
   day.entries = day.entries || [];
@@ -4187,6 +4349,10 @@ function patchEnt(exId, which, field, val){
   const n = val==='' ? '' : (field==='weight' ? parseFloat(val) : parseInt(val,10));
   e[which][field] = isNaN(n) ? val : n;
   putTodayLog(day);
+  if(which==='backoff' && field==='weight'){
+    const h = document.getElementById('boHint_'+exId);
+    if(h) h.textContent = '직접 입력 · 탑세트 바꾸면 다시 계산';
+  }
   if(which==='backoff' && (field==='weight'||field==='reps')){
     const card = document.getElementById('wkc_'+exId);
     if(card){
@@ -4206,14 +4372,14 @@ function onTopW(exId, val){
   patchEnt(exId, 'top', 'weight', val);
   const w = parseFloat(val);
   if(!(w>0)) return;
-  const bo = round2p5(w*0.75);
+  const bo = calcBackoff(w);
   const { day, e } = ensureEnt(exId);
   e.backoff.weight = bo;
   putTodayLog(day);
   const inp = document.getElementById('boW_'+exId);
   if(inp) inp.value = bo;
   const h = document.getElementById('boHint_'+exId);
-  if(h) h.textContent = bo+'kg 자동 입력됨 · 고칠 수 있어요';
+  if(h) h.textContent = w+' × '+backoffPct()+'% → '+bo+'kg · 2.5kg 반올림 · 고칠 수 있어요';
 }
 function editSetup(exId){
   const { day, e, ex } = ensureEnt(exId);
@@ -4252,6 +4418,7 @@ function saveExSheet(){
   const type = document.getElementById('exType').value;
   const setup = document.getElementById('exSetup').value.trim();
   const list = loadStore(WK.ex, []);
+  const backRou = window._rouEditId;
   if(_exEditId){
     const x = list.find(a=>a.id===_exEditId);
     if(x){ x.name=name; x.muscle=muscle; x.type=type; x.setup=setup; x.defaultRir=defaultRir(type); }
@@ -4260,8 +4427,8 @@ function saveExSheet(){
     list.push(ex);
     const day = todayLog();
     const rus = loadStore(WK.rou, []);
-    const r = rus.find(x=>x.id===day.routineId);
-    if(r){ r.exerciseIds.push(ex.id); saveStore(WK.rou, rus); }
+    const r = rus.find(x=>x.id===(backRou || day.routineId));
+    if(r){ r.exerciseIds = r.exerciseIds||[]; r.exerciseIds.push(ex.id); saveStore(WK.rou, rus); }
     else {
       day.entries = day.entries||[];
       day.entries.push({ exerciseId:ex.id, setupUsed:setup, top:{weight:'',reps:'',rir:ex.defaultRir}, backoff:{weight:'',reps:'',rir:ex.defaultRir}, memo:'' });
@@ -4272,6 +4439,12 @@ function saveExSheet(){
   closeSheet();
   renderWork();
   toast('종목 저장');
+  if(backRou) openRouSheet(backRou);
+}
+function openExSheetFromRou(){
+  const rs = document.getElementById('rouSheet');
+  if(rs) rs.classList.remove('show');
+  openExSheet();
 }
 function delExFromSheet(){
   if(!_exEditId) return;
