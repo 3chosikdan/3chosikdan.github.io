@@ -469,6 +469,10 @@
   .rou-row { display:flex; align-items:center; gap:6px; padding:10px 0; border-bottom:1px solid #f2f2f7; }
   .rou-row .n { flex:1; min-width:0; font-size:14px; font-weight:700; }
   .rou-row .arr { width:36px; height:36px; border:none; border-radius:10px; background:#f2f2f7; font-size:16px; font-weight:800; cursor:pointer; color:#111; }
+  .wk-help { margin:10px 0 4px; }
+  .wk-help summary { font-size:13px; font-weight:700; color:#007aff; cursor:pointer; list-style:none; }
+  .wk-help summary::-webkit-details-marker { display:none; }
+  .wk-help .wk-pick { margin-top:8px; margin-bottom:0; }
 
   /* dark */
   html.dark { color-scheme: dark; }
@@ -552,6 +556,7 @@
   html.dark .wk-exrow { border-color:#2c2c2e; }
   html.dark .wk-exrow.on { background:#2c2c2e; }
   html.dark .wk-card svg, html.dark .wk-exrow svg { color:#f2f2f7; }
+  html.dark .wk-help summary { color:#0a84ff; }
   html.dark .rou-row { border-color:#2c2c2e; }
   html.dark .rou-row .arr, html.dark .wk-card h4 .arr { background:#2c2c2e; color:#f2f2f7; }
 
@@ -930,8 +935,8 @@
   <div style="font-size:11px;color:#8e8e93;line-height:1.5;">카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기 기록이 백업 내용으로 바뀝니다.</div>
   <input type="file" id="importInput" accept=".json,application/json" class="hidden">
 
-  <div class="flabel" style="margin-top:20px;">초기화</div>
-  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">루틴만 다시 짜려면 운동 탭에서 <b>새 루틴</b> 또는 <b>복사해서 새로</b>를 쓰세요. 식단은 안 지워집니다. 아래는 식단까지 전부 비웁니다. 그전에 백업하세요.</p>
+  <div class="flabel" style="margin-top:20px;">기록 지우기</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">루틴만 바꾸고 싶으면 운동 탭에서 <b>루틴을 새로 짜거나 복사하려면</b>을 누르세요. 식단은 안 지워집니다. 아래는 식단·몸무게·운동을 이 기기에서 전부 지웁니다. 그전에 백업하세요.</p>
   <button class="mini-btn" style="background:#f2f2f7;color:#111;margin-bottom:6px;" onclick="shareBackup()">먼저 백업하기</button>
   <button type="button" class="rec-del" onclick="resetAllData()">식단·운동 전부 지우기</button>
 
@@ -4269,7 +4274,7 @@ function startBare(){
   putTodayLog(day);
   renderWork();
   openRouSheet(r.id);
-  toast('새 루틴 · 이전 루틴은 목록에 남아 있습니다');
+  toast('빈 루틴을 추가했습니다. 이전 루틴은 목록에 있습니다');
 }
 function currentRouId(){
   const sheet = document.getElementById('rouSheet');
@@ -4290,13 +4295,13 @@ function cloneRoutine(){
   window._rouEditId = r.id;
   if(document.getElementById('rouSheet').classList.contains('show')) renderRouBody();
   else openRouSheet(r.id);
-  toast('복사됨 · 원래 루틴은 목록에 있습니다');
+  toast('복사했습니다. 원래 루틴은 목록에서 그대로 고를 수 있습니다');
 }
 function rebuildRoutine(){
   const rus = loadStore(WK.rou, []);
   const r = rus.find(x=>x.id===currentRouId());
   if(!r){ startBare(); return; }
-  if((r.exerciseIds||[]).length && !confirm('이 루틴 종목을 비울까요? 지난 운동 숫자와 식단은 남습니다.')) return;
+  if((r.exerciseIds||[]).length && !confirm('이 루틴에 들어 있는 종목 목록만 비울까요?\n지난 날 중량과 식단은 그대로입니다.')) return;
   r.exerciseIds = [];
   saveStore(WK.rou, rus);
   const day = todayLog();
@@ -4309,12 +4314,12 @@ function rebuildRoutine(){
   else openRouSheet(r.id);
 }
 function clearTodayWork(){
-  if(!confirm('오늘 운동 숫자만 지울까요? 루틴 구성·식단은 남습니다.')) return;
+  if(!confirm('오늘 적은 중량만 지울까요?\n루틴 종목과 식단은 그대로입니다.')) return;
   const day = todayLog();
   day.entries = [];
   putTodayLog(day);
   renderWork();
-  toast('오늘 운동만 지웠습니다');
+  toast('오늘 중량만 지웠습니다');
 }
 function applyPreset(pid){
   const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
@@ -4426,8 +4431,8 @@ function renderWork(){
       : ['split5_now','f_hourglass','full_3','upper_lower'];
     const presets = WK_PRESETS.slice().sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
     box.innerHTML = `<h2 style="margin-bottom:8px;">내 루틴</h2>
-      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">종목은 직접 넣거나 아래 분할을 가져온 뒤 고치면 됩니다. 한 종목은 탑세트 1 + 백오프 1. 워밍업·피더는 적지 않습니다. <button type="button" class="helper-link" onclick="openWhy()">원리</button></p>
-      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 만들기</b><span>이름만 정하고 종목을 넣습니다</span></button>`
+      <p style="font-size:13px;color:#8e8e93;line-height:1.5;margin-bottom:12px;">처음부터 종목을 넣거나, 아래 분할을 가져온 뒤 고치면 됩니다. 한 종목은 탑세트 1 + 백오프 1만 적습니다. 워밍업·피더는 적지 않습니다. <button type="button" class="helper-link" onclick="openWhy()">왜 이렇게 하나요</button></p>
+      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴으로 시작</b><span>이름만 정하고 종목을 넣습니다. 나중에 루틴을 여러 개 둬도 됩니다.</span></button>`
       + presets.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
     return;
   }
@@ -4449,30 +4454,29 @@ function renderWork(){
   }
   const pct = backoffPct();
   html += `<div style="display:flex;justify-content:space-between;align-items:baseline;">
-      <div class="flabel" style="margin:0">오늘 루틴</div>
-      <button type="button" class="helper-link" onclick="openWhy()">원리</button>
+      <div class="flabel" style="margin:0">오늘 할 루틴</div>
+      <button type="button" class="helper-link" onclick="openWhy()">왜 이렇게 하나요</button>
     </div>
-    <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="루틴 선택" style="margin-top:8px;">
-      <option value="">루틴 없이 기록</option>
+    <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="오늘 할 루틴" style="margin-top:8px;">
+      <option value="">루틴 없이 오늘만 적기</option>
       ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
     </select>
-    <p class="wk-hint" style="margin:6px 0 0;">루틴은 여러 개 둬도 됩니다. 위에서 바꿔 쓰면 됩니다. 기존 건 안 지워집니다.</p>
-    <div class="frow" style="margin-top:8px;">
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">루틴 편집</button>
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="startBare()">새 루틴</button>
-    </div>
-    <div class="frow" style="margin-top:8px;">
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="cloneRoutine()">복사해서 새로</button>
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="rebuildRoutine()">종목 다시 짜기</button>
-    </div>
-    <button type="button" class="helper-link" style="margin-top:8px;" onclick="clearTodayWork()">오늘 운동 숫자만 지우기</button>`;
+    <p class="wk-hint" style="margin:6px 0 0;">월·화처럼 다른 날 루틴은 위에서 고르면 됩니다. 고르지 않은 루틴은 그대로 둡니다.</p>
+    <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">종목·순서 고치기</button>
+    <details class="wk-help">
+      <summary>루틴을 새로 짜거나 복사하려면</summary>
+      <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 하나 더 만들기</b><span>처음부터 종목을 넣습니다. 지금 쓰는 루틴은 목록에 남습니다.</span></button>
+      <button type="button" class="wk-pick" onclick="cloneRoutine()"><b>이 루틴 복사해 새로 짜기</b><span>종목은 같고 이름만 다르게 하나 더 생깁니다. 원래 루틴은 안 지워집니다.</span></button>
+      <button type="button" class="wk-pick" onclick="rebuildRoutine()"><b>종목만 비우기</b><span>이 루틴 종목 목록만 지웁니다. 지난 날 중량과 식단은 남습니다.</span></button>
+      <button type="button" class="helper-link" style="margin-top:10px;" onclick="clearTodayWork()">오늘 적은 중량만 지우기</button>
+    </details>`;
   if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
   html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
       <input class="wk-in" id="sleepIn" inputmode="decimal" aria-label="어제 수면 시간" value="${day.sleepHours!=null?day.sleepHours:''}" onchange="setSleepHours(this.value)" placeholder="5">
       <span class="wk-unit">시간</span>
     </div>
-    <div class="wk-hint">${day.sleepHours!=null && day.sleepHours<6 ? '6시간 미만 — 정체면 무게보다 잠을 먼저 봅니다.' : '정체 원인 추적. 전날 잔 시간입니다.'}</div>`;
+    <div class="wk-hint">${day.sleepHours!=null && day.sleepHours<6 ? '6시간 미만 — 정체면 무게보다 잠을 먼저 봅니다.' : '어제 몇 시간 잤는지. 정체가 나오면 원인 추적에 씁니다.'}</div>`;
   const light = !!(rou && rou.light && day.routineId);
   if(light) html += `<div class="wk-banner" style="margin-top:12px;">저강도 세션 — 탑세트 없이 백오프만. 고강도는 주 4회로 제한합니다.</div>`;
   const ids = day.routineId ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
@@ -4573,9 +4577,9 @@ function renderRouBody(){
   let html = `<div class="flabel"><label for="rouNameIn">이름</label></div>
     <input class="txt-input" id="rouNameIn" value="${(r.name||'').replace(/"/g,'')}" onchange="saveRouName(this.value)" aria-label="루틴 이름">
     <label style="display:flex;align-items:center;gap:8px;margin:12px 0;font-size:14px;font-weight:700;">
-      <input type="checkbox" ${r.light?'checked':''} onchange="toggleRouLight(this.checked)"> 저강도 (탑세트 숨김)
+      <input type="checkbox" ${r.light?'checked':''} onchange="toggleRouLight(this.checked)"> 저강도 날 (탑세트 칸을 숨깁니다)
     </label>
-    <div class="flabel">종목 순서</div>`;
+    <div class="flabel">종목 순서 — 위아래로 바꿉니다</div>`;
   if(!ids.length) html += `<p class="empty">아직 종목이 없습니다. 아래에서 넣으세요.</p>`;
   ids.forEach((eid,i)=>{
     const ex = exs.find(x=>x.id===eid);
@@ -4587,7 +4591,7 @@ function renderRouBody(){
       <button type="button" class="helper-link" onclick="removeExFromRou('${eid}')">빼기</button>
     </div>`;
   });
-  html += `<div class="flabel" style="margin-top:12px;">있는 종목 넣기</div>`;
+  html += `<div class="flabel" style="margin-top:12px;">이미 있는 종목 넣기</div>`;
   if(unused.length){
     html += `<select class="txt-input" id="rouAddSel" aria-label="종목 선택">
       ${unused.map(e=>`<option value="${e.id}">${e.name} · ${e.muscle}</option>`).join('')}
@@ -4595,11 +4599,9 @@ function renderRouBody(){
     <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="addExToRou(document.getElementById('rouAddSel').value)">이 종목 넣기</button>`;
   } else html += `<p class="empty">라이브러리 종목은 다 들어 있습니다.</p>`;
   html += `<button type="button" class="mini-btn" style="margin-top:8px;" onclick="openExSheetFromRou()">＋ 새 종목 만들기</button>
-    <div class="frow" style="margin-top:8px;">
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="cloneRoutine()">이 루틴 복사</button>
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="rebuildRoutine()">종목 비우고 다시</button>
-    </div>
-    <div class="flabel" style="margin-top:16px;">템플릿 더하기 (지금 루틴을 지우지 않습니다)</div>`;
+    <button type="button" class="wk-pick" style="margin-top:10px;" onclick="cloneRoutine()"><b>이 루틴 복사해 새로 짜기</b><span>종목은 같고 이름만 다르게 하나 더 생깁니다. 이 루틴은 그대로입니다.</span></button>
+    <button type="button" class="wk-pick" onclick="rebuildRoutine()"><b>종목만 비우기</b><span>이 루틴 종목 목록만 지웁니다. 지난 날 중량과 식단은 남습니다.</span></button>
+    <div class="flabel" style="margin-top:16px;">분할 템플릿 가져오기 — 지금 루틴은 그대로 두고 목록에 추가합니다</div>`;
   WK_PRESETS.forEach(p=>{
     html += `<button type="button" class="wk-pick" style="margin-bottom:8px;" onclick="applyPreset('${p.id}');closeSheet();"><b>${p.name}</b><span>${p.blurb}</span></button>`;
   });
@@ -4669,7 +4671,7 @@ function addExToRou(exId){
 }
 function deleteRoutine(){
   const { rus, r } = rouCur(); if(!r) return;
-  if(!confirm('「'+r.name+'」루틴을 지울까요? 운동 기록은 남습니다.')) return;
+  if(!confirm('「'+r.name+'」루틴만 지울까요? 지난 날 중량과 식단은 남습니다.')) return;
   const next = rus.filter(x=>x.id!==r.id);
   saveStore(WK.rou, next);
   const day = todayLog();
