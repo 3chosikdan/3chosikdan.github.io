@@ -4078,6 +4078,13 @@ function wkSettings(){
   if(s.backoffPct == null) s.backoffPct = 75;
   return s;
 }
+(function renameExTypos(){
+  const map = { '케이블 라테랄 레이즈':'케이블 레터럴 레이즈' };
+  const list = loadStore(WK.ex, []);
+  let n = 0;
+  list.forEach(ex=>{ if(map[ex.name]){ ex.name = map[ex.name]; n++; } });
+  if(n) saveStore(WK.ex, list);
+})();
 function backoffPct(){
   const n = +wkSettings().backoffPct || 75;
   return Math.min(90, Math.max(50, n));
@@ -4111,7 +4118,7 @@ const WK_PRESETS = [
         ['인클라인 머신 프레스','가슴','machine_compound',''],
         ['플랫 머신 프레스','가슴','machine_compound',''],
         ['케이블 플라이','가슴','cable',''],
-        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['케이블 레터럴 레이즈','어깨','cable',''],
         ['케이블 푸시다운','삼두','cable',''],
         ['오버헤드 케이블 익스텐션','삼두','cable','']
       ]},
@@ -4134,7 +4141,7 @@ const WK_PRESETS = [
         ['머신 숄더프레스','어깨','machine_compound',''],
         ['인클라인 머신 프레스','가슴','machine_compound',''],
         ['덤벨 사이드 레터럴 레이즈','어깨','free_isolation',''],
-        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['케이블 레터럴 레이즈','어깨','cable',''],
         ['리버스 펙덱 플라이','어깨','machine_isolation',''],
         ['와이드 랫풀다운','등','machine_compound','']
       ]},
@@ -4191,7 +4198,7 @@ const WK_PRESETS = [
         ['체스트 서포트 로우','등','machine_compound',''],
         ['인클라인 머신 프레스','가슴','machine_compound',''],
         ['랫풀다운','등','machine_compound',''],
-        ['케이블 라테랄 레이즈','어깨','cable',''],
+        ['케이블 레터럴 레이즈','어깨','cable',''],
         ['오버헤드 케이블 익스텐션','삼두','cable',''],
         ['인클라인 덤벨 컬','이두','free_isolation','']
       ]},
