@@ -42,7 +42,8 @@
 <script data-goatcounter="https://3cho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 3cho.kr이 Cloudflare 뒤에 있다면 대시보드의 Web Analytics(무료)가 스크립트 한 줄로 더 간단. -->
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -285,7 +286,8 @@
   .seg button.on { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.1); }
   .frow { display:flex; gap:10px; margin-bottom:12px; }
   .frow > div { flex:1; }
-  .flabel { font-size:12px; font-weight:700; color:#8e8e93; margin:4px 0 6px; }
+  .flabel { font-size:12px; font-weight:700; color:#8e8e93; margin:4px 0 6px; display:block; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   .seg-help { font-size:12px; line-height:1.5; color:#3a3a3c; background:#f2f2f7; border-radius:10px; padding:9px 12px; margin:-4px 0 12px; }
   .seg-help.warn { background:#fff3f2; color:#c0392b; }
   .seg-help b { color:#111; }
@@ -542,6 +544,25 @@
   html.dark .cal-cell { color:#f2f2f7; }
   html.dark .cal-cell:disabled { color:#3a3a3c; }
   html.dark .cal-cell.on { background:#f2f2f7; color:#000; }
+
+  /* 데스크톱: 왼쪽 요약 · 오른쪽 기록 */
+  @media (min-width: 900px) {
+    html { background:#f2f2f7; }
+    html.dark { background:#000; }
+    body { max-width:1080px; min-height:100vh; padding-bottom:120px; }
+    header { padding:24px 32px 8px; }
+    .home-mode { margin:10px 32px 0; }
+    .desk-cols { display:grid; grid-template-columns:minmax(300px,400px) 1fr; gap:8px 36px; align-items:start; padding:0 32px; }
+    .desk-left .macros, .desk-left .reco, .desk-left .cond-row { margin-left:0; margin-right:0; }
+    #bodySection, #diarySection { padding-left:0; padding-right:0; }
+    #workPanel { padding-left:32px !important; padding-right:32px !important; }
+    .site-foot { padding-left:32px; padding-right:32px; }
+    nav, .sheet { max-width:1080px; }
+    .sheet { max-width:560px; }
+    #viewTrend > section { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px 32px 0; }
+    #viewTrend .stat-row, #viewTrend .photo-btn, #viewTrend #wkChartCard { grid-column:1 / -1; }
+    #toast { max-width:560px; }
+  }
   html.dark .cal-cell.today:not(.on) { background:#2c2c2e; }
   html.dark .freq-chip { background:#1c1c1e; border-color:#3a3a3c; color:#f2f2f7; }
   html.dark .freq-chip .freq-x { color:#636366; }
@@ -596,6 +617,8 @@
   </div>
   <div id="setupBanner" class="hidden" style="margin:8px 24px 0;"></div>
   <div id="installTip" class="hidden" style="margin:10px 24px 0;"></div>
+  <div class="desk-cols">
+  <div class="desk-left">
   <div id="dietChrome" class="hero">
     <div class="ring-wrap">
       <svg width="190" height="190" viewBox="0 0 190 190">
@@ -625,12 +648,15 @@
     <div id="weightArea"></div>
     <div id="bfArea" style="margin-top:10px;"></div>
   </section>
-
+  </div>
+  <div class="desk-right">
   <section id="diarySection">
-    <h2>다이어리</h2>
+    <h2>오늘 식단</h2>
     <div id="yestBox"></div>
     <div id="mealList"></div>
   </section>
+  </div>
+  </div>
   <div id="workPanel" class="hidden" style="padding:16px 24px 0;"></div>
   <footer class="site-foot">
     <a href="food.html">음식 칼로리 사전</a>
@@ -826,30 +852,48 @@
   </div>
 
   <div class="frow">
-    <div><div class="flabel">나이</div><input class="txt-input" id="pAge" type="number" inputmode="numeric" placeholder="28" oninput="previewTDEE()"></div>
-    <div><div class="flabel">키 (cm)</div><input class="txt-input" id="pHeight" type="number" inputmode="numeric" placeholder="175" oninput="previewTDEE()"></div>
+    <div>
+      <label class="flabel" for="pAge">나이</label>
+      <input class="txt-input" id="pAge" type="number" inputmode="numeric" placeholder="28" aria-describedby="pAgeHelp" oninput="previewTDEE()">
+      <span id="pAgeHelp" class="sr-only">만 나이</span>
+    </div>
+    <div>
+      <label class="flabel" for="pHeight">키 (cm)</label>
+      <input class="txt-input" id="pHeight" type="number" inputmode="numeric" placeholder="175" oninput="previewTDEE()">
+    </div>
   </div>
   <div class="frow">
-    <div><div class="flabel">현재 몸무게 (kg)</div><input class="txt-input" id="pWeight" type="number" inputmode="decimal" step="0.1" placeholder="72" oninput="previewTDEE()"></div>
     <div>
-      <div class="flabel">목표 기준 — 사람마다 다르니까</div>
-      <div class="seg" style="margin-bottom:0;" id="segGoalType">
+      <label class="flabel" for="pWeight">현재 몸무게 (kg)</label>
+      <input class="txt-input" id="pWeight" type="number" inputmode="decimal" step="0.1" placeholder="72" oninput="previewTDEE()">
+    </div>
+    <div>
+      <div class="flabel" id="goalTypeLabel">목표 기준 — 사람마다 다르니까</div>
+      <div class="seg" style="margin-bottom:0;" id="segGoalType" role="group" aria-labelledby="goalTypeLabel">
         <button data-v="weight" onclick="setSeg('segGoalType','weight')">몸무게</button>
         <button data-v="bf" onclick="setSeg('segGoalType','bf')">체지방률</button>
       </div>
     </div>
   </div>
   <div class="frow">
-    <div id="goalWWrap"><div class="flabel">목표 몸무게 (kg)</div><input class="txt-input" id="pGoalW" type="number" inputmode="decimal" step="0.1" placeholder="선택" oninput="previewTDEE()"></div>
-    <div id="goalBfWrap" class="hidden"><div class="flabel">목표 체지방률 (%)</div><input class="txt-input" id="pGoalBf" type="number" inputmode="decimal" step="0.5" placeholder="예: 15" oninput="previewTDEE()"></div>
+    <div id="goalWWrap">
+      <label class="flabel" for="pGoalW">목표 몸무게 (kg)</label>
+      <input class="txt-input" id="pGoalW" type="number" inputmode="decimal" step="0.1" placeholder="선택" oninput="previewTDEE()">
+    </div>
+    <div id="goalBfWrap" class="hidden">
+      <label class="flabel" for="pGoalBf">목표 체지방률 (%)</label>
+      <input class="txt-input" id="pGoalBf" type="number" inputmode="decimal" step="0.5" placeholder="예: 15" oninput="previewTDEE()">
+    </div>
   </div>
   <div class="frow">
     <div>
-      <div class="flabel">체지방률 % <button class="helper-link" onclick="toggleBfHelper()">몰라요 → 줄자 측정</button></div>
+      <label class="flabel" for="pBf">체지방률 %</label>
+      <button class="helper-link" type="button" onclick="toggleBfHelper()">몰라요 → 줄자 측정</button>
       <input class="txt-input" id="pBf" type="number" inputmode="decimal" placeholder="알면 더 정확" oninput="previewTDEE()">
     </div>
     <div>
-      <div class="flabel">활동량 <button class="helper-link" onclick="toggleActHelper()">몰라요 → 체크</button></div>
+      <label class="flabel" for="pActivity">활동량</label>
+      <button class="helper-link" type="button" onclick="toggleActHelper()">몰라요 → 체크</button>
       <select class="txt-input" id="pActivity" onchange="previewTDEE()">
         <option value="0">거의 안 움직임</option>
         <option value="1">가벼운 운동 (주1-2)</option>
@@ -864,9 +908,18 @@
   <div id="bfHelper" class="helper-panel hidden">
     <div class="flabel">📏 줄자로 체지방률 재기 (미 해군 측정법)</div>
     <div class="frow">
-      <div><div class="flabel">목둘레 (cm)</div><input class="txt-input" id="bfNeck" type="number" inputmode="decimal" placeholder="38"></div>
-      <div><div class="flabel">허리둘레 (cm)</div><input class="txt-input" id="bfWaist" type="number" inputmode="decimal" placeholder="배꼽 높이"></div>
-      <div id="bfHipWrap" class="hidden"><div class="flabel">엉덩이 (cm)</div><input class="txt-input" id="bfHip" type="number" inputmode="decimal" placeholder="가장 큰 곳"></div>
+      <div>
+        <label class="flabel" for="bfNeck">목둘레 (cm)</label>
+        <input class="txt-input" id="bfNeck" type="number" inputmode="decimal" placeholder="38">
+      </div>
+      <div>
+        <label class="flabel" for="bfWaist">허리둘레 (cm)</label>
+        <input class="txt-input" id="bfWaist" type="number" inputmode="decimal" placeholder="배꼽 높이">
+      </div>
+      <div id="bfHipWrap" class="hidden">
+        <label class="flabel" for="bfHip">엉덩이 (cm)</label>
+        <input class="txt-input" id="bfHip" type="number" inputmode="decimal" placeholder="가장 큰 곳">
+      </div>
     </div>
     <button class="mini-btn" onclick="calcBf()">계산해서 넣기</button>
     <div class="bf-guide" id="bfGuide"></div>
@@ -917,9 +970,18 @@
   <div class="flabel">지방 g/kg — 체지방이 낮을수록 따로</div>
   <p class="seg-help" style="margin-top:0;">단백질 다음 지방을 확보합니다. 한 자릿수 체지방이면 호르몬 때문에 지방을 더 남기고, 줄어든 칼로리는 탄수에서 뺍니다. 비워 두면 자동입니다.</p>
   <div class="frow">
-    <div><div class="flabel">기본</div><input class="txt-input" id="pFatPer" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.7" oninput="previewTDEE()"></div>
-    <div><div class="flabel">10% 이하</div><input class="txt-input" id="pFat10" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.8" oninput="previewTDEE()"></div>
-    <div><div class="flabel">7% 이하</div><input class="txt-input" id="pFat7" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="1.0" oninput="previewTDEE()"></div>
+    <div>
+      <label class="flabel" for="pFatPer">기본 지방 g/kg</label>
+      <input class="txt-input" id="pFatPer" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.7" oninput="previewTDEE()">
+    </div>
+    <div>
+      <label class="flabel" for="pFat10">체지방 10% 이하</label>
+      <input class="txt-input" id="pFat10" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.8" oninput="previewTDEE()">
+    </div>
+    <div>
+      <label class="flabel" for="pFat7">체지방 7% 이하</label>
+      <input class="txt-input" id="pFat7" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="1.0" oninput="previewTDEE()">
+    </div>
   </div>
 
   <div class="tdee-box">

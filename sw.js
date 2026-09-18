@@ -1,11 +1,11 @@
 // 3초식단 Service Worker — 오프라인 + 데이터 보존(iOS 설치 PWA)
-const CACHE = 'sikdan-v45';
+const CACHE = 'sikdan-v46';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c =>
       // 하나가 실패해도 설치는 성공시킨다 (fooddb.js 미업로드 대비)
-      Promise.all(['./', './fooddb.js', './privacy.html', './food.html', './calc.html', './micro.html', './hypert.html', './shop.html', './affiliate.js', './manifest.json'].map(u => c.add(u).catch(() => {})))
+      Promise.all(['./', './fooddb.js', './privacy.html', './food.html', './calc.html', './micro.html', './hypert.html', './shop.html', './affiliate.js', './manifest.json', './favicon.ico', './icon-192.png'].map(u => c.add(u).catch(() => {})))
     )
   );
   self.skipWaiting();
