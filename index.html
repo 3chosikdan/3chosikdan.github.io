@@ -398,6 +398,17 @@
     font-size:12.5px; font-weight:600; color:#3a3a3c; line-height:1.45;
   }
   .past-banner b { color:#111; }
+  .sync-bar {
+    margin:10px 24px 0; padding:12px 14px; border-radius:14px; background:#f2f2f7;
+    font-size:12.5px; line-height:1.5; color:#3a3a3c;
+  }
+  .sync-bar b { color:#111; }
+  .sync-bar .sync-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .sync-bar button {
+    border:none; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .sync-bar .on { background:#111; color:#fff; }
+  .sync-bar .off { background:#fff; color:#111; }
   .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .cal-head .m { font-size:16px; font-weight:800; }
   .cal-dow { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11px; font-weight:700; color:#8e8e93; margin-bottom:6px; }
@@ -539,7 +550,9 @@
   html.dark .rec-del { background:#2a1215; border-color:#5a2020; color:#ff6b6b; }
   html.dark .date-arr { background:#2c2c2e; color:#f2f2f7; }
   html.dark .date-go { color:#8e8e93; }
-  html.dark .past-banner { background:#2a2414; color:#e5e5ea; }
+  html.dark .sync-bar { background:#1c1c1e; color:#e5e5ea; }
+  html.dark .sync-bar b { color:#f2f2f7; }
+  html.dark .sync-bar .off { background:#2c2c2e; color:#f2f2f7; }
   html.dark .past-banner b { color:#f2f2f7; }
   html.dark .cal-cell { color:#f2f2f7; }
   html.dark .cal-cell:disabled { color:#3a3a3c; }
@@ -553,6 +566,7 @@
     header { padding:24px 32px 8px; }
     .home-mode { margin:10px 32px 0; }
     .desk-cols { display:grid; grid-template-columns:minmax(300px,400px) 1fr; gap:8px 36px; align-items:start; padding:0 32px; }
+    #syncBar .sync-bar { margin-left:32px; margin-right:32px; }
     .desk-left .macros, .desk-left .reco, .desk-left .cond-row { margin-left:0; margin-right:0; }
     #bodySection, #diarySection { padding-left:0; padding-right:0; }
     #workPanel { padding-left:32px !important; padding-right:32px !important; }
@@ -617,6 +631,7 @@
   </div>
   <div id="setupBanner" class="hidden" style="margin:8px 24px 0;"></div>
   <div id="installTip" class="hidden" style="margin:10px 24px 0;"></div>
+  <div id="syncBar"></div>
   <div class="desk-cols">
   <div class="desk-left">
   <div id="dietChrome" class="hero">
@@ -669,7 +684,7 @@
     <div class="faq">
       <h2>자주 묻는 질문</h2>
       <details><summary>가입해야 하나요?</summary><p>아니요. 계정이 없습니다. 기록은 이 폰 브라우저에만 남습니다.</p></details>
-      <details><summary>데이터는 어디에 저장되나요?</summary><p>서버로 보내지 않습니다. 기기를 바꾸면 목표 화면에서 백업(파일·카톡)하거나 이동 링크를 만드세요.</p></details>
+      <details><summary>데이터는 어디에 저장되나요?</summary><p>이 브라우저에만 남습니다. 서버로 안 보냅니다. 폰과 컴퓨터를 같이 쓰려면 목표에서 보내기 한 뒤 다른 기기에서 불러오세요. 합치기도 됩니다.</p></details>
       <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식마다 비타민 값은 아직 없습니다.</p></details>
       <details><summary>근비대는 어떻게 기록하나요?</summary><p>운동 탭에서 종목마다 탑세트와 백오프만 적습니다. 원리는 근비대 원리 페이지에 있습니다. 자력 반복만 세고, 고강도는 주 4회를 넘기지 않는 쪽입니다.</p></details>
     </div>
@@ -1002,24 +1017,25 @@
   <div style="font-size:12px;color:#8e8e93;line-height:1.5;margin-bottom:8px;">검색에 없던 음식을 직접 넣은 목록입니다. 수정·삭제할 수 있어요.</div>
   <div id="myFoodList"></div>
 
-  <div class="flabel" style="margin-top:20px;">📂 내 기록 백업 — 폰 바꿔도 안 날아가게</div>
-  <button class="mini-btn" style="background:#111;color:#fff;margin-bottom:6px;" onclick="shareBackup()">💬 카톡으로 백업 보내기</button>
+  <div class="flabel" style="margin-top:20px;">기록이 이 기기에만 있습니다</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 10px;">가입이 없어서 폰과 컴퓨터가 자동으로 붙지 않습니다. 폰에서 적고 컴퓨터에서 보려면 <b>보내기 → 그 파일을 컴퓨터에서 불러오기</b>입니다. iCloud·드라이브 폴더에 두면 두 기기에서 같은 파일을 씁니다.</p>
+  <button class="mini-btn" style="background:#111;color:#fff;margin-bottom:6px;" onclick="shareBackup()">다른 기기로 보내기</button>
   <div class="frow" style="margin-bottom:6px;">
-    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">📤 파일로 저장</button>
-    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="document.getElementById('importInput').click()">📥 불러오기</button>
+    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">파일로 저장</button>
+    <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="document.getElementById('importInput').click()">이 기기에 불러오기</button>
   </div>
-  <div style="font-size:11px;color:#8e8e93;line-height:1.5;">카톡 '나에게 보내기'로 보관하세요. 불러오면 이 기기 기록이 백업 내용으로 바뀝니다.</div>
+  <div id="backupAgo" style="font-size:11px;color:#8e8e93;line-height:1.5;">불러오면 합칠지, 이 백업으로 바꿀지 묻습니다.</div>
   <input type="file" id="importInput" accept=".json,application/json" class="hidden">
 
-  <div class="flabel" style="margin-top:20px;">기록 지우기</div>
-  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">루틴만 바꾸고 싶으면 운동 탭에서 <b>루틴을 새로 짜거나 복사하려면</b>을 누르세요. 식단은 안 지워집니다. 아래는 식단·몸무게·운동을 이 기기에서 전부 지웁니다. 그전에 백업하세요.</p>
-  <button class="mini-btn" style="background:#f2f2f7;color:#111;margin-bottom:6px;" onclick="shareBackup()">먼저 백업하기</button>
-  <button type="button" class="rec-del" onclick="resetAllData()">식단·운동 전부 지우기</button>
-
-  <div class="flabel" style="margin-top:20px;">🔗 다른 기기로 옮기기 — 데스크탑에서 폰으로</div>
-  <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="makeTransferLink()">🔗 이동 링크 만들기</button>
+  <div class="flabel" style="margin-top:20px;">🔗 이동 링크 — 기록이 적을 때만</div>
+  <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="makeTransferLink()">링크 만들기</button>
   <div id="transferBox" style="margin-top:8px;"></div>
-  <div style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:6px;">링크를 카톡 '나에게 보내기'로 보낸 뒤 다른 기기에서 열면 그 기록이 그대로 올라옵니다.</div>
+  <div style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:6px;">기록이 많아지면 링크로는 안 담깁니다. 그때는 파일을 보내세요.</div>
+
+  <div class="flabel" style="margin-top:20px;">기록 지우기</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.5;margin:0 0 8px;">루틴만 바꾸고 싶으면 운동 탭에서 <b>루틴을 새로 짜거나 복사하려면</b>을 누르세요. 식단은 안 지워집니다. 아래는 식단·몸무게·운동을 이 기기에서 전부 지웁니다. 그전에 보내기부터 하세요.</p>
+  <button class="mini-btn" style="background:#f2f2f7;color:#111;margin-bottom:6px;" onclick="shareBackup()">먼저 보내기</button>
+  <button type="button" class="rec-del" onclick="resetAllData()">식단·운동 전부 지우기</button>
 
   <div class="flabel" style="margin-top:20px;">💚 3초식단이 도움이 됐다면</div>
   <button class="mini-btn" style="background:#eafaf0;color:#111;" onclick="shareApp()">📤 친구에게 알리기 — 가입 없이 링크로 끝</button>
@@ -1513,46 +1529,78 @@ S.condition = S.condition || {}; // { date: 'good'|'tired'|'stress'|'refeed' }
 S.train = S.train || {};         // { date: true } 운동한 날
 S.theme = S.theme || 'system';
 /* ============ 데이터 보존 3중 장치 ============
-   ① storage.persist() — 브라우저에 "이 데이터 지우지 마" 요청 (iOS 7일 삭제 방어)
-   ② IndexedDB 미러 — localStorage가 날아가도 IDB 복사본으로 자동 복구
-   ③ 백업 리마인더 — 7일 이상 기록 시 내보내기 유도 (render 안) */
+   ① storage.persist() — 브라우저에 "이 데이터 지우지 마" 요청
+   ② IndexedDB 미러 — 식단+운동 전체 스냅샷. localStorage가 비면 복구
+   ③ 파일 보내기 — 폰↔컴퓨터. 가입 없는 한 실시간 동기화는 없음 */
 if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist().catch(()=>{}); }catch(_){} }
 const idbMirror = {
   db: null,
   open(){ return new Promise(res=>{ try{
-    const rq = indexedDB.open('foodspot-mirror', 1);
-    rq.onupgradeneeded = ()=>rq.result.createObjectStore('kv');
+    const rq = indexedDB.open('foodspot-mirror', 2);
+    rq.onupgradeneeded = ()=>{
+      const db = rq.result;
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+    };
     rq.onsuccess = ()=>res(rq.result);
     rq.onerror = ()=>res(null);
   }catch(_){ res(null); } }); },
   async write(json){ try{
     this.db = this.db || await this.open(); if(!this.db) return;
+    this.db.transaction('kv','readwrite').objectStore('kv').put(json,'SNAP');
     this.db.transaction('kv','readwrite').objectStore('kv').put(json,'S');
   }catch(_){} },
   async read(){ try{
     this.db = this.db || await this.open(); if(!this.db) return null;
     return await new Promise(res=>{
-      const rq = this.db.transaction('kv').objectStore('kv').get('S');
-      rq.onsuccess = ()=>res(rq.result||null); rq.onerror = ()=>res(null);
+      const tx = this.db.transaction('kv');
+      const os = tx.objectStore('kv');
+      const rq = os.get('SNAP');
+      rq.onsuccess = ()=>{
+        if(rq.result) return res(rq.result);
+        const rq2 = os.get('S');
+        rq2.onsuccess = ()=>res(rq2.result||null);
+        rq2.onerror = ()=>res(null);
+      };
+      rq.onerror = ()=>res(null);
     });
   }catch(_){ return null; } }
 };
+let _mirrorT = null;
+function mirrorAll(){
+  clearTimeout(_mirrorT);
+  _mirrorT = setTimeout(()=>{
+    try{ idbMirror.write(JSON.stringify(typeof snapshot==='function' ? snapshot() : S)); }catch(_){}
+  }, 400);
+}
 const save = () => {
   try {
     const j = JSON.stringify(S);
     localStorage.setItem('foodspot', j);
-    idbMirror.write(j);
+    mirrorAll();
     if(typeof snapshotPerson==='function') snapshotPerson();
   } catch(_){
-    try { toast('저장 공간이 부족합니다. 백업 후 오래된 기록을 지워주세요'); } catch(__){}
+    try { toast('저장 공간이 부족합니다. 보낸 뒤 오래된 기록을 지워주세요'); } catch(__){}
   }
 };
-// 부팅 시: localStorage가 비었는데 IDB 미러에 기록이 있으면 → 복구
+// 부팅 시: localStorage가 비었는데 IDB에 스냅샷이 있으면 복구
 (async ()=>{
-  if(!localStorage.getItem('foodspot')){
+  try{
+    if(localStorage.getItem('foodspot')) return;
     const j = await idbMirror.read();
-    if(j && j.length > 40){ localStorage.setItem('foodspot', j); location.reload(); }
-  }
+    if(!j || (typeof j==='string' && j.length<40)) return;
+    const data = typeof j==='string' ? JSON.parse(j) : j;
+    if(!data || typeof data !== 'object') return;
+    if(data.meals && typeof data.meals==='object'){
+      const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
+      const clean = {};
+      Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
+      if(typeof applySnapshot==='function') applySnapshot(data, false);
+      localStorage.setItem('foodspot', JSON.stringify(Object.keys(clean).length?clean:data));
+      location.reload();
+      return;
+    }
+    if(typeof j==='string'){ localStorage.setItem('foodspot', j); location.reload(); }
+  }catch(_){}
 })();
 
 const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
@@ -1568,7 +1616,7 @@ function loadStore(key, fallback){
   } catch(_){ return fallback; }
 }
 function saveStore(key, val){
-  try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  try { localStorage.setItem(key, JSON.stringify(val)); if(typeof mirrorAll==='function') mirrorAll(); return true; }
   catch(_){ try{ toast('저장 공간이 부족합니다'); }catch(__){} return false; }
 }
 function snapshot(){
@@ -1610,6 +1658,101 @@ function applySnapshot(data, replaceAll){
     Object.keys(data).forEach(k=>{ if(!skip[k]) S[k] = data[k]; });
   }
 }
+function mergeMeals(local, incoming){
+  const out = Object.assign({}, local||{});
+  Object.keys(incoming||{}).forEach(day=>{
+    const a = Array.isArray(out[day]) ? out[day].slice() : [];
+    const b = incoming[day]||[];
+    if(!a.length){ out[day]=b; return; }
+    const seen = new Set(a.map(m=>String(m.name)+'|'+Math.round(m.kcal||0)));
+    b.forEach(m=>{
+      const id = String(m.name)+'|'+Math.round(m.kcal||0);
+      if(!seen.has(id)){ seen.add(id); a.push(m); }
+    });
+    out[day]=a;
+  });
+  return out;
+}
+function mergeArrById(local, incoming, idKey){
+  const map = new Map();
+  (incoming||[]).forEach(x=>map.set(x[idKey]||x.name, x));
+  (local||[]).forEach(x=>map.set(x[idKey]||x.name, x));
+  return [...map.values()];
+}
+function mergeWkLog(local, incoming){
+  const out = Object.assign({}, local||{});
+  Object.keys(incoming||{}).forEach(day=>{
+    const L = out[day];
+    const R = incoming[day] || {};
+    if(!L){ out[day]=R; return; }
+    const byEx = new Map();
+    (R.entries||[]).forEach(e=>byEx.set(e.exId||e.name, e));
+    (L.entries||[]).forEach(e=>byEx.set(e.exId||e.name, e));
+    const n = Object.assign({}, R, L, { entries:[...byEx.values()] });
+    if(L.sleepHours==null && R.sleepHours!=null) n.sleepHours = R.sleepHours;
+    out[day]=n;
+  });
+  return out;
+}
+function mergeSnapshot(data){
+  if(!data || typeof data !== 'object') return;
+  S.meals = mergeMeals(S.meals, data.meals);
+  ['weights','bodyfat','condition','train','custom','sets'].forEach(k=>{
+    S[k] = Object.assign({}, data[k]||{}, S[k]||{});
+  });
+  if(!S.profile && data.profile) S.profile = data.profile;
+  if(data.slots && !(S.slots&&S.slots.length)) S.slots = data.slots;
+  saveStore('3cho:workout:log', mergeWkLog(loadStore('3cho:workout:log',{}), data['3cho:workout:log']||{}));
+  saveStore('3cho:myfoods', mergeArrById(loadStore('3cho:myfoods',[]), data['3cho:myfoods']||[], 'id'));
+  saveStore('3cho:foodstats', Object.assign({}, data['3cho:foodstats']||{}, loadStore('3cho:foodstats',{})));
+  saveStore('3cho:workout:exercises', mergeArrById(loadStore('3cho:workout:exercises',[]), data['3cho:workout:exercises']||[], 'id'));
+  saveStore('3cho:workout:routines', mergeArrById(loadStore('3cho:workout:routines',[]), data['3cho:workout:routines']||[], 'id'));
+  const st = Object.assign({}, data['3cho:workout:settings']||{}, loadStore('3cho:workout:settings',{}));
+  saveStore('3cho:workout:settings', st);
+  if(data['3cho:workout:deload']!=null && loadStore('3cho:workout:deload', null)==null)
+    saveStore('3cho:workout:deload', data['3cho:workout:deload']);
+  save();
+}
+function hasLocalRecords(){
+  const meals = Object.keys(S.meals||{}).length;
+  const wk = Object.keys(loadStore('3cho:workout:log',{})||{}).length;
+  return meals>0 || wk>0 || !!(S.profile);
+}
+function ingestBackup(data, preferMerge){
+  if(!data || typeof data !== 'object' || !data.meals) throw new Error('bad');
+  if(preferMerge && hasLocalRecords()){
+    mergeSnapshot(data);
+    return 'merge';
+  }
+  ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed'].forEach(k=>{
+    if(data[k] !== undefined) S[k] = data[k];
+  });
+  applySnapshot(data, false);
+  save();
+  return 'replace';
+}
+function backupAgoText(){
+  if(!S.lastBackupAt) return '아직 다른 기기로 보낸 적 없음';
+  const d = Math.round((Date.now()-S.lastBackupAt)/86400000);
+  if(d<=0) return '오늘 보냄';
+  if(d===1) return '어제 보냄';
+  return d+'일 전에 보냄';
+}
+function renderSyncBar(){
+  const el = document.getElementById('syncBar'); if(!el) return;
+  if(typeof viewDate!=='undefined' && viewDate !== todayKey()){ el.innerHTML=''; return; }
+  if(S.syncHideUntil && Date.now()<S.syncHideUntil){ el.innerHTML=''; return; }
+  if(!hasLocalRecords()){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="sync-bar">
+    <b>이 브라우저에만 있습니다.</b> 폰에서 적고 컴퓨터에서 보려면 보내서 불러오세요. ${backupAgoText()}.
+    <div class="sync-actions">
+      <button type="button" class="on" onclick="shareBackup()">보내기</button>
+      <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
+      <button type="button" class="off" onclick="S.syncHideUntil=Date.now()+7*86400000;save();renderSyncBar();">일주일 숨기기</button>
+    </div>
+  </div>`;
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
 
 const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'];
 function peopleList(){ return loadStore('3cho:people', []); }
@@ -3311,12 +3454,12 @@ function render(){
       ${(_deferredPrompt || ios) ? '<button class="inst-btn" onclick="installApp()">추가</button>' : ''}
       <button style="border:none;background:none;color:#c7c7cc;font-size:14px;cursor:pointer;" onclick="dismissTip()">✕</button>
     </div>`;
-  } else if(mealDays >= 7 && (!S.lastBackupAt || Date.now()-S.lastBackupAt > 14*86400000) && S.backupNagWk !== weekKeyOf()){
+  } else if(mealDays >= 2 && (!S.lastBackupAt || Date.now()-S.lastBackupAt > 7*86400000) && S.backupNagWk !== weekKeyOf()){
     tip.classList.remove('hidden');
     tip.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#fff8e6;font-size:12.5px;line-height:1.5;color:#3a3a3c;">
-      <span style="flex:1;">🛟 기록 <b>${mealDays}일치</b>가 이 기기에만 있어요 — 폰을 바꾸거나 브라우저 데이터가 지워지면 사라집니다</span>
-      <button style="border:none;background:#111;color:#fff;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;" onclick="exportData()">백업</button>
-      <button style="border:none;background:none;color:#c7c7cc;font-size:14px;cursor:pointer;" aria-label="백업 안내 닫기" onclick="S.backupNagWk=weekKeyOf();save();render();">✕</button>
+      <span style="flex:1;">이 브라우저에만 있습니다. 컴퓨터에서 보려면 보내서 불러오세요.</span>
+      <button style="border:none;background:#111;color:#fff;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap;" onclick="shareBackup()">보내기</button>
+      <button style="border:none;background:none;color:#c7c7cc;font-size:14px;cursor:pointer;" aria-label="안내 닫기" onclick="S.backupNagWk=weekKeyOf();save();render();">✕</button>
     </div>`;
   } else if(isSunday && totalMeals >= 3 && S.shareWk !== weekKeyOf()){
     tip.classList.remove('hidden');
@@ -3326,6 +3469,7 @@ function render(){
       <button style="border:none;background:none;color:#c7c7cc;font-size:14px;cursor:pointer;" onclick="dismissShareBanner()">✕</button>
     </div>`;
   } else tip.classList.add('hidden');
+  renderSyncBar();
 
   // diary (끼니별 그룹 — 커스텀 슬롯 포함, 선택 날짜 기준)
   const meals = vMeals;
@@ -3975,6 +4119,8 @@ function openSettings(){
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
   renderMyFoodList();
+  const ago = document.getElementById('backupAgo');
+  if(ago) ago.textContent = backupAgoText() + '. 불러오면 합칠지, 이 파일로 바꿀지 묻습니다.';
   const ss = document.getElementById('settingsSheet');
   ss.setAttribute('role','dialog');
   ss.setAttribute('aria-modal','true');
@@ -4076,12 +4222,9 @@ async function tryLoadFromHash(){
     const data = JSON.parse(json);
     if(!data || typeof data !== 'object') throw new Error('bad');
     const cnt = data.meals ? Object.keys(data.meals).length : 0;
-    if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 올릴까요?\n지금 이 기기의 기록은 교체됩니다.`)) return false;
-    applySnapshot(data, false);
-    const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
-    const clean = {};
-    Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
-    localStorage.setItem('foodspot', JSON.stringify(clean));
+    if(!confirm(`다른 기기의 기록(${cnt}일치)을 이 기기에 넣을까요?`)) return false;
+    const mode = hasLocalRecords() && confirm('이 기기 기록과 합칠까요?\n확인 = 합치기 · 취소 = 이 링크로 교체') ? 'merge' : 'replace';
+    ingestBackup(data, mode==='merge');
     location.reload();
     return true;
   }catch(e){ toast('이동 링크를 읽지 못했어요'); return false; }
@@ -4093,13 +4236,12 @@ document.getElementById('importInput').addEventListener('change', e=>{
     try {
       const d = JSON.parse(r.result);
       if(typeof d !== 'object' || !d.meals) throw 0;
-      ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed'].forEach(k=>{
-        if(d[k] !== undefined) S[k] = d[k];
-      });
-      applySnapshot(d, false);
-      save(); closeSheet(); render();
+      if(!confirm('이 파일을 이 기기에 넣을까요?')) return;
+      const merge = hasLocalRecords() && confirm('이 기기 기록과 합칠까요?\n확인 = 합치기 (폰+컴퓨터) · 취소 = 파일로 교체');
+      const mode = ingestBackup(d, merge);
+      S.lastBackupAt = Date.now(); save(); closeSheet(); render();
       renderMyFoodList();
-      toast('기록 복원 완료 📥');
+      toast(mode==='merge' ? '합쳤습니다. 두 기기 기록이 이 기기에 있습니다.' : '기록을 불러왔습니다.');
     } catch(_) { toast('올바른 백업 파일이 아니에요'); }
   };
   r.readAsText(f);
