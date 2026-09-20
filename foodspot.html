@@ -4698,7 +4698,7 @@ function applyPreset(pid){
     return;
   }
   saveStore(WK.ex, exercises);
-  saveStore(WK.rou, routines);
+  saveStore(WK.rou, sortRoutines(routines));
   if(p.backoffPct){
     const s = wkSettings();
     s.backoffPct = p.backoffPct;
@@ -4711,9 +4711,28 @@ function applyPreset(pid){
   renderWork();
 }
 function normRouName(n){ return String(n||'').replace(/\s/g,''); }
+function rouOrder(r){
+  const n = String(r&&r.name||'');
+  const empty = !(r.exerciseIds&&r.exerciseIds.length);
+  if(empty || n==='내 루틴') return [90, 0, n];
+  const DAY = {월:1,화:2,수:3,목:4,금:5,토:6,일:7};
+  const day = DAY[n.charAt(0)] || 50;
+  let ab = 0;
+  if(/상체/.test(n) && /A/.test(n)) ab = 1;
+  else if(/하체/.test(n) && /A/.test(n)) ab = 2;
+  else if(/상체/.test(n) && /B/.test(n)) ab = 3;
+  else if(/하체/.test(n) && /B/.test(n)) ab = 4;
+  return [day, ab, n];
+}
+function sortRoutines(rus){
+  return (rus||[]).slice().sort((a,b)=>{
+    const ka = rouOrder(a), kb = rouOrder(b);
+    return ka[0]-kb[0] || ka[1]-kb[1] || String(ka[2]).localeCompare(String(kb[2]),'ko');
+  });
+}
 function compactDuplicateRoutines(){
   const rus = loadStore(WK.rou, []);
-  if(rus.length<2) return false;
+  if(!rus.length) return false;
   const log = loadStore(WK.log, {});
   const used = {};
   Object.keys(log).forEach(d=>{
@@ -4729,15 +4748,18 @@ function compactDuplicateRoutines(){
     if(!prev || score(r)>score(prev)) keep.set(k, r);
   });
   const keepIds = new Set([...keep.values()].map(r=>r.id));
-  if(keepIds.size===rus.length) return false;
-  const drop = rus.filter(r=>!keepIds.has(r.id));
-  drop.forEach(r=>{
-    const nid = keep.get(normRouName(r.name)).id;
-    Object.keys(log).forEach(d=>{
-      if(log[d] && log[d].routineId===r.id) log[d].routineId = nid;
-    });
+  rus.forEach(r=>{
+    if(!keepIds.has(r.id)){
+      const nid = keep.get(normRouName(r.name)).id;
+      Object.keys(log).forEach(d=>{
+        if(log[d] && log[d].routineId===r.id) log[d].routineId = nid;
+      });
+    }
   });
-  saveStore(WK.rou, rus.filter(r=>keepIds.has(r.id)));
+  const next = sortRoutines(rus.filter(r=>keepIds.has(r.id)));
+  const same = next.length===rus.length && next.every((r,i)=>r.id===rus[i].id);
+  if(same) return false;
+  saveStore(WK.rou, next);
   saveStore(WK.log, log);
   return true;
 }
@@ -4854,7 +4876,7 @@ function renderWork(){
     </div>
     <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="오늘 할 루틴" style="margin-top:8px;">
       <option value="">루틴 없이 오늘만 적기</option>
-      ${routines.map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
+      ${sortRoutines(routines).map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
     </select>
     <p class="wk-hint" style="margin:6px 0 0;">월·화처럼 다른 날 루틴은 위에서 고르면 됩니다. 고르지 않은 루틴은 그대로 둡니다.</p>
     <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">종목·순서 고치기</button>
