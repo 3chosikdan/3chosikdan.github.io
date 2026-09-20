@@ -4675,17 +4675,28 @@ function clearTodayWork(){
 }
 function applyPreset(pid){
   const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
+  compactDuplicateRoutines();
   const exercises = loadStore(WK.ex, []);
   const routines = loadStore(WK.rou, []);
+  const have = new Set(routines.map(r=>normRouName(r.name)));
   const tag = Date.now().toString(36).slice(-3);
+  let added = 0;
   p.routines.forEach(r=>{
+    if(have.has(normRouName(r.name))) return;
     const ids = r.items.map(it=>{
       const ex = mkEx(it[0], it[1], it[2], it[3]||'');
       exercises.push(ex);
       return ex.id;
     });
     routines.push({ id:r.id+'_'+tag, name:r.name, exerciseIds:ids, light:!!r.light, note:r.note||'' });
+    have.add(normRouName(r.name));
+    added++;
   });
+  if(!added){
+    toast('이미 그 분할이 목록에 있습니다. 종목만 고치면 됩니다');
+    renderWork();
+    return;
+  }
   saveStore(WK.ex, exercises);
   saveStore(WK.rou, routines);
   if(p.backoffPct){
@@ -4694,10 +4705,41 @@ function applyPreset(pid){
     saveStore(WK.settings, s);
   }
   const day = todayLog();
-  day.routineId = routines[routines.length-p.routines.length].id;
-  putTodayLog(day);
-  toast(p.name+' 넣음 · 종목은 언제든 고치세요');
+  const firstNew = routines.find(r=>p.routines.some(pr=>normRouName(pr.name)===normRouName(r.name) && r.id.endsWith('_'+tag)));
+  if(firstNew){ day.routineId = firstNew.id; putTodayLog(day); }
+  toast(p.name+(added<p.routines.length?' · 없는 날만 추가':' 넣음')+' · 종목은 언제든 고치세요');
   renderWork();
+}
+function normRouName(n){ return String(n||'').replace(/\s/g,''); }
+function compactDuplicateRoutines(){
+  const rus = loadStore(WK.rou, []);
+  if(rus.length<2) return false;
+  const log = loadStore(WK.log, {});
+  const used = {};
+  Object.keys(log).forEach(d=>{
+    const id = log[d] && log[d].routineId;
+    if(id) used[id] = (used[id]||0)+1;
+  });
+  const score = (x)=> (used[x.id]||0)*100 + ((x.exerciseIds||[]).length);
+  const keep = new Map();
+  rus.forEach(r=>{
+    const k = normRouName(r.name);
+    if(!k) return;
+    const prev = keep.get(k);
+    if(!prev || score(r)>score(prev)) keep.set(k, r);
+  });
+  const keepIds = new Set([...keep.values()].map(r=>r.id));
+  if(keepIds.size===rus.length) return false;
+  const drop = rus.filter(r=>!keepIds.has(r.id));
+  drop.forEach(r=>{
+    const nid = keep.get(normRouName(r.name)).id;
+    Object.keys(log).forEach(d=>{
+      if(log[d] && log[d].routineId===r.id) log[d].routineId = nid;
+    });
+  });
+  saveStore(WK.rou, rus.filter(r=>keepIds.has(r.id)));
+  saveStore(WK.log, log);
+  return true;
 }
 function todayLog(){
   const log = loadStore(WK.log, {});
@@ -4774,6 +4816,7 @@ function effectiveRir(ex){
 function renderWork(){
   const box = document.getElementById('workPanel');
   if(!box || homeMode!=='lift') return;
+  compactDuplicateRoutines();
   const routines = loadStore(WK.rou, []);
   const exercises = loadStore(WK.ex, []);
   if(!routines.length){
@@ -4953,7 +4996,7 @@ function renderRouBody(){
   html += `<button type="button" class="mini-btn" style="margin-top:8px;" onclick="openExSheetFromRou()">＋ 새 종목 만들기</button>
     <button type="button" class="wk-pick" style="margin-top:10px;" onclick="cloneRoutine()"><b>이 루틴 복사해 새로 짜기</b><span>종목은 같고 이름만 다르게 하나 더 생깁니다. 이 루틴은 그대로입니다.</span></button>
     <button type="button" class="wk-pick" onclick="rebuildRoutine()"><b>종목만 비우기</b><span>이 루틴 종목 목록만 지웁니다. 지난 날 중량과 식단은 남습니다.</span></button>
-    <div class="flabel" style="margin-top:16px;">분할 템플릿 가져오기 — 지금 루틴은 그대로 두고 목록에 추가합니다</div>`;
+    <div class="flabel" style="margin-top:16px;">분할 템플릿 가져오기 — 같은 이름이면 안 넣습니다</div>`;
   WK_PRESETS.forEach(p=>{
     html += `<button type="button" class="wk-pick" style="margin-bottom:8px;" onclick="applyPreset('${p.id}');closeSheet();"><b>${p.name}</b><span>${p.blurb}</span></button>`;
   });
