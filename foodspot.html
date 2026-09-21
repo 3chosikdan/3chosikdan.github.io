@@ -75,6 +75,7 @@
   .macros { margin:16px 24px 0; display:flex; flex-direction:column; gap:10px; text-align:left; }
   .mrow { display:flex; align-items:center; gap:10px; }
   .mname { width:44px; font-size:12px; font-weight:800; }
+  .mname-btn { background:none; border:none; padding:0; margin:0; font:inherit; font-size:12px; font-weight:800; width:44px; text-align:left; cursor:pointer; color:inherit; }
   .mbar { flex:1; height:9px; background:#f2f2f7; border-radius:6px; overflow:hidden; }
   .mbar div { height:100%; width:0; border-radius:6px; transition:width .4s; background:#111; }
   .mval { width:88px; text-align:right; font-size:12px; font-weight:600; color:#8e8e93; }
@@ -649,7 +650,7 @@
     <div id="adjPill" class="hidden" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:100px;background:#f2f2f7;font-size:12px;font-weight:700;color:#3a3a3c;"></div>
     <div class="macros">
       <div class="mrow"><div class="mname">단백질</div><div class="mbar"><div id="barP"></div></div><div class="mval" id="valP"></div></div>
-      <div class="mrow"><div class="mname">탄수</div><div class="mbar"><div id="barC"></div></div><div class="mval" id="valC"></div></div>
+      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayCarb()" aria-label="오늘 탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><div class="mval" id="valC"></div></div>
       <div class="mrow"><div class="mname">지방</div><div class="mbar"><div id="barF"></div></div><div class="mval" id="valF"></div></div>
     </div>
     <div class="cond-row" id="condRow"></div>
@@ -985,6 +986,10 @@
   <label class="flabel" for="pProtG">목표 단백질 (g)</label>
   <p class="seg-help" style="margin-top:0;">비워 두면 체중·체지방으로 자동. 넣고 싶은 그램만 적으면 됩니다.</p>
   <input class="txt-input" id="pProtG" type="number" inputmode="numeric" min="40" max="400" placeholder="자동" oninput="previewTDEE()">
+
+  <label class="flabel" for="pCarbG">목표 탄수 (g)</label>
+  <p class="seg-help" style="margin-top:0;">비워 두면 단백질·지방 다음 남은 칼로리. 사이클링은 홈에서 탄수를 탭해 오늘만 바꿉니다.</p>
+  <input class="txt-input" id="pCarbG" type="number" inputmode="numeric" min="0" max="800" placeholder="자동" oninput="previewTDEE()">
 
   <div class="flabel">지방 g/kg — 체지방이 낮을수록 따로</div>
   <p class="seg-help" style="margin-top:0;">단백질 다음 지방을 확보합니다. 한 자릿수 체지방이면 호르몬 때문에 지방을 더 남기고, 줄어든 칼로리는 탄수에서 뺍니다. 비워 두면 자동입니다.</p>
@@ -1530,6 +1535,7 @@ S.custom = S.custom || {};
 S.slots = S.slots || ["아침","점심","저녁","간식"]; // 끼니 자유 추가 가능
 S.sets = S.sets || {};        // 자주 먹는 콤보 { '점심 세트': [{name,kcal,p,c,f},...] }
 S.condition = S.condition || {}; // { date: 'good'|'tired'|'stress'|'refeed' }
+S.carbG = S.carbG || {};         // { date: grams } 오늘만 탄수 사이클
 S.train = S.train || {};         // { date: true } 운동한 날
 S.theme = S.theme || 'system';
 /* ============ 데이터 보존 3중 장치 ============
@@ -1701,7 +1707,7 @@ function mergeWkLog(local, incoming){
 function mergeSnapshot(data){
   if(!data || typeof data !== 'object') return;
   S.meals = mergeMeals(S.meals, data.meals);
-  ['weights','bodyfat','condition','train','custom','sets'].forEach(k=>{
+  ['weights','bodyfat','condition','train','custom','sets','carbG'].forEach(k=>{
     S[k] = Object.assign({}, data[k]||{}, S[k]||{});
   });
   if(!S.profile && data.profile) S.profile = data.profile;
@@ -1728,7 +1734,7 @@ function ingestBackup(data, preferMerge){
     mergeSnapshot(data);
     return 'merge';
   }
-  ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed'].forEach(k=>{
+  ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed','carbG'].forEach(k=>{
     if(data[k] !== undefined) S[k] = data[k];
   });
   applySnapshot(data, false);
@@ -2030,15 +2036,35 @@ function macrosFor(goal, w, bf, adjust, style, cfg){
   const autoP = proteinCalc(w, bf||0, adjust||0);
   const pT = cfg.protG > 0 ? Math.round(Math.max(40, Math.min(400, +cfg.protG))) : autoP;
   const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT, bf||0, cfg);
-  const cT = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
-  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg), autoP };
+  const autoC = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
+  const wantC = cfg.dayCarbG > 0 ? +cfg.dayCarbG : (cfg.carbG > 0 ? +cfg.carbG : 0);
+  const cT = wantC > 0 ? Math.round(Math.max(0, Math.min(800, wantC))) : autoC;
+  const goalKcal = wantC > 0 ? Math.max(1100, Math.round(pT*4 + cT*4 + fT*9)) : goal;
+  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg), autoP, autoC, goalKcal, carbSet: wantC > 0 };
 }
 function macroTargets(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
   const bf = latestBf() || (S.profile && S.profile.bf) || 0;
   const adj = S.profile ? S.profile.adjust : 0;
   const style = (S.profile && S.profile.macro) || 'balanced';
-  return macrosFor(currentGoal(), w, bf, adj, style);
+  const kcal = (viewDate===todayKey()) ? currentGoal() : baseGoal();
+  const dayC = (S.carbG && S.carbG[viewDate] > 0) ? +S.carbG[viewDate] : 0;
+  return macrosFor(kcal, w, bf, adj, style, Object.assign({}, S.profile||{}, { dayCarbG: dayC }));
+}
+function editDayCarb(){
+  const t = macroTargets();
+  const cur = (S.carbG && S.carbG[viewDate] > 0) ? S.carbG[viewDate] : '';
+  const v = prompt('오늘 탄수 목표 (g)\n비우면 자동 '+t.autoC+'g', cur);
+  if(v==null) return;
+  S.carbG = S.carbG || {};
+  const s = String(v).trim();
+  if(s===''){ delete S.carbG[viewDate]; }
+  else {
+    const n = parseInt(s,10);
+    if(isNaN(n) || n<0 || n>800){ toast('0~800g으로 적으세요'); return; }
+    S.carbG[viewDate] = n;
+  }
+  save(); render();
 }
 
 /* ============ 날짜 탐색 — ‹ › · 달력 시트 · 스와이프 · 과거 소급 기록 ============ */
@@ -3170,7 +3196,7 @@ function prevBf(){ const ks=Object.keys(S.bodyfat).sort().reverse().filter(k=>k!
 function recommend(){
   if(!S.profile) return '';
   const t = macroTargets(), s = todaySum();
-  const left = currentGoal() - s.k, pLeft = t.p - s.p;
+  const left = t.goalKcal - s.k, pLeft = t.p - s.p;
   const cond = S.condition[todayKey()];
   const adj = goalAdjust();
 
@@ -3258,7 +3284,7 @@ function renderFill(isToday, s){
       }
     }
   } else if(t){
-    const left = currentGoal() - (s.k||0);
+    const left = t.goalKcal - (s.k||0);
     if(left >= 80){
       const logged = new Set(meals.map(m=>foodBase(m.name)));
       const mine = frequentFoods()
@@ -3374,7 +3400,8 @@ function render(){
   const st = streak();
   document.getElementById('streak').textContent = st>0 ? `🔥 ${st}일` : '';
 
-  const goal = isToday ? currentGoal() : baseGoal();
+  const t = macroTargets();
+  const goal = t.goalKcal;
   const vMeals = S.meals[viewDate]||[];
   const s = vMeals.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
   document.getElementById('kcalNow').textContent = s.k.toLocaleString();
@@ -3385,14 +3412,16 @@ function render(){
   // 과식 자동 차감을 숨기지 않고 보여준다 (신뢰 포인트)
   const adjP = document.getElementById('adjPill');
   const adjV = isToday ? goalAdjust() : 0;
-  if(adjV < 0){
+  if(adjV < 0 && !t.carbSet){
     const yOver = (S.meals[keyOffset(-1)]||[]).reduce((a,m)=>a+m.kcal,0) - baseGoal();
     adjP.classList.remove('hidden');
     adjP.textContent = `어제 +${yOver} → 오늘 ${adjV} kcal 반영 ✓`;
+  } else if(t.carbSet){
+    adjP.classList.remove('hidden');
+    adjP.textContent = `오늘 탄수 ${t.c}g · ${goal.toLocaleString()} kcal`;
   } else adjP.classList.add('hidden');
 
   // macro bars
-  const t = macroTargets();
   const setBar=(bar,val,now,target,goodColor)=>{
     const el=document.getElementById(bar), v=document.getElementById(val);
     el.style.width = Math.min(now/target*100,100)+'%';
@@ -4037,8 +4066,10 @@ function readForm(){
   const fatPer10 = parseFloat(document.getElementById('pFat10').value) || 0;
   const fatPer7 = parseFloat(document.getElementById('pFat7').value) || 0;
   const protG = parseFloat(document.getElementById('pProtG').value) || 0;
+  const carbG = parseFloat(document.getElementById('pCarbG').value);
+  const carbGv = (!isNaN(carbG) && document.getElementById('pCarbG').value !== '') ? carbG : 0;
   if(!sex || !age || !height || !weight) return null;
-  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro, fatPer, fatPer10, fatPer7, protG };
+  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro, fatPer, fatPer10, fatPer7, protG, carbG: carbGv };
 }
 function previewTDEE(){
   const p = readForm();
@@ -4048,11 +4079,12 @@ function previewTDEE(){
   const goal = Math.max(1200, r.tdee + p.adjust);
   document.getElementById('tvBmr').textContent = r.bmr.toLocaleString();
   document.getElementById('tvTdee').textContent = r.tdee.toLocaleString();
-  document.getElementById('tvGoal').textContent = goal.toLocaleString();
-
   const m = macrosFor(goal, p.weight, p.bf, p.adjust, p.macro, p);
   const protEl = document.getElementById('pProtG');
   if(protEl) protEl.placeholder = String(m.autoP);
+  const carbEl = document.getElementById('pCarbG');
+  if(carbEl) carbEl.placeholder = String(m.autoC);
+  document.getElementById('tvGoal').textContent = m.goalKcal.toLocaleString();
   document.getElementById('tvP').textContent = m.p+'g';
   document.getElementById('tvC').textContent = m.c+'g';
   document.getElementById('tvF').textContent = m.f+'g';
@@ -4062,6 +4094,7 @@ function previewTDEE(){
   if(goal <= r.bmr) eta += `<span style="color:#ff3b30;font-weight:700;">⚠️ 목표가 기초대사량(${r.bmr.toLocaleString()}) 아래입니다 — 감량 강도를 낮추세요. 근손실·요요의 지름길입니다.</span><br>`;
   if(p.protG > 0) eta += `단백질 <b>${m.p}g</b> 직접 설정 (자동이면 ${m.autoP}g)<br>`;
   else if(p.bf > 0) eta += `단백질은 제지방량(LBM ${Math.round(p.weight*(1-p.bf/100))}kg) 기준으로 계산됩니다<br>`;
+  if(p.carbG > 0) eta += `탄수 <b>${m.c}g</b> 직접 설정 (자동이면 ${m.autoC}g) · 칼로리 ${m.goalKcal.toLocaleString()}kcal<br>`;
   if(p.bf > 0 && p.bf <= 7) eta += `체지방 ${p.bf}% · <b>7% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
   else if(p.bf > 0 && p.bf <= 10) eta += `체지방 ${p.bf}% · <b>10% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
   else eta += `지방 ${m.fatPer}g/kg · 체지방 10%·7% 이하이면 칸을 따로 씁니다<br>`;
@@ -4118,6 +4151,7 @@ function openSettings(){
     document.getElementById('pFat10').value = p.fatPer10 || '';
     document.getElementById('pFat7').value = p.fatPer7 || '';
     document.getElementById('pProtG').value = p.protG || '';
+    document.getElementById('pCarbG').value = p.carbG || '';
   } else {
     setSeg('segSex','m'); setSeg('segMode','cut'); setSeg('segCut','-500'); setSeg('segMacro','balanced'); setSeg('segGoalType','weight');
     const lw = lastWeight();
@@ -4126,6 +4160,7 @@ function openSettings(){
     document.getElementById('pFat10').value = '';
     document.getElementById('pFat7').value = '';
     document.getElementById('pProtG').value = '';
+    document.getElementById('pCarbG').value = '';
   }
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
