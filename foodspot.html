@@ -982,6 +982,10 @@
   </div>
   <div class="seg-help" id="macroHelp"></div>
 
+  <label class="flabel" for="pProtG">목표 단백질 (g)</label>
+  <p class="seg-help" style="margin-top:0;">비워 두면 체중·체지방으로 자동. 넣고 싶은 그램만 적으면 됩니다.</p>
+  <input class="txt-input" id="pProtG" type="number" inputmode="numeric" min="40" max="400" placeholder="자동" oninput="previewTDEE()">
+
   <div class="flabel">지방 g/kg — 체지방이 낮을수록 따로</div>
   <p class="seg-help" style="margin-top:0;">단백질 다음 지방을 확보합니다. 한 자릿수 체지방이면 호르몬 때문에 지방을 더 남기고, 줄어든 칼로리는 탄수에서 뺍니다. 비워 두면 자동입니다.</p>
   <div class="frow">
@@ -1990,6 +1994,7 @@ function proteinCalc(w, bf, adjust){
 function proteinTarget(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
   const bf = latestBf() || (S.profile && S.profile.bf) || 0;
+  if(S.profile && S.profile.protG > 0) return Math.round(Math.max(40, Math.min(400, +S.profile.protG)));
   if(!S.profile) return Math.round(w*1.6);
   return proteinCalc(w, bf, S.profile.adjust);
 }
@@ -2022,10 +2027,11 @@ function fatGrams(w, adjust, style, goal, pT, bf, cfg){
 }
 function macrosFor(goal, w, bf, adjust, style, cfg){
   cfg = cfg || S.profile || {};
-  const pT = proteinCalc(w, bf||0, adjust||0);
+  const autoP = proteinCalc(w, bf||0, adjust||0);
+  const pT = cfg.protG > 0 ? Math.round(Math.max(40, Math.min(400, +cfg.protG))) : autoP;
   const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT, bf||0, cfg);
   const cT = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
-  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg) };
+  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg), autoP };
 }
 function macroTargets(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
@@ -4030,8 +4036,9 @@ function readForm(){
   const fatPer = parseFloat(document.getElementById('pFatPer').value) || 0;
   const fatPer10 = parseFloat(document.getElementById('pFat10').value) || 0;
   const fatPer7 = parseFloat(document.getElementById('pFat7').value) || 0;
+  const protG = parseFloat(document.getElementById('pProtG').value) || 0;
   if(!sex || !age || !height || !weight) return null;
-  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro, fatPer, fatPer10, fatPer7 };
+  return { sex, age, height, weight, goalType, goalWeight, goalBf, bf, activity, adjust, macro, fatPer, fatPer10, fatPer7, protG };
 }
 function previewTDEE(){
   const p = readForm();
@@ -4043,8 +4050,9 @@ function previewTDEE(){
   document.getElementById('tvTdee').textContent = r.tdee.toLocaleString();
   document.getElementById('tvGoal').textContent = goal.toLocaleString();
 
-  const pT = proteinCalc(p.weight, p.bf, p.adjust);
   const m = macrosFor(goal, p.weight, p.bf, p.adjust, p.macro, p);
+  const protEl = document.getElementById('pProtG');
+  if(protEl) protEl.placeholder = String(m.autoP);
   document.getElementById('tvP').textContent = m.p+'g';
   document.getElementById('tvC').textContent = m.c+'g';
   document.getElementById('tvF').textContent = m.f+'g';
@@ -4052,7 +4060,8 @@ function previewTDEE(){
   const bmi = Math.round(p.weight/Math.pow(p.height/100,2)*10)/10;
   let eta = '';
   if(goal <= r.bmr) eta += `<span style="color:#ff3b30;font-weight:700;">⚠️ 목표가 기초대사량(${r.bmr.toLocaleString()}) 아래입니다 — 감량 강도를 낮추세요. 근손실·요요의 지름길입니다.</span><br>`;
-  if(p.bf > 0) eta += `단백질은 제지방량(LBM ${Math.round(p.weight*(1-p.bf/100))}kg) 기준으로 계산됩니다<br>`;
+  if(p.protG > 0) eta += `단백질 <b>${m.p}g</b> 직접 설정 (자동이면 ${m.autoP}g)<br>`;
+  else if(p.bf > 0) eta += `단백질은 제지방량(LBM ${Math.round(p.weight*(1-p.bf/100))}kg) 기준으로 계산됩니다<br>`;
   if(p.bf > 0 && p.bf <= 7) eta += `체지방 ${p.bf}% · <b>7% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
   else if(p.bf > 0 && p.bf <= 10) eta += `체지방 ${p.bf}% · <b>10% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
   else eta += `지방 ${m.fatPer}g/kg · 체지방 10%·7% 이하이면 칸을 따로 씁니다<br>`;
@@ -4108,6 +4117,7 @@ function openSettings(){
     document.getElementById('pFatPer').value = p.fatPer || '';
     document.getElementById('pFat10').value = p.fatPer10 || '';
     document.getElementById('pFat7').value = p.fatPer7 || '';
+    document.getElementById('pProtG').value = p.protG || '';
   } else {
     setSeg('segSex','m'); setSeg('segMode','cut'); setSeg('segCut','-500'); setSeg('segMacro','balanced'); setSeg('segGoalType','weight');
     const lw = lastWeight();
@@ -4115,6 +4125,7 @@ function openSettings(){
     document.getElementById('pFatPer').value = '';
     document.getElementById('pFat10').value = '';
     document.getElementById('pFat7').value = '';
+    document.getElementById('pProtG').value = '';
   }
   previewTDEE();
   setSegOnly('segTheme', S.theme || 'system');
