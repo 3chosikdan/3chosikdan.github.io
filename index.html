@@ -1,1 +1,23 @@
-file:///workspace/site/index.html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3초식단</title>
+</head>
+<body>
+<script>
+(async function(){
+  try{
+    var r = await fetch('https://cdn.jsdelivr.net/gh/3chosikdan/3chosikdan.github.io@0ca384d/index.html');
+    var html = await r.text();
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(e){
+    document.body.textContent = '잠시 후 새로고침 해주세요';
+  }
+})();
+</script>
+</body>
+</html>
