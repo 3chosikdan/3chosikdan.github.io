@@ -79,6 +79,7 @@
   .mbar { flex:1; height:9px; background:#f2f2f7; border-radius:6px; overflow:hidden; }
   .mbar div { height:100%; width:0; border-radius:6px; transition:width .4s; background:#111; }
   .mval { width:88px; text-align:right; font-size:12px; font-weight:600; color:#8e8e93; }
+  .mval-btn { background:none; border:none; padding:0; margin:0; font:inherit; cursor:pointer; color:#8e8e93; }
 
   .reco {
     margin:14px 24px 0; padding:12px 16px; background:#f2f2f7; border-radius:14px;
@@ -498,7 +499,7 @@
   html.dark body { background:#000; color:#f2f2f7; }
   html.dark .hdr-btn { background:#2c2c2e; color:#e5e5ea; }
   html.dark .hdr-btn:active { background:#3a3a3c; }
-  html.dark .kcal-sub, html.dark .date, html.dark h2, html.dark .mval, html.dark .flabel,
+  html.dark .kcal-sub, html.dark .date, html.dark h2, html.dark .mval, html.dark .mval-btn, html.dark .flabel,
   html.dark .meal .time, html.dark .empty, html.dark .del-hint, html.dark .site-foot,
   html.dark .faq p, html.dark .fi-w, html.dark .cart-item .ci-k { color:#8e8e93; }
   html.dark .mbar, html.dark .meal .thumb, html.dark .wcard, html.dark .reco,
@@ -649,9 +650,9 @@
     </div>
     <div id="adjPill" class="hidden" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:100px;background:#f2f2f7;font-size:12px;font-weight:700;color:#3a3a3c;"></div>
     <div class="macros">
-      <div class="mrow"><div class="mname">단백질</div><div class="mbar"><div id="barP"></div></div><div class="mval" id="valP"></div></div>
-      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayCarb()" aria-label="오늘 탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><div class="mval" id="valC"></div></div>
-      <div class="mrow"><div class="mname">지방</div><div class="mbar"><div id="barF"></div></div><div class="mval" id="valF"></div></div>
+      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('p')" aria-label="단백질 목표">단백질</button><div class="mbar"><div id="barP"></div></div><button type="button" class="mval mval-btn" id="valP" onclick="editDayMacro('p')" aria-label="단백질 목표 바꾸기"></button></div>
+      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('c')" aria-label="탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><button type="button" class="mval mval-btn" id="valC" onclick="editDayMacro('c')" aria-label="탄수 목표 바꾸기"></button></div>
+      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('f')" aria-label="지방 목표">지방</button><div class="mbar"><div id="barF"></div></div><button type="button" class="mval mval-btn" id="valF" onclick="editDayMacro('f')" aria-label="지방 목표 바꾸기"></button></div>
     </div>
     <div class="cond-row" id="condRow"></div>
     <div class="reco" id="reco"></div>
@@ -1535,7 +1536,8 @@ S.custom = S.custom || {};
 S.slots = S.slots || ["아침","점심","저녁","간식"]; // 끼니 자유 추가 가능
 S.sets = S.sets || {};        // 자주 먹는 콤보 { '점심 세트': [{name,kcal,p,c,f},...] }
 S.condition = S.condition || {}; // { date: 'good'|'tired'|'stress'|'refeed' }
-S.carbG = S.carbG || {};         // { date: grams } 오늘만 탄수 사이클
+S.carbG = S.carbG || {};         // 예전 오늘 탄수. dayMacro로 이전
+S.dayMacro = S.dayMacro || {};   // { date: {p,c,f} } 오늘 탄단지 g
 S.train = S.train || {};         // { date: true } 운동한 날
 S.theme = S.theme || 'system';
 /* ============ 데이터 보존 3중 장치 ============
@@ -1707,7 +1709,7 @@ function mergeWkLog(local, incoming){
 function mergeSnapshot(data){
   if(!data || typeof data !== 'object') return;
   S.meals = mergeMeals(S.meals, data.meals);
-  ['weights','bodyfat','condition','train','custom','sets','carbG'].forEach(k=>{
+  ['weights','bodyfat','condition','train','custom','sets','carbG','dayMacro'].forEach(k=>{
     S[k] = Object.assign({}, data[k]||{}, S[k]||{});
   });
   if(!S.profile && data.profile) S.profile = data.profile;
@@ -1734,7 +1736,7 @@ function ingestBackup(data, preferMerge){
     mergeSnapshot(data);
     return 'merge';
   }
-  ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed','carbG'].forEach(k=>{
+  ['goal','meals','weights','bodyfat','custom','slots','sets','condition','train','theme','profile','schemaVersion','replayed','carbG','dayMacro'].forEach(k=>{
     if(data[k] !== undefined) S[k] = data[k];
   });
   applySnapshot(data, false);
@@ -2033,14 +2035,25 @@ function fatGrams(w, adjust, style, goal, pT, bf, cfg){
 }
 function macrosFor(goal, w, bf, adjust, style, cfg){
   cfg = cfg || S.profile || {};
+  const day = cfg.dayMacro || {};
   const autoP = proteinCalc(w, bf||0, adjust||0);
-  const pT = cfg.protG > 0 ? Math.round(Math.max(40, Math.min(400, +cfg.protG))) : autoP;
-  const fT = fatGrams(w, adjust||0, style||'balanced', goal, pT, bf||0, cfg);
+  const pT = day.p > 0 ? Math.round(Math.max(40, Math.min(400, +day.p)))
+    : (cfg.protG > 0 ? Math.round(Math.max(40, Math.min(400, +cfg.protG))) : autoP);
+  const autoF = fatGrams(w, adjust||0, style||'balanced', goal, pT, bf||0, cfg);
+  const fT = day.f > 0 ? Math.round(Math.max(5, Math.min(250, +day.f))) : autoF;
   const autoC = Math.max(0, Math.round((goal - pT*4 - fT*9)/4));
-  const wantC = cfg.dayCarbG > 0 ? +cfg.dayCarbG : (cfg.carbG > 0 ? +cfg.carbG : 0);
-  const cT = wantC > 0 ? Math.round(Math.max(0, Math.min(800, wantC))) : autoC;
-  const goalKcal = wantC > 0 ? Math.max(1100, Math.round(pT*4 + cT*4 + fT*9)) : goal;
-  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg), autoP, autoC, goalKcal, carbSet: wantC > 0 };
+  const cT = day.c > 0 ? Math.round(Math.max(0, Math.min(800, +day.c)))
+    : (cfg.carbG > 0 ? Math.round(Math.max(0, Math.min(800, +cfg.carbG))) : autoC);
+  const cSet = day.c > 0 || cfg.carbG > 0;
+  const allSet = (day.p > 0 || cfg.protG > 0) && cSet && day.f > 0;
+  const goalKcal = (cSet || allSet) ? Math.max(1100, Math.round(pT*4 + cT*4 + fT*9)) : goal;
+  return { p:pT, c:cT, f:fT, fatPer: fatPerKg(w, adjust||0, style||'balanced', bf||0, cfg), autoP, autoC, autoF, goalKcal, carbSet: cSet, protSet: day.p>0 || cfg.protG>0, fatSet: day.f>0, daySet: day.p>0 || day.c>0 || day.f>0 };
+}
+function dayMacroOf(date){
+  date = date || viewDate;
+  const d = Object.assign({}, (S.dayMacro && S.dayMacro[date]) || {});
+  if(!(d.c > 0) && S.carbG && S.carbG[date] > 0) d.c = S.carbG[date];
+  return d;
 }
 function macroTargets(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
@@ -2048,22 +2061,30 @@ function macroTargets(){
   const adj = S.profile ? S.profile.adjust : 0;
   const style = (S.profile && S.profile.macro) || 'balanced';
   const kcal = (viewDate===todayKey()) ? currentGoal() : baseGoal();
-  const dayC = (S.carbG && S.carbG[viewDate] > 0) ? +S.carbG[viewDate] : 0;
-  return macrosFor(kcal, w, bf, adj, style, Object.assign({}, S.profile||{}, { dayCarbG: dayC }));
+  return macrosFor(kcal, w, bf, adj, style, Object.assign({}, S.profile||{}, { dayMacro: dayMacroOf(viewDate) }));
 }
-function editDayCarb(){
+function editDayMacro(which){
   const t = macroTargets();
-  const cur = (S.carbG && S.carbG[viewDate] > 0) ? S.carbG[viewDate] : '';
-  const v = prompt('오늘 탄수 목표 (g)\n비우면 자동 '+t.autoC+'g', cur);
+  const day = dayMacroOf(viewDate);
+  const label = which==='p' ? '단백질' : which==='c' ? '탄수' : '지방';
+  const auto = which==='p' ? t.autoP : which==='c' ? t.autoC : t.autoF;
+  const cur = day[which] > 0 ? day[which] : '';
+  const v = prompt('오늘 '+label+' 목표 (g)\n비우면 자동 '+auto+'g', cur);
   if(v==null) return;
-  S.carbG = S.carbG || {};
+  S.dayMacro = S.dayMacro || {};
+  const row = Object.assign({}, S.dayMacro[viewDate] || {});
   const s = String(v).trim();
-  if(s===''){ delete S.carbG[viewDate]; }
+  if(s==='') delete row[which];
   else {
     const n = parseInt(s,10);
-    if(isNaN(n) || n<0 || n>800){ toast('0~800g으로 적으세요'); return; }
-    S.carbG[viewDate] = n;
+    const max = which==='c' ? 800 : which==='p' ? 400 : 250;
+    const min = which==='f' ? 5 : 0;
+    if(isNaN(n) || n<min || n>max){ toast(min+'~'+max+'g으로 적으세요'); return; }
+    row[which] = n;
   }
+  if(row.p || row.c || row.f) S.dayMacro[viewDate] = row;
+  else delete S.dayMacro[viewDate];
+  if(which==='c' && S.carbG) delete S.carbG[viewDate];
   save(); render();
 }
 
@@ -3034,7 +3055,6 @@ function lookupFoodNutri(id){
 function logNowFromStats(id){
   const st = loadStore('3cho:foodstats', {})[id];
   if(!st) return;
-  curSlot = autoSlot();
   cart = [{
     name: st.lastName || id,
     kcal: Math.round(st.lastKcal||0), p:Math.round(st.lastP||0), c:Math.round(st.lastC||0), f:Math.round(st.lastF||0),
@@ -3412,13 +3432,13 @@ function render(){
   // 과식 자동 차감을 숨기지 않고 보여준다 (신뢰 포인트)
   const adjP = document.getElementById('adjPill');
   const adjV = isToday ? goalAdjust() : 0;
-  if(adjV < 0 && !t.carbSet){
+  if(adjV < 0 && !t.daySet){
     const yOver = (S.meals[keyOffset(-1)]||[]).reduce((a,m)=>a+m.kcal,0) - baseGoal();
     adjP.classList.remove('hidden');
     adjP.textContent = `어제 +${yOver} → 오늘 ${adjV} kcal 반영 ✓`;
-  } else if(t.carbSet){
+  } else if(t.daySet){
     adjP.classList.remove('hidden');
-    adjP.textContent = `오늘 탄수 ${t.c}g · ${goal.toLocaleString()} kcal`;
+    adjP.textContent = `오늘 P${t.p} C${t.c} F${t.f} · ${goal.toLocaleString()} kcal`;
   } else adjP.classList.add('hidden');
 
   // macro bars
