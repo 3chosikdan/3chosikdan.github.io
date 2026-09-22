@@ -992,20 +992,20 @@
   <p class="seg-help" style="margin-top:0;">비워 두면 단백질·지방 다음 남은 칼로리. 사이클링은 홈에서 탄수를 탭해 오늘만 바꿉니다.</p>
   <input class="txt-input" id="pCarbG" type="number" inputmode="numeric" min="0" max="800" placeholder="자동" oninput="previewTDEE()">
 
-  <div class="flabel">지방 g/kg — 체지방이 낮을수록 따로</div>
-  <p class="seg-help" style="margin-top:0;">체지방이 낮아질수록 지방을 줄이고 탄수를 남깁니다. 7%에서도 0.7g/kg은 남깁니다. 비워 두면 자동입니다.</p>
+  <div class="flabel">지방 g/kg — 체지방 구간</div>
+  <p class="seg-help" style="margin-top:0;">15% 이상 0.8~1.2 · 10~15% 0.6~0.8 · 10% 미만 0.5~0.6. 0.5g/kg 밑으로는 오래 두지 않습니다. 비워 두면 자동입니다.</p>
   <div class="frow">
     <div>
-      <label class="flabel" for="pFatPer">기본 지방 g/kg</label>
-      <input class="txt-input" id="pFatPer" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="1.0" oninput="previewTDEE()">
+      <label class="flabel" for="pFatPer">기본 (15% 이상)</label>
+      <input class="txt-input" id="pFatPer" type="number" inputmode="decimal" step="0.1" min="0.5" max="1.8" placeholder="1.0" oninput="previewTDEE()">
     </div>
     <div>
-      <label class="flabel" for="pFat10">체지방 10% 이하</label>
-      <input class="txt-input" id="pFat10" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.8" oninput="previewTDEE()">
+      <label class="flabel" for="pFat10">체지방 10~15%</label>
+      <input class="txt-input" id="pFat10" type="number" inputmode="decimal" step="0.1" min="0.5" max="1.8" placeholder="0.7" oninput="previewTDEE()">
     </div>
     <div>
-      <label class="flabel" for="pFat7">체지방 7% 이하</label>
-      <input class="txt-input" id="pFat7" type="number" inputmode="decimal" step="0.1" min="0.4" max="1.8" placeholder="0.7" oninput="previewTDEE()">
+      <label class="flabel" for="pFat7">체지방 10% 미만</label>
+      <input class="txt-input" id="pFat7" type="number" inputmode="decimal" step="0.1" min="0.5" max="1.8" placeholder="0.55" oninput="previewTDEE()">
     </div>
   </div>
 
@@ -1993,11 +1993,14 @@ function currentGoal(){
 }
 /* 단백질: 체지방률을 알면 제지방량(LBM) 기준 — 감량기 근손실 방지에 더 정확 */
 function proteinCalc(w, bf, adjust){
+  if(bf > 0 && bf < 10){
+    return Math.round(w * (bf <= 7 ? 2.8 : 2.6));
+  }
   if(bf > 0){
     const lbm = w*(1-bf/100);
-    return Math.round(lbm * (adjust<0 ? 2.4 : adjust>0 ? 2.2 : 2.0)); // LBM 2.0~2.4
+    return Math.round(lbm * (adjust<0 ? 2.4 : adjust>0 ? 2.2 : 2.0));
   }
-  return Math.round(w * (adjust<0 ? 2.3 : adjust>0 ? 2.0 : 2.0));      // 체중 2.0~2.3
+  return Math.round(w * (adjust<0 ? 2.3 : 2.0));
 }
 function proteinTarget(){
   const w = lastWeight() || (S.profile && S.profile.weight) || 70;
@@ -2009,24 +2012,28 @@ function proteinTarget(){
 /* 매크로: 단백질 → 지방(체지방 구간별 g/kg) → 남은 kcal 전부 탄수 */
 function fatPerKg(w, adjust, style, bf, cfg){
   cfg = cfg || {};
-  let per = cfg.fatPer > 0 ? +cfg.fatPer : (adjust<0 ? 0.9 : 1.0);
-  if(!(cfg.fatPer > 0)){
-    if(style==='lowcarb') per += 0.25;
-    if(style==='hicarb') per -= 0.2;
+  let per;
+  if(bf > 0 && bf < 10){
+    per = cfg.fatPer7 > 0 ? +cfg.fatPer7 : 0.55;
+  } else if(bf > 0 && bf <= 15){
+    per = cfg.fatPer10 > 0 ? +cfg.fatPer10 : 0.7;
+  } else {
+    per = cfg.fatPer > 0 ? +cfg.fatPer : (adjust<0 ? 0.9 : 1.0);
+    if(!(cfg.fatPer > 0)){
+      if(style==='lowcarb') per += 0.25;
+      if(style==='hicarb') per -= 0.2;
+    }
   }
-  if(bf > 0 && bf <= 7){
-    per = cfg.fatPer7 > 0 ? +cfg.fatPer7 : 0.7;
-  } else if(bf > 0 && bf <= 10){
-    per = cfg.fatPer10 > 0 ? +cfg.fatPer10 : 0.8;
-  }
-  return Math.max(0.4, Math.min(1.8, per));
+  return Math.max(0.5, Math.min(1.8, per));
 }
 function fatGrams(w, adjust, style, goal, pT, bf, cfg){
+  cfg = cfg || {};
   const per = fatPerKg(w, adjust, style, bf||0, cfg);
-  const floor = Math.round(w * 0.4);
+  const floor = Math.round(w * 0.5);
   let f = Math.round(w * per);
-  if(!(cfg && (cfg.fatPer>0 || ((bf||0)<=10 && (cfg.fatPer10>0 || cfg.fatPer7>0))))){
-    f = Math.max(f, Math.round(w * 0.5), Math.round(goal * 0.15 / 9));
+  const custom = cfg.fatPer>0 || cfg.fatPer10>0 || cfg.fatPer7>0;
+  if(!custom && !(bf > 0 && bf < 10)){
+    f = Math.max(f, floor, Math.round(goal * 0.15 / 9));
   }
   f = Math.max(f, floor);
   const remAfterP = goal - pT*4;
@@ -3868,7 +3875,7 @@ const GUIDE_MAIN = `
       ① 칼로리 예산 — ⚙︎에서 자동 계산<br>
       ② <b>단백질부터 확보</b> — 단백질은 목표, 나머지는 예산<br>
       ③ 탄수화물 — 양은 남은 예산, <b>종류는 시간대</b>로<br>
-      ④ 지방 — <b>75%는 생선·아보카도·견과류</b>에서. 체지방 10% 이하·7% 이하는 ⚙︎에서 g/kg을 따로 둘 수 있습니다
+      ④ 지방 — 15% 이상 0.8~1.2g/kg, 10~15% 0.6~0.8, 10% 미만 0.5~0.6. 0.5g/kg 밑으로는 오래 두지 않습니다. ⚙︎에서 구간별로 바꿀 수 있습니다.
     </div>
   </div>
 
@@ -4115,9 +4122,9 @@ function previewTDEE(){
   if(p.protG > 0) eta += `단백질 <b>${m.p}g</b> 직접 설정 (자동이면 ${m.autoP}g)<br>`;
   else if(p.bf > 0) eta += `단백질은 제지방량(LBM ${Math.round(p.weight*(1-p.bf/100))}kg) 기준으로 계산됩니다<br>`;
   if(p.carbG > 0) eta += `탄수 <b>${m.c}g</b> 직접 설정 (자동이면 ${m.autoC}g) · 칼로리 ${m.goalKcal.toLocaleString()}kcal<br>`;
-  if(p.bf > 0 && p.bf <= 7) eta += `체지방 ${p.bf}% · <b>7% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
-  else if(p.bf > 0 && p.bf <= 10) eta += `체지방 ${p.bf}% · <b>10% 이하</b> 지방 ${m.fatPer}g/kg 적용<br>`;
-  else eta += `지방 ${m.fatPer}g/kg · 체지방 10%·7% 이하이면 칸을 따로 씁니다<br>`;
+  if(p.bf > 0 && p.bf < 10) eta += `체지방 ${p.bf}% · <b>10% 미만</b> 지방 ${m.fatPer}g/kg (하한 0.5) · 단백질 체중 ${p.bf<=7?'2.8':'2.6'}g/kg<br>`;
+  else if(p.bf > 0 && p.bf <= 15) eta += `체지방 ${p.bf}% · <b>10~15%</b> 지방 ${m.fatPer}g/kg<br>`;
+  else eta += `지방 ${m.fatPer}g/kg · 15% 이상 구간<br>`;
   eta += `BMI ${bmi} · ${bmi<18.5?'저체중':bmi<23?'정상':bmi<25?'과체중':'비만'} (아시아 기준)`;
   const perWeek = p.adjust*7/7700; // kg/주 (음수면 감량)
   if(p.adjust!==0){
