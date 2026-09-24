@@ -636,6 +636,10 @@
     <button type="button" class="on" data-v="diet" onclick="setHomeMode('diet')">식단</button>
     <button type="button" data-v="lift" onclick="setHomeMode('lift')">운동</button>
   </div>
+  <div id="condBox" style="padding:12px 24px 0;">
+    <div class="flabel" style="margin:0 0 8px;">컨디션</div>
+    <div class="cond-row" id="condRow" style="margin:0;"></div>
+  </div>
   <div id="setupBanner" class="hidden" style="margin:8px 24px 0;"></div>
   <div id="installTip" class="hidden" style="margin:10px 24px 0;"></div>
   <div id="syncBar"></div>
@@ -659,7 +663,6 @@
       <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('c')" aria-label="탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><button type="button" class="mval mval-btn" id="valC" onclick="editDayMacro('c')" aria-label="탄수 목표 바꾸기"></button></div>
       <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('f')" aria-label="지방 목표">지방</button><div class="mbar"><div id="barF"></div></div><button type="button" class="mval mval-btn" id="valF" onclick="editDayMacro('f')" aria-label="지방 목표 바꾸기"></button></div>
     </div>
-    <div class="cond-row" id="condRow"></div>
     <div class="reco" id="reco"></div>
     <div id="fillBox" class="fill"></div>
     <div class="reco hidden" id="dayWrap" style="background:#111;color:#e5e5ea;"></div>
@@ -782,7 +785,7 @@
       <button class="mini-btn" style="width:auto;margin:0;padding:0 18px;" onclick="addSlot()">추가</button>
     </div>
 
-    <input class="search-input" id="searchInput" placeholder="음식 이름 또는 초성 (ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="renderMatches()">
+    <input class="search-input" id="searchInput" placeholder="음식 이름 또는 초성 (ㄱㅊㅉ)" aria-label="음식 이름 검색" oninput="queueMatches()">
     <div class="matches" id="matches"></div>
 
     <div id="nowWrap" class="hidden" style="margin-top:16px;">
@@ -2479,9 +2482,9 @@ function renderSets(){
 }
 
 /* ============ 컨디션 ============ */
-const CONDS = { good:'😀 좋음', tired:'😴 피곤', stress:'😤 스트레스', refeed:'🍚 리피드' };
+const CONDS = { good:'좋음', ok:'보통', tired:'피곤', refeed:'리피드' };
 function setCond(c){
-  const k = todayKey();
+  const k = viewDate;
   S.condition[k] = (S.condition[k]===c) ? null : c;
   save(); render();
 }
@@ -2741,6 +2744,11 @@ function commitRow(i){
     : `${r.name} ${r.amt}${r.uLabel}`;
   addMeal(label, r.k*s, r.p*s, r.c*s, r.f*s, null, true);
 }
+let _matchT = null;
+function queueMatches(){
+  clearTimeout(_matchT);
+  _matchT = setTimeout(renderMatches, 80);
+}
 function renderMatches(){
   const raw = document.getElementById('searchInput').value.trim();
   const box = document.getElementById('matches');
@@ -2858,7 +2866,7 @@ function renderMatches(){
       const src = +L.charAt(L.length-3);
       const row = [i, r, src];
       if(src===2) extB.push(row); else extC.push(row);
-      if(extB.length+extC.length > 4000) break;
+      if(extB.length+extC.length > 120) break;
     }
     const pack = (arr)=> arr.sort((a,b)=> (b[1]-a[1]) || (a[2]-b[2]) || (EXT_N[a[0]].length - EXT_N[b[0]].length)).slice(0,20).map(([i])=>{
       const e = extItem(i);
@@ -3162,6 +3170,8 @@ function migrateV1(){
 document.getElementById('searchInput').addEventListener('keydown', e=>{
   if(e.key !== 'Enter') return;
   e.preventDefault();
+  clearTimeout(_matchT);
+  renderMatches();
   if(window._rows && window._rows.length){
     commitRow(0);   // Enter = 첫 결과 기본량 바로 담기 → 계속 입력
   } else {
@@ -3465,10 +3475,11 @@ function render(){
   setBar('barF','valF',s.f,t.f,'#ff9500');
 
   // condition chips (여성 프로필이면 생리주기 추가) — 오늘만
-  const curCond = S.condition[todayKey()];
-  const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'🌙 생리'} : {})};
-  document.getElementById('condRow').innerHTML = (!isToday || !S.profile) ? '' : Object.entries(condList).map(([k,label])=>
-    `<button class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
+  const curCond = S.condition[viewDate];
+  const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'생리'} : {})};
+  const condRow = document.getElementById('condRow');
+  if(condRow) condRow.innerHTML = Object.entries(condList).map(([k,label])=>
+    `<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
 
   document.getElementById('reco').innerHTML = !isToday ? '' : recommend();
   const recoEl = document.getElementById('reco');
