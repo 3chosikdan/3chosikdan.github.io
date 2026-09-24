@@ -4465,6 +4465,8 @@ const WK = {
 function wkSettings(){
   const s = loadStore(WK.settings, {}) || {};
   if(s.backoffPct == null) s.backoffPct = 75;
+  if(s.unit !== 'lb') s.unit = s.unit === 'kg' ? 'kg' : (s.unit || 'kg');
+  if(!s.weekPlan) s.weekPlan = {};
   return s;
 }
 (function renameExTypos(){
@@ -4482,20 +4484,35 @@ function setBoPct(n){
   const s = wkSettings();
   s.backoffPct = +n;
   saveStore(WK.settings, s);
-  toast('백오프 = 탑세트의 '+n+'% · 2.5kg 반올림');
+  const step = wkUnit()==='lb' ? '5lb' : '2.5kg';
+  toast('백오프 = 탑세트의 '+n+'% · '+step+' 반올림');
   renderWork();
 }
-function calcBackoff(topW){
+function calcBackoff(topW, unit){
   const w = parseFloat(topW);
   if(!(w>0)) return '';
-  return round2p5(w * backoffPct() / 100);
+  return plateRound(w * backoffPct() / 100, unit || wkUnit());
 }
+function wkUnit(){ return wkSettings().unit==='lb' ? 'lb' : 'kg'; }
+function setWkUnit(u){
+  const s = wkSettings();
+  s.unit = u==='lb' ? 'lb' : 'kg';
+  saveStore(WK.settings, s);
+  toast(s.unit==='lb' ? '중량 lb · 백오프는 5lb 단위' : '중량 kg · 백오프는 2.5kg 단위');
+  renderWork();
+}
+function plateRound(n, unit){
+  const step = unit==='lb' ? 5 : 2.5;
+  return Math.round((+n||0)/step)*step;
+}
+function toKg(w, unit){ return unit==='lb' ? (+w||0)*0.45359237 : (+w||0); }
+function uLabel(unit){ return unit==='lb' ? 'lb' : 'kg'; }
 function defaultRir(type){
   if(type==='machine_isolation' || type==='cable') return 0;
   if(type==='free_compound') return 2;
   return 1;
 }
-function round2p5(n){ return Math.round((+n||0)/2.5)*2.5; }
+function round2p5(n){ return plateRound(n, 'kg'); }
 function mkEx(name, muscle, type, setup){
   return { id:'ex_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4),
     name, muscle, type, setup: setup||'', defaultRir: defaultRir(type) };
@@ -4876,8 +4893,12 @@ function backoffHist(exId){
   return Object.keys(log).sort().map(d=>{
     const e = (log[d].entries||[]).find(x=>x.exerciseId===exId);
     if(!e || !e.backoff || !(e.backoff.weight>0)) return null;
-    return { date:d, w:e.backoff.weight, r:e.backoff.reps, vol:e.backoff.weight*e.backoff.reps };
+    return { date:d, w:e.backoff.weight, r:e.backoff.reps, unit:e.unit||'kg', vol: toKg(e.backoff.weight, e.unit||'kg')*e.backoff.reps };
   }).filter(Boolean);
+}
+function lastBackoff(exId){
+  const h = backoffHist(exId).filter(x=>x.date < viewDate);
+  return h.length ? h[h.length-1] : null;
 }
 function isStagnantEx(exId){
   const h = backoffHist(exId);
@@ -4885,9 +4906,69 @@ function isStagnantEx(exId){
   const a=h[h.length-1], b=h[h.length-2], c=h[h.length-3];
   return a.vol <= b.vol && b.vol <= c.vol;
 }
-function lastBackoff(exId){
-  const h = backoffHist(exId).filter(x=>x.date < viewDate);
-  return h.length ? h[h.length-1] : null;
+function lastSet(exId){
+  const log = loadStore(WK.log, {});
+  const keys = Object.keys(log).sort().filter(d=>d<viewDate);
+  for(let i=keys.length-1;i>=0;i--){
+    const e = (log[keys[i]].entries||[]).find(x=>x.exerciseId===exId);
+    if(e && ((e.top && e.top.weight>0) || (e.backoff && e.backoff.weight>0))) return e;
+  }
+  return null;
+}
+function copySet(exId, prev){
+  const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
+  if(!prev){
+    return { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', unit:wkUnit(),
+      top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:0}, memo:'' };
+  }
+  return {
+    exerciseId:exId,
+    setupUsed: prev.setupUsed || (ex&&ex.setup)||'',
+    unit: prev.unit==='lb' ? 'lb' : 'kg',
+    top: { weight: prev.top&&prev.top.weight!=null?prev.top.weight:'', reps: prev.top&&prev.top.reps!=null?prev.top.reps:'', rir: prev.top&&prev.top.rir!=null?prev.top.rir:(ex?effectiveRir(ex):1) },
+    backoff: { weight: prev.backoff&&prev.backoff.weight!=null?prev.backoff.weight:'', reps: prev.backoff&&prev.backoff.reps!=null?prev.backoff.reps:'', rir: prev.backoff&&prev.backoff.rir!=null?prev.backoff.rir:0 },
+    memo: '',
+    carried: true
+  };
+}
+function fillLastNumbers(force){
+  const day = todayLog();
+  const rou = loadStore(WK.rou, []).find(r=>r.id===day.routineId);
+  const ids = (day.routineId && rou) ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
+  if(!ids.length){ toast('먼저 루틴 종목을 넣으세요'); return; }
+  const has = (day.entries||[]).some(e=>(e.top&&e.top.weight>0)||(e.backoff&&e.backoff.weight>0));
+  if(has && !force && !confirm('지난 세션 숫자로 바꿀까요?\n오늘 올린 무게는 그 위에 고치면 됩니다.')) return;
+  day.entries = ids.map(id=>copySet(id, lastSet(id)));
+  putTodayLog(day);
+  renderWork();
+  toast('지난 세션 숫자를 넣었습니다. 오늘 바뀐 것만 고치면 됩니다');
+}
+function pinWeekday(){
+  const day = todayLog();
+  if(!day.routineId){ toast('먼저 루틴을 고르세요'); return; }
+  const s = wkSettings();
+  s.weekPlan = s.weekPlan || {};
+  const wd = new Date(viewDate+'T12:00:00').getDay();
+  s.weekPlan[String(wd)] = day.routineId;
+  saveStore(WK.settings, s);
+  const names = ['일','월','화','수','목','금','토'];
+  toast(names[wd]+'요일은 이 루틴으로 고정했습니다. 다음 주도 같은 종목·지난 중량이 들어옵니다');
+  renderWork();
+}
+function bootTodayRoutine(){
+  if(viewDate!==todayKey()) return;
+  const log = loadStore(WK.log, {});
+  if(log[viewDate]) return;
+  const rus = loadStore(WK.rou, []);
+  if(!rus.length) return;
+  const plan = (wkSettings().weekPlan)||{};
+  const wd = String(new Date(viewDate+'T12:00:00').getDay());
+  const planned = rus.find(r=>r.id===plan[wd]);
+  const rou = planned || sortRoutines(rus)[0];
+  const day = { schemaVersion:1, routineId: rou.id, entries:[], durationMin:null };
+  day.entries = (rou.exerciseIds||[]).map(id=>copySet(id, lastSet(id)));
+  log[viewDate] = day;
+  saveStore(WK.log, log);
 }
 function deloadState(){
   const d = loadStore(WK.deload, null);
@@ -4926,6 +5007,7 @@ function renderWork(){
       + presets.map(p=>`<button type="button" class="wk-pick" onclick="applyPreset('${p.id}')"><b>${p.name}</b><span>${p.blurb}</span></button>`).join('');
     return;
   }
+  if(viewDate===todayKey()) bootTodayRoutine();
   const day = todayLog();
   const rou = routines.find(r=>r.id===day.routineId) || routines[0];
   if(!day.routineId){ day.routineId = rou.id; putTodayLog(day); }
@@ -4943,16 +5025,28 @@ function renderWork(){
       </div></div>`;
   }
   const pct = backoffPct();
-  html += `<div style="display:flex;justify-content:space-between;align-items:baseline;">
+  const unit = wkUnit();
+  const wd = new Date(viewDate+'T12:00:00').getDay();
+  const pinned = (wkSettings().weekPlan||{})[String(wd)]===day.routineId;
+  const wdName = ['일','월','화','수','목','금','토'][wd];
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
       <div class="flabel" style="margin:0">오늘 할 루틴</div>
-      <button type="button" class="helper-link" onclick="openWhy()">왜 이렇게 하나요</button>
+      <div class="seg" id="wkUnitSeg" style="margin:0;flex:0 0 120px;">
+        <button type="button" data-v="kg" onclick="setWkUnit('kg')">kg</button>
+        <button type="button" data-v="lb" onclick="setWkUnit('lb')">lb</button>
+      </div>
     </div>
     <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="오늘 할 루틴" style="margin-top:8px;">
       <option value="">루틴 없이 오늘만 적기</option>
       ${sortRoutines(routines).map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
     </select>
-    <p class="wk-hint" style="margin:6px 0 0;">월·화처럼 다른 날 루틴은 위에서 고르면 됩니다. 고르지 않은 루틴은 그대로 둡니다.</p>
-    <button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">종목·순서 고치기</button>
+    <p class="wk-hint" style="margin:6px 0 0;">${pinned ? wdName+'요일에 이 루틴이 고정돼 있습니다. 다음 주도 종목과 지난 중량이 들어옵니다.' : '이 요일에 고정하면 다음 주도 같은 종목·지난 중량이 들어옵니다.'}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="pinWeekday()">${wdName}요일에 고정</button>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(document.getElementById('wkRouSel').value)">종목·순서</button>
+    </div>
+    <button type="button" class="helper-link" style="margin-top:8px;" onclick="openWhy()">왜 이렇게 하나요</button>
     <details class="wk-help">
       <summary>루틴을 새로 짜거나 복사하려면</summary>
       <button type="button" class="wk-pick" onclick="startBare()"><b>빈 루틴 하나 더 만들기</b><span>처음부터 종목을 넣습니다. 지금 쓰는 루틴은 목록에 남습니다.</span></button>
@@ -4975,7 +5069,7 @@ function renderWork(){
   (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
-    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. 그다음 2.5kg 반올림. 횟수는 안 넣습니다. 워밍업·피더는 여기 적지 않습니다.</p>
+    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. 그다음 ${unit==='lb'?'5lb':'2.5kg'} 반올림. 횟수는 안 넣습니다. 워밍업·피더는 여기 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
       <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
       <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
@@ -4984,20 +5078,23 @@ function renderWork(){
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
   setSegOnly('boPctSeg', String(pct));
+  setSegOnly('wkUnitSeg', unit);
 }
 function workCardHtml(exId, day, light){
   const exercises = loadStore(WK.ex, []);
   const ex = exercises.find(x=>x.id===exId);
   if(!ex) return '';
-  const ent = (day.entries||[]).find(e=>e.exerciseId===exId) || { exerciseId:exId, setupUsed:ex.setup, top:{weight:'',reps:'',rir:effectiveRir(ex)}, backoff:{weight:'',reps:'',rir:effectiveRir(ex)}, memo:'' };
+  const ent = (day.entries||[]).find(e=>e.exerciseId===exId) || { exerciseId:exId, setupUsed:ex.setup, unit:wkUnit(), top:{weight:'',reps:'',rir:effectiveRir(ex)}, backoff:{weight:'',reps:'',rir:effectiveRir(ex)}, memo:'' };
+  const unit = ent.unit==='lb' ? 'lb' : ((ent.top&&ent.top.weight) || (ent.backoff&&ent.backoff.weight) ? 'kg' : wkUnit());
+  const ul = uLabel(unit);
   const prev = lastBackoff(exId);
-  const curVol = (ent.backoff && ent.backoff.weight && ent.backoff.reps) ? ent.backoff.weight*ent.backoff.reps : null;
+  const curVol = (ent.backoff && ent.backoff.weight && ent.backoff.reps) ? toKg(ent.backoff.weight, unit)*ent.backoff.reps : null;
   let cmp = '';
   if(prev){
     const dVol = curVol==null ? 0 : curVol - prev.vol;
     const cls = dVol>0?'up':dVol<0?'dn':'';
     const arrow = dVol>0?('▲+'+Math.round(dVol)):dVol<0?('▼'+Math.round(dVol)):'–';
-    cmp = `지난 세션 백오프: ${prev.w}kg × ${prev.r}회 <span class="${cls}">${curVol==null?'':arrow}</span>`;
+    cmp = `지난 세션 백오프: ${prev.w}${uLabel(prev.unit||'kg')} × ${prev.r}회 <span class="${cls}">${curVol==null?'':arrow}</span>`;
   } else cmp = '지난 세션 백오프: 아직 없음';
   const stag = isStagnantEx(exId) ? `<span class="wk-badge">2세션 정체</span>` : '';
   const sid = ex.id.replace(/['"]/g,'');
@@ -5011,7 +5108,7 @@ function workCardHtml(exId, day, light){
     <div class="${topHide}">
       <div class="wk-row"><span class="wk-lab">탑세트</span>
         <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 탑세트 중량" value="${ent.top&&ent.top.weight!=null?ent.top.weight:''}" oninput="onTopW('${sid}',this.value)">
-        <span class="wk-unit">kg ×</span>
+        <span class="wk-unit">${ul} ×</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 횟수" value="${ent.top&&ent.top.reps!=null?ent.top.reps:''}" oninput="patchEnt('${sid}','top','reps',this.value)">
         <span class="wk-unit">회 RIR</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">
@@ -5020,19 +5117,25 @@ function workCardHtml(exId, day, light){
     </div>
     <div class="wk-row"><span class="wk-lab">백오프</span>
       <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
-      <span class="wk-unit">kg ×</span>
+      <span class="wk-unit">${ul} ×</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 횟수" value="${ent.backoff&&ent.backoff.reps!=null?ent.backoff.reps:''}" oninput="patchEnt('${sid}','backoff','reps',this.value)">
       <span class="wk-unit">회 RIR</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:0}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
     </div>
-    <div class="wk-hint" id="boHint_${sid}">${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}kg` : ent.backoff.weight+'kg') : `탑세트 × ${backoffPct()}% → 2.5kg 반올림`}</div>
+    <div class="wk-hint" id="boHint_${sid}">${ent.carried?'지난 세션 숫자입니다. 오늘 바뀐 것만 고치세요. ':''}${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}${ul}` : ent.backoff.weight+ul) : `탑세트 × ${backoffPct()}% → ${ul==='lb'?'5lb':'2.5kg'} 반올림`}</div>
     <div class="wk-prev">${cmp}</div>
     ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
 }
 function pickRoutine(id){
   const day = todayLog();
+  const prev = day.routineId;
   day.routineId = id || null;
+  const empty = !((day.entries||[]).some(e=>(e.top&&e.top.weight>0)||(e.backoff&&e.backoff.weight>0)));
+  if(id && id!==prev && empty){
+    const rou = loadStore(WK.rou, []).find(r=>r.id===id);
+    day.entries = ((rou&&rou.exerciseIds)||[]).map(exId=>copySet(exId, lastSet(exId)));
+  }
   putTodayLog(day);
   renderWork();
 }
@@ -5190,6 +5293,7 @@ function patchEnt(exId, which, field, val){
   const { day, e } = ensureEnt(exId);
   const n = val==='' ? '' : (field==='weight' ? parseFloat(val) : parseInt(val,10));
   e[which][field] = isNaN(n) ? val : n;
+  if(field==='weight'){ e.unit = wkUnit(); e.carried = false; }
   putTodayLog(day);
   if(which==='backoff' && field==='weight'){
     const h = document.getElementById('boHint_'+exId);
@@ -5199,29 +5303,31 @@ function patchEnt(exId, which, field, val){
     const card = document.getElementById('wkc_'+exId);
     if(card){
       const prev = lastBackoff(exId);
-      const vol = (e.backoff.weight>0 && e.backoff.reps>0) ? e.backoff.weight*e.backoff.reps : null;
+      const vol = (e.backoff.weight>0 && e.backoff.reps>0) ? toKg(e.backoff.weight, e.unit||'kg')*e.backoff.reps : null;
       const el = card.querySelector('.wk-prev');
       if(el && prev){
         const dVol = vol==null?0:vol-prev.vol;
         const cls = dVol>0?'up':dVol<0?'dn':'';
         const arrow = dVol>0?('▲+'+Math.round(dVol)):dVol<0?('▼'+Math.round(dVol)):'–';
-        el.innerHTML = `지난 세션 백오프: ${prev.w}kg × ${prev.r}회 <span class="${cls}">${vol==null?'':arrow}</span>`;
+        el.innerHTML = `지난 세션 백오프: ${prev.w}${uLabel(prev.unit||'kg')} × ${prev.r}회 <span class="${cls}">${vol==null?'':arrow}</span>`;
       }
     }
   }
 }
 function onTopW(exId, val){
+  const unit = wkUnit();
   patchEnt(exId, 'top', 'weight', val);
   const w = parseFloat(val);
   if(!(w>0)) return;
-  const bo = calcBackoff(w);
+  const bo = calcBackoff(w, unit);
   const { day, e } = ensureEnt(exId);
+  e.unit = unit;
   e.backoff.weight = bo;
   putTodayLog(day);
   const inp = document.getElementById('boW_'+exId);
   if(inp) inp.value = bo;
   const h = document.getElementById('boHint_'+exId);
-  if(h) h.textContent = w+' × '+backoffPct()+'% → '+bo+'kg · 2.5kg 반올림 · 고칠 수 있어요';
+  if(h) h.textContent = w+' × '+backoffPct()+'% → '+bo+uLabel(unit)+' · '+(unit==='lb'?'5lb':'2.5kg')+' 반올림 · 고칠 수 있어요';
 }
 function editSetup(exId){
   const { day, e, ex } = ensureEnt(exId);
@@ -5379,7 +5485,7 @@ function muscleWeekVol(fromKey, toKey){
       if(!e.backoff || !(e.backoff.weight>0) || !(e.backoff.reps>0)) return;
       const ex = exs.find(x=>x.id===e.exerciseId);
       const m = (ex && ex.muscle) || '기타';
-      map[m] = (map[m]||0) + e.backoff.weight*e.backoff.reps;
+      map[m] = (map[m]||0) + toKg(e.backoff.weight, e.unit||'kg')*e.backoff.reps;
     });
   });
   return map;
