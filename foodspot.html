@@ -458,6 +458,9 @@
   .wk-in { width:58px; padding:8px 6px; border-radius:10px; border:1.5px solid #e5e5ea; background:#fff; font-size:16px; font-weight:800; text-align:center; }
   .wk-in:focus { outline:none; border-color:#111; }
   .wk-unit { font-size:12px; font-weight:700; color:#8e8e93; }
+  .unit-tog { display:inline-flex; border:1.5px solid #e5e5ea; border-radius:8px; overflow:hidden; margin-left:4px; vertical-align:middle; flex-shrink:0; }
+  .unit-tog button { border:none; background:none; font-size:11px; font-weight:800; padding:4px 8px; color:#8e8e93; cursor:pointer; }
+  .unit-tog button.on { background:#111; color:#fff; }
   .wk-hint { font-size:11px; color:#8e8e93; font-weight:600; margin:-2px 0 8px 48px; }
   .wk-prev { font-size:12px; font-weight:600; color:#3a3a3c; margin-top:4px; }
   .wk-prev .up { color:#30d158; } .wk-prev .dn { color:#ff3b30; }
@@ -587,6 +590,8 @@
   html.dark .db-more { background:#2c2c2e; color:#f2f2f7; }
   html.dark .wk-card { background:#1c1c1e; }
   html.dark .wk-in { background:#111; border-color:#3a3a3c; color:#f2f2f7; }
+  html.dark .unit-tog { border-color:#3a3a3c; }
+  html.dark .unit-tog button.on { background:#f2f2f7; color:#111; }
   html.dark .wk-pick { background:#1c1c1e; border-color:#3a3a3c; }
   html.dark .wk-banner { background:#2a2414; color:#e5e5ea; }
   html.dark .wk-banner b { color:#f2f2f7; }
@@ -4484,21 +4489,29 @@ function setBoPct(n){
   const s = wkSettings();
   s.backoffPct = +n;
   saveStore(WK.settings, s);
-  const step = wkUnit()==='lb' ? '5lb' : '2.5kg';
+  const step = 'kg는 2.5 · lb는 5';
   toast('백오프 = 탑세트의 '+n+'% · '+step+' 반올림');
   renderWork();
 }
 function calcBackoff(topW, unit){
   const w = parseFloat(topW);
   if(!(w>0)) return '';
-  return plateRound(w * backoffPct() / 100, unit || wkUnit());
+  return plateRound(w * backoffPct() / 100, unit || 'kg');
 }
-function wkUnit(){ return wkSettings().unit==='lb' ? 'lb' : 'kg'; }
-function setWkUnit(u){
-  const s = wkSettings();
-  s.unit = u==='lb' ? 'lb' : 'kg';
-  saveStore(WK.settings, s);
-  toast(s.unit==='lb' ? '중량 lb · 백오프는 5lb 단위' : '중량 kg · 백오프는 2.5kg 단위');
+function exUnitOf(ex, ent){
+  if(ex && (ex.unit==='kg' || ex.unit==='lb')) return ex.unit;
+  if(ent && ent.unit==='lb') return 'lb';
+  return 'kg';
+}
+function setExUnit(exId, unit){
+  unit = unit==='lb' ? 'lb' : 'kg';
+  const list = loadStore(WK.ex, []);
+  const ex = list.find(x=>x.id===exId);
+  if(ex){ ex.unit = unit; saveStore(WK.ex, list); }
+  const { day, e } = ensureEnt(exId);
+  e.unit = unit;
+  if(e.top && e.top.weight>0) e.backoff.weight = calcBackoff(e.top.weight, unit);
+  putTodayLog(day);
   renderWork();
 }
 function plateRound(n, unit){
@@ -4918,13 +4931,13 @@ function lastSet(exId){
 function copySet(exId, prev){
   const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
   if(!prev){
-    return { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', unit:wkUnit(),
+    return { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', unit: exUnitOf(ex, null),
       top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:0}, memo:'' };
   }
   return {
     exerciseId:exId,
     setupUsed: prev.setupUsed || (ex&&ex.setup)||'',
-    unit: prev.unit==='lb' ? 'lb' : 'kg',
+    unit: exUnitOf(ex, prev),
     top: { weight: prev.top&&prev.top.weight!=null?prev.top.weight:'', reps: prev.top&&prev.top.reps!=null?prev.top.reps:'', rir: prev.top&&prev.top.rir!=null?prev.top.rir:(ex?effectiveRir(ex):1) },
     backoff: { weight: prev.backoff&&prev.backoff.weight!=null?prev.backoff.weight:'', reps: prev.backoff&&prev.backoff.reps!=null?prev.backoff.reps:'', rir: prev.backoff&&prev.backoff.rir!=null?prev.backoff.rir:0 },
     memo: '',
@@ -5025,17 +5038,10 @@ function renderWork(){
       </div></div>`;
   }
   const pct = backoffPct();
-  const unit = wkUnit();
   const wd = new Date(viewDate+'T12:00:00').getDay();
   const pinned = (wkSettings().weekPlan||{})[String(wd)]===day.routineId;
   const wdName = ['일','월','화','수','목','금','토'][wd];
-  html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <div class="flabel" style="margin:0">오늘 할 루틴</div>
-      <div class="seg" id="wkUnitSeg" style="margin:0;flex:0 0 120px;">
-        <button type="button" data-v="kg" onclick="setWkUnit('kg')">kg</button>
-        <button type="button" data-v="lb" onclick="setWkUnit('lb')">lb</button>
-      </div>
-    </div>
+  html += `<div class="flabel" style="margin:0">오늘 할 루틴</div>
     <select class="txt-input" id="wkRouSel" onchange="pickRoutine(this.value)" aria-label="오늘 할 루틴" style="margin-top:8px;">
       <option value="">루틴 없이 오늘만 적기</option>
       ${sortRoutines(routines).map(r=>`<option value="${r.id}" ${r.id===day.routineId?'selected':''}>${r.name}${r.light?' · 저강도':''}</option>`).join('')}
@@ -5069,7 +5075,7 @@ function renderWork(){
   (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
-    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. 그다음 ${unit==='lb'?'5lb':'2.5kg'} 반올림. 횟수는 안 넣습니다. 워밍업·피더는 여기 적지 않습니다.</p>
+    <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
       <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
       <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
@@ -5078,14 +5084,13 @@ function renderWork(){
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
   setSegOnly('boPctSeg', String(pct));
-  setSegOnly('wkUnitSeg', unit);
 }
 function workCardHtml(exId, day, light){
   const exercises = loadStore(WK.ex, []);
   const ex = exercises.find(x=>x.id===exId);
   if(!ex) return '';
-  const ent = (day.entries||[]).find(e=>e.exerciseId===exId) || { exerciseId:exId, setupUsed:ex.setup, unit:wkUnit(), top:{weight:'',reps:'',rir:effectiveRir(ex)}, backoff:{weight:'',reps:'',rir:effectiveRir(ex)}, memo:'' };
-  const unit = ent.unit==='lb' ? 'lb' : ((ent.top&&ent.top.weight) || (ent.backoff&&ent.backoff.weight) ? 'kg' : wkUnit());
+  const ent = (day.entries||[]).find(e=>e.exerciseId===exId) || { exerciseId:exId, setupUsed:ex.setup, unit:exUnitOf(ex, null), top:{weight:'',reps:'',rir:effectiveRir(ex)}, backoff:{weight:'',reps:'',rir:effectiveRir(ex)}, memo:'' };
+  const unit = exUnitOf(ex, ent);
   const ul = uLabel(unit);
   const prev = lastBackoff(exId);
   const curVol = (ent.backoff && ent.backoff.weight && ent.backoff.reps) ? toKg(ent.backoff.weight, unit)*ent.backoff.reps : null;
@@ -5101,6 +5106,10 @@ function workCardHtml(exId, day, light){
   const topHide = light ? 'hidden' : '';
   return `<div class="wk-card" id="wkc_${sid}">
     <h4><span class="nm">${ex.name}${stag}</span>
+      <span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
+        <button type="button" class="${unit==='kg'?'on':''}" onclick="setExUnit('${sid}','kg')">kg</button>
+        <button type="button" class="${unit==='lb'?'on':''}" onclick="setExUnit('${sid}','lb')">lb</button>
+      </span>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
@@ -5293,7 +5302,11 @@ function patchEnt(exId, which, field, val){
   const { day, e } = ensureEnt(exId);
   const n = val==='' ? '' : (field==='weight' ? parseFloat(val) : parseInt(val,10));
   e[which][field] = isNaN(n) ? val : n;
-  if(field==='weight'){ e.unit = wkUnit(); e.carried = false; }
+  if(field==='weight'){
+    const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
+    e.unit = exUnitOf(ex, e);
+    e.carried = false;
+  }
   putTodayLog(day);
   if(which==='backoff' && field==='weight'){
     const h = document.getElementById('boHint_'+exId);
@@ -5315,12 +5328,12 @@ function patchEnt(exId, which, field, val){
   }
 }
 function onTopW(exId, val){
-  const unit = wkUnit();
   patchEnt(exId, 'top', 'weight', val);
   const w = parseFloat(val);
   if(!(w>0)) return;
+  const { day, e, ex } = ensureEnt(exId);
+  const unit = exUnitOf(ex, e);
   const bo = calcBackoff(w, unit);
-  const { day, e } = ensureEnt(exId);
   e.unit = unit;
   e.backoff.weight = bo;
   putTodayLog(day);
