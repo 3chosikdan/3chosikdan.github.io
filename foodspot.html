@@ -5003,19 +5003,49 @@ function pinWeekday(){
   toast(names[wd]+'요일은 이 루틴으로 고정했습니다. 다음 주도 같은 종목·지난 중량이 들어옵니다');
   renderWork();
 }
+function dayChar(name){
+  const c = String(name||'').trim().charAt(0);
+  return '월화수목금토일'.includes(c) ? c : '';
+}
+function presetPack(name){
+  const n = normRouName(name);
+  for(let i=0;i<WK_PRESETS.length;i++){
+    const p = WK_PRESETS[i];
+    if((p.routines||[]).some(r=>normRouName(r.name)===n)) return p.id;
+  }
+  return '';
+}
+function entriesAreDraft(day){
+  return !((day.entries||[]).some(e=>{
+    const has = (e.top&&e.top.weight>0) || (e.backoff&&e.backoff.weight>0);
+    return has && !e.carried;
+  }));
+}
+function routineForWeekday(rus, wd){
+  const ch = ['일','월','화','수','목','금','토'][wd];
+  return (rus||[]).find(r=>dayChar(r.name)===ch) || null;
+}
+function fillRoutineEntries(rou){
+  return ((rou&&rou.exerciseIds)||[]).map(id=>copySet(id, lastSet(id)));
+}
 function bootTodayRoutine(){
   if(viewDate!==todayKey()) return;
   const log = loadStore(WK.log, {});
-  if(log[viewDate]) return;
   const rus = loadStore(WK.rou, []);
   if(!rus.length) return;
+  const wd = new Date(viewDate+'T12:00:00').getDay();
   const plan = (wkSettings().weekPlan)||{};
-  const wd = String(new Date(viewDate+'T12:00:00').getDay());
-  const planned = rus.find(r=>r.id===plan[wd]);
-  const rou = planned || sortRoutines(rus)[0];
-  const day = { schemaVersion:1, routineId: rou.id, entries:[], durationMin:null };
-  day.entries = (rou.exerciseIds||[]).map(id=>copySet(id, lastSet(id)));
-  log[viewDate] = day;
+  const want = rus.find(r=>r.id===plan[String(wd)]) || routineForWeekday(rus, wd) || sortRoutines(rus)[0];
+  const exist = log[viewDate];
+  if(exist){
+    if(want && exist.routineId!==want.id && entriesAreDraft(exist)){
+      exist.routineId = want.id;
+      exist.entries = fillRoutineEntries(want);
+      saveStore(WK.log, log);
+    }
+    return;
+  }
+  log[viewDate] = { schemaVersion:1, routineId: want.id, entries: fillRoutineEntries(want), durationMin:null };
   saveStore(WK.log, log);
 }
 function deloadState(){
@@ -5076,12 +5106,18 @@ function renderWork(){
   const pinned = (wkSettings().weekPlan||{})[String(wd)]===day.routineId;
   const wdName = ['일','월','화','수','목','금','토'][wd];
   const usedIds = usedRoutineIds();
-  const names = presetNameSet();
   const sorted = sortRoutines(routines);
   const mine = [], shelf = [];
+  const packsOn = new Set();
   sorted.forEach(r=>{
-    const imported = names.has(normRouName(r.name));
-    const live = usedIds.has(r.id) || r.id===day.routineId || !imported;
+    if(usedIds.has(r.id) || r.id===day.routineId){
+      const pack = presetPack(r.name);
+      if(pack) packsOn.add(pack);
+    }
+  });
+  sorted.forEach(r=>{
+    const pack = presetPack(r.name);
+    const live = !pack || packsOn.has(pack) || usedIds.has(r.id) || r.id===day.routineId || dayChar(r.name)===wdName;
     (live ? mine : shelf).push(r);
   });
   const curName = rou ? (String(rou.name||'루틴').replace(/[<>]/g,'')+(rou.light?' · 저강도':'')) : '루틴 없이 오늘만 적기';
@@ -5120,7 +5156,6 @@ function renderWork(){
   const ids = (day.routineId && rou) ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
   const seen = new Set();
   ids.forEach(id=>{ if(!seen.has(id)){ seen.add(id); html += workCardHtml(id, day, light); } });
-  (day.entries||[]).forEach(e=>{ if(!seen.has(e.exerciseId)){ seen.add(e.exerciseId); html += workCardHtml(e.exerciseId, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
     <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
@@ -5187,12 +5222,13 @@ function workCardHtml(exId, day, light){
 function pickRoutine(id){
   const day = todayLog();
   const prev = day.routineId;
+  if((id||null)===(prev||null)){ window._rouOpen = false; renderWork(); return; }
+  if(prev && !entriesAreDraft(day) && !confirm('오늘 직접 적은 중량이 있습니다. 이 루틴 종목으로 바꿀까요?')) return;
   day.routineId = id || null;
-  const empty = !((day.entries||[]).some(e=>(e.top&&e.top.weight>0)||(e.backoff&&e.backoff.weight>0)));
-  if(id && id!==prev && empty){
+  if(id){
     const rou = loadStore(WK.rou, []).find(r=>r.id===id);
-    day.entries = ((rou&&rou.exerciseIds)||[]).map(exId=>copySet(exId, lastSet(exId)));
-  }
+    day.entries = fillRoutineEntries(rou);
+  } else day.entries = [];
   putTodayLog(day);
   window._rouOpen = false;
   renderWork();
