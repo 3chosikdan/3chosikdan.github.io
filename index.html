@@ -4389,7 +4389,7 @@ document.getElementById('importInput').addEventListener('change', e=>{
 
 /* ============ 주간 리포트 공유 카드 (인스타 스토리용) ============ */
 function shareCard(){
-  const W=1080, H=1350;
+  const W=1080, H=1920;
   const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
   const x = cv.getContext('2d');
   const F = "-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif";
@@ -4398,64 +4398,106 @@ function shareCard(){
     x.arcTo(px,py+ph,px,py,r); x.arcTo(px,py,px+pw,py,r); x.closePath(); };
   x.fillStyle='#fff'; x.fillRect(0,0,W,H);
 
-  // 로고
   x.fillStyle='#111'; x.font='900 84px '+F; x.textBaseline='alphabetic';
-  x.fillText('3초식단', 90, 190);
-  x.fillStyle='#30d158'; x.fillText('.', 90 + x.measureText('3초식단').width, 190);
-  x.fillStyle='#8e8e93'; x.font='600 40px '+F;
+  x.fillText('3초식단', 90, 170);
+  x.fillStyle='#30d158'; x.fillText('.', 90 + x.measureText('3초식단').width, 170);
+  x.fillStyle='#8e8e93'; x.font='600 36px '+F;
   const wk=keyOffset(-6);
-  x.fillText(`${wk.slice(5).replace('-','.')} – ${todayKey().slice(5).replace('-','.')} 주간 리포트`, 90, 260);
+  x.fillText(`${wk.slice(5).replace('-','.')} – ${todayKey().slice(5).replace('-','.')}  ·  최근 7일`, 90, 230);
 
-  // 스탯 계산
-  let sum=0, pSum=0, days=0;
-  for(let i=-6;i<=0;i++){ const m=S.meals[keyOffset(i)]; if(m&&m.length){ sum+=m.reduce((a,b)=>a+b.kcal,0); pSum+=m.reduce((a,b)=>a+(b.p||0),0); days++; } }
+  let sum=0, pSum=0, cSum=0, fSum=0, days=0;
+  for(let i=-6;i<=0;i++){
+    const m=S.meals[keyOffset(i)];
+    if(m&&m.length){
+      sum+=m.reduce((a,b)=>a+(b.kcal||0),0);
+      pSum+=m.reduce((a,b)=>a+(b.p||0),0);
+      cSum+=m.reduce((a,b)=>a+(b.c||0),0);
+      fSum+=m.reduce((a,b)=>a+(b.f||0),0);
+      days++;
+    }
+  }
   const tr = weightTrend();
   const pT = proteinTarget();
+  const wkLog = loadStore(WK.log, {});
+  let liftDays=0, setN=0, sleepSum=0, sleepN=0;
+  for(let i=-6;i<=0;i++){
+    const d = wkLog[keyOffset(i)];
+    if(!d) continue;
+    if(d.sleepHours>0){ sleepSum+=d.sleepHours; sleepN++; }
+    const did = (d.entries||[]).some(e=>(e.top&&e.top.weight>0)||(e.backoff&&e.backoff.weight>0)||(e.sets||[]).some(s=>s&&s.weight>0));
+    if(did){
+      liftDays++;
+      (d.entries||[]).forEach(e=>{
+        if(e.top&&e.top.weight>0) setN++;
+        if(e.backoff&&e.backoff.weight>0) setN++;
+        (e.sets||[]).forEach(s=>{ if(s&&s.weight>0) setN++; });
+      });
+    }
+  }
+  const wKeys = Object.keys(S.weights||{}).sort();
+  const wNow = wKeys.length ? S.weights[wKeys[wKeys.length-1]] : null;
+  const bf = latestBf();
+  const avg = (n)=> days ? Math.round(n/days) : null;
+  const pAvg = avg(pSum), cAvg = avg(cSum), fAvg = avg(fSum), kAvg = avg(sum);
+  const pPct = (days && pT) ? Math.min(Math.round((pSum/days)/pT*100),999) : null;
   const stats = [
-    ['체중 추세', tr ? `${tr.perWeek>0?'+':''}${tr.perWeek}` : '기록 중', tr ? 'kg/주' : '', tr && tr.perWeek<0 ? '#30d158' : '#111'],
-    ['연속 기록', '🔥'+streak(), '일', '#111'],
-    ['단백질 달성', days ? Math.min(Math.round((pSum/days)/pT*100),999) : '–', days?'%':'', '#111'],
-    ['하루 평균', days ? Math.round(sum/days).toLocaleString() : '–', days?'kcal':'', '#111']
+    ['체중 추세', tr ? `${tr.perWeek>0?'+':''}${tr.perWeek}` : (wNow!=null?String(wNow):'기록 중'), tr ? 'kg/주' : (wNow!=null?'kg':''), tr && tr.perWeek<0 ? '#30d158' : '#111'],
+    ['연속 기록', String(streak()), '일', '#111'],
+    ['단백질', pAvg!=null ? String(pAvg) : '–', pAvg!=null ? 'g' : '', '#111'],
+    ['단백질 달성', pPct!=null ? String(pPct) : '–', pPct!=null ? '%' : '', '#111'],
+    ['탄수', cAvg!=null ? String(cAvg) : '–', cAvg!=null ? 'g' : '', '#111'],
+    ['지방', fAvg!=null ? String(fAvg) : '–', fAvg!=null ? 'g' : '', '#111'],
+    ['하루 칼로리', kAvg!=null ? kAvg.toLocaleString() : '–', kAvg!=null ? 'kcal' : '', '#111'],
+    ['운동', String(liftDays), '일', '#111']
   ];
-  // 2×2 스탯 카드
-  const cw=(W-180-30)/2, chh=280;
+  const cw=(W-180-24)/2, chh=210;
   stats.forEach(([label, val, unit, color], i)=>{
-    const cx0 = 90 + (i%2)*(cw+30), cy0 = 320 + Math.floor(i/2)*(chh+30);
-    x.fillStyle='#f6f6f8'; rr(cx0,cy0,cw,chh,36); x.fill();
-    x.fillStyle='#8e8e93'; x.font='700 38px '+F; x.fillText(label, cx0+44, cy0+90);
-    x.fillStyle=color; x.font='900 100px '+F;
+    const cx0 = 90 + (i%2)*(cw+24), cy0 = 280 + Math.floor(i/2)*(chh+18);
+    x.fillStyle='#f6f6f8'; rr(cx0,cy0,cw,chh,32); x.fill();
+    x.fillStyle='#8e8e93'; x.font='700 32px '+F; x.fillText(label, cx0+36, cy0+64);
+    x.fillStyle=color; x.font='900 78px '+F;
     const vw = x.measureText(String(val)).width;
-    x.fillText(String(val), cx0+44, cy0+212);
-    if(unit){ x.fillStyle='#98989f'; x.font='700 44px '+F; x.fillText(unit, cx0+44+vw+14, cy0+212); }
+    x.fillText(String(val), cx0+36, cy0+158);
+    if(unit){ x.fillStyle='#98989f'; x.font='700 34px '+F; x.fillText(unit, cx0+36+vw+12, cy0+158); }
   });
 
-  // 체중 스파크라인 — 숫자보다 '내려가는 선'이 자랑거리
+  const bits = [`식단 ${days}/7일`, `세트 ${setN}`];
+  if(sleepN) bits.push('수면 '+(Math.round(sleepSum/sleepN*10)/10)+'시간');
+  if(bf!=null) bits.push('체지방 '+bf+'%');
+  if(wNow!=null) bits.push('최근 체중 '+wNow+'kg');
+  x.fillStyle='#111'; x.font='600 32px '+F;
+  const line1 = bits.slice(0,3).join('   ·   ');
+  const line2 = bits.slice(3).join('   ·   ');
+  x.fillText(line1, 90, 1236);
+  if(line2) x.fillText(line2, 90, 1280);
+
   const wPts=[];
   for(let i=-13;i<=0;i++){ const k=keyOffset(i); if(S.weights[k]!==undefined) wPts.push(S.weights[k]); }
-  if(wPts.length>=3){
-    const sx=90, sy=1000, sw=W-180, sh=130;
+  if(wPts.length>=2){
+    const sx=90, sy=1380, sw=W-180, sh=140;
     const mn=Math.min(...wPts), mx=Math.max(...wPts), rg=Math.max(mx-mn,0.1);
-    x.fillStyle='#8e8e93'; x.font='600 32px '+F;
-    x.fillText('최근 14일 체중', sx, sy-18);
-    x.strokeStyle='#30d158'; x.lineWidth=9; x.lineCap='round'; x.lineJoin='round';
+    x.fillStyle='#8e8e93'; x.font='600 30px '+F;
+    x.fillText(`최근 14일 체중  ${mn}–${mx}kg`, sx, sy-24);
+    x.strokeStyle='#30d158'; x.lineWidth=8; x.lineCap='round'; x.lineJoin='round';
     x.beginPath();
     wPts.forEach((v,i)=>{
-      const px = sx + sw*i/(wPts.length-1);
+      const px = sx + (wPts.length===1 ? sw/2 : sw*i/(wPts.length-1));
       const py = sy + sh*(1-(v-mn)/rg);
       i ? x.lineTo(px,py) : x.moveTo(px,py);
     });
     x.stroke();
     const lastY = sy + sh*(1-(wPts[wPts.length-1]-mn)/rg);
     x.fillStyle='#30d158';
-    x.beginPath(); x.arc(sx+sw, lastY, 14, 0, 7); x.fill();
+    x.beginPath(); x.arc(sx + (wPts.length===1?sw/2:sw), lastY, 12, 0, 7); x.fill();
   }
 
-  // 하단 CTA 밴드 — 카드가 곧 광고판
-  x.fillStyle='#111'; rr(60, 1180, W-120, 120, 32); x.fill();
-  x.fillStyle='#fff'; x.font='600 38px '+F;
-  x.fillText('기록 3초 · 가입 없음 · 무료', 108, 1255);
-  x.fillStyle='#30d158'; x.font='900 54px '+F; x.textAlign='right';
-  x.fillText('3cho.kr', W-108, 1258);
+  x.fillStyle='#111'; rr(60, 1680, W-120, 150, 32); x.fill();
+  x.fillStyle='#fff'; x.font='600 34px '+F;
+  x.fillText('식단 · 운동 · 체중 한 장', 108, 1740);
+  x.fillStyle='#8e8e93'; x.font='500 28px '+F;
+  x.fillText('숫자는 최근 7일 평균입니다', 108, 1788);
+  x.fillStyle='#30d158'; x.font='900 48px '+F; x.textAlign='right';
+  x.fillText('3cho.kr', W-108, 1768);
   x.textAlign='left';
 
   cv.toBlob(async b=>{
@@ -4465,11 +4507,11 @@ function shareCard(){
       const a=document.createElement('a');
       a.href=URL.createObjectURL(b); a.download='3초식단-주간리포트.png';
       document.body.appendChild(a); a.click(); a.remove();
-      toast('리포트 카드 저장됨 📤 인스타에 올려보세요');
+      toast('리포트 카드 저장됨');
     };
     if(navigator.canShare && navigator.canShare({files:[f]})){
       try { await navigator.share({files:[f], title:'3초식단 주간 리포트'}); }
-      catch(err){ if(!err || err.name!=='AbortError') download(); } // 데스크톱 등 공유 실패 → 다운로드 폴백
+      catch(err){ if(!err || err.name!=='AbortError') download(); }
     } else download();
   }, 'image/png');
 }
