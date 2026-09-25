@@ -700,7 +700,7 @@
     <div class="faq">
       <h2>자주 묻는 질문</h2>
       <details><summary>가입해야 하나요?</summary><p>아니요. 계정이 없습니다. 기록은 이 폰 브라우저에만 남습니다.</p></details>
-      <details><summary>데이터는 어디에 저장되나요?</summary><p>이 브라우저에만 남습니다. 서버로 안 보냅니다. 폰과 컴퓨터를 같이 쓰려면 목표에서 보내기 한 뒤 다른 기기에서 불러오세요. 합치기도 됩니다.</p></details>
+      <details><summary>데이터는 어디에 저장되나요?</summary><p>가입은 없습니다. 이 폰에 저장되고, 날짜별 복사본도 이 폰에 남습니다. 파일로 저장을 누르면 json 파일이 생겨서 카톡·드라이브에 둘 수 있습니다. 로그인으로 서버에 올리는 기능은 아직 없습니다.</p></details>
       <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식마다 비타민 값은 아직 없습니다.</p></details>
       <details><summary>근비대는 어떻게 기록하나요?</summary><p>운동 탭에서 종목마다 탑세트와 백오프만 적습니다. 원리는 근비대 원리 페이지에 있습니다. 자력 반복만 세고, 고강도는 주 4회를 넘기지 않는 쪽입니다.</p></details>
     </div>
@@ -1574,7 +1574,33 @@ const idbMirror = {
     this.db = this.db || await this.open(); if(!this.db) return;
     this.db.transaction('kv','readwrite').objectStore('kv').put(json,'SNAP');
     this.db.transaction('kv','readwrite').objectStore('kv').put(json,'S');
+    const day = new Date().toISOString().slice(0,10);
+    const tx = this.db.transaction('kv','readwrite');
+    tx.objectStore('kv').put(json, 'D:'+day);
+    const all = tx.objectStore('kv').getAllKeys();
+    all.onsuccess = ()=>{
+      const days = (all.result||[]).map(String).filter(k=>k.indexOf('D:')===0).sort();
+      days.slice(0, Math.max(0, days.length-21)).forEach(k=>{
+        try{ this.db.transaction('kv','readwrite').objectStore('kv').delete(k); }catch(_){}
+      });
+    };
   }catch(_){} },
+  async keys(){ try{
+    this.db = this.db || await this.open(); if(!this.db) return [];
+    return await new Promise(res=>{
+      const rq = this.db.transaction('kv').objectStore('kv').getAllKeys();
+      rq.onsuccess = ()=>res(rq.result||[]);
+      rq.onerror = ()=>res([]);
+    });
+  }catch(_){ return []; } },
+  async get(key){ try{
+    this.db = this.db || await this.open(); if(!this.db) return null;
+    return await new Promise(res=>{
+      const rq = this.db.transaction('kv').objectStore('kv').get(key);
+      rq.onsuccess = ()=>res(rq.result||null);
+      rq.onerror = ()=>res(null);
+    });
+  }catch(_){ return null; } },
   async read(){ try{
     this.db = this.db || await this.open(); if(!this.db) return null;
     return await new Promise(res=>{
@@ -1758,11 +1784,28 @@ function ingestBackup(data, preferMerge){
   return 'replace';
 }
 function backupAgoText(){
-  if(!S.lastBackupAt) return '아직 다른 기기로 보낸 적 없음';
+  if(!S.lastBackupAt) return '아직 파일로 저장한 적 없음';
   const d = Math.round((Date.now()-S.lastBackupAt)/86400000);
-  if(d<=0) return '오늘 보냄';
-  if(d===1) return '어제 보냄';
-  return d+'일 전에 보냄';
+  if(d<=0) return '오늘 파일로 저장함';
+  if(d===1) return '어제 파일로 저장함';
+  return d+'일 전에 파일로 저장함';
+}
+async function showLocalBackups(){
+  const keys = (await idbMirror.keys()).map(String).filter(k=>k.indexOf('D:')===0).sort().reverse();
+  if(!keys.length){ toast('이 폰에 남은 날짜 백업이 없습니다. 파일로 저장을 한 번 누르세요'); return; }
+  const pick = prompt('이 폰에 남은 백업입니다. 되돌릴 날짜를 그대로 적으세요.\n'+keys.map(k=>k.slice(2)).join('\n'));
+  if(!pick) return;
+  const key = keys.find(k=>k.slice(2)===pick.trim());
+  if(!key){ toast('그 날짜 백업이 없습니다'); return; }
+  const raw = await idbMirror.get(key);
+  try{
+    const data = typeof raw==='string' ? JSON.parse(raw) : raw;
+    if(!confirm(pick+' 백업으로 이 폰 기록을 되돌릴까요?')) return;
+    const merge = hasLocalRecords() && confirm('지금 기록과 합칠까요?\n확인 = 합치기 · 취소 = 그 날짜로 교체');
+    ingestBackup(data, merge);
+    toast(merge ? '그 날짜 백업과 합쳤습니다' : '그 날짜 백업으로 되돌렸습니다');
+    setTimeout(()=>location.reload(), 400);
+  }catch(_){ toast('백업을 읽지 못했습니다'); }
 }
 function renderSyncBar(){
   const el = document.getElementById('syncBar'); if(!el) return;
@@ -1770,10 +1813,11 @@ function renderSyncBar(){
   if(S.syncHideUntil && Date.now()<S.syncHideUntil){ el.innerHTML=''; return; }
   if(!hasLocalRecords()){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="sync-bar">
-    <b>이 브라우저에만 있습니다.</b> 폰에서 적고 컴퓨터에서 보려면 보내서 불러오세요. ${backupAgoText()}.
+    <b>가입 없이 이 폰에 저장됩니다.</b> 날아갈까 불안하면 파일로 한 번 더 저장하세요. ${backupAgoText()}. 로그인 보관은 서버가 없어 아직 없습니다.
     <div class="sync-actions">
-      <button type="button" class="on" onclick="shareBackup()">보내기</button>
+      <button type="button" class="on" onclick="shareBackup()">파일로 저장</button>
       <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
+      <button type="button" class="off" onclick="showLocalBackups()">이 폰 백업</button>
       <button type="button" class="off" onclick="S.syncHideUntil=Date.now()+7*86400000;save();renderSyncBar();">일주일 숨기기</button>
     </div>
   </div>`;
@@ -4959,7 +5003,7 @@ function lastSet(exId){
   const keys = Object.keys(log).sort().filter(d=>d<viewDate);
   for(let i=keys.length-1;i>=0;i--){
     const e = (log[keys[i]].entries||[]).find(x=>x.exerciseId===exId);
-    if(e && ((e.top && e.top.weight>0) || (e.backoff && e.backoff.weight>0))) return e;
+    if(e && ((e.top && e.top.weight>0) || (e.backoff && e.backoff.weight>0) || (e.sets||[]).some(s=>s&&s.weight>0))) return e;
   }
   return null;
 }
@@ -4967,7 +5011,7 @@ function copySet(exId, prev){
   const ex = loadStore(WK.ex, []).find(x=>x.id===exId);
   if(!prev){
     return { exerciseId:exId, setupUsed:(ex&&ex.setup)||'', unit: exUnitOf(ex, null),
-      top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:0}, memo:'' };
+      top:{weight:'',reps:'',rir:ex?effectiveRir(ex):1}, backoff:{weight:'',reps:'',rir:0}, sets:[], memo:'' };
   }
   return {
     exerciseId:exId,
@@ -4975,6 +5019,7 @@ function copySet(exId, prev){
     unit: exUnitOf(ex, prev),
     top: { weight: prev.top&&prev.top.weight!=null?prev.top.weight:'', reps: prev.top&&prev.top.reps!=null?prev.top.reps:'', rir: prev.top&&prev.top.rir!=null?prev.top.rir:(ex?effectiveRir(ex):1) },
     backoff: { weight: prev.backoff&&prev.backoff.weight!=null?prev.backoff.weight:'', reps: prev.backoff&&prev.backoff.reps!=null?prev.backoff.reps:'', rir: prev.backoff&&prev.backoff.rir!=null?prev.backoff.rir:0 },
+    sets: (prev.sets||[]).map(s=>({ weight:s.weight!=null?s.weight:'', reps:s.reps!=null?s.reps:'', rir:s.rir!=null?s.rir:'' })),
     memo: '',
     carried: true
   };
@@ -5022,7 +5067,7 @@ function presetPack(name){
 }
 function entriesAreDraft(day){
   return !((day.entries||[]).some(e=>{
-    const has = (e.top&&e.top.weight>0) || (e.backoff&&e.backoff.weight>0);
+    const has = (e.top&&e.top.weight>0) || (e.backoff&&e.backoff.weight>0) || (e.sets||[]).some(s=>s&&s.weight>0);
     return has && !e.carried;
   }));
 }
@@ -5239,8 +5284,41 @@ function workCardHtml(exId, day, light){
     </div>
     <div class="wk-hint" id="boHint_${sid}">${ent.carried?'지난 세션 숫자입니다. 오늘 바뀐 것만 고치세요. ':''}${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}${ul}` : ent.backoff.weight+ul) : `탑세트 × ${backoffPct()}% → ${ul==='lb'?'5lb':'2.5kg'} 반올림`}</div>
     <div class="wk-prev">${cmp}</div>
+    ${(ent.sets||[]).map((s,i)=>`<div class="wk-row"><span class="wk-lab">세트 ${i+1}</span>
+        <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 세트 ${i+1} 중량" value="${s.weight!=null?s.weight:''}" oninput="patchPlain('${sid}',${i},'weight',this.value)">
+        <span class="wk-unit">${ul} ×</span>
+        <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 세트 ${i+1} 횟수" value="${s.reps!=null?s.reps:''}" oninput="patchPlain('${sid}',${i},'reps',this.value)">
+        <span class="wk-unit">회</span>
+        <button type="button" class="helper-link" onclick="delPlain('${sid}',${i})">빼기</button>
+      </div>`).join('')}
+    <button type="button" class="helper-link" style="margin-top:6px;" onclick="addPlainSet('${sid}')">＋ 일반 세트</button>
+    <div class="wk-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
     ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
+}
+function addPlainSet(exId){
+  const { day, e } = ensureEnt(exId);
+  e.sets = e.sets || [];
+  e.sets.push({ weight:'', reps:'', rir:'' });
+  e.carried = false;
+  putTodayLog(day);
+  renderWork();
+}
+function patchPlain(exId, i, field, val){
+  const { day, e } = ensureEnt(exId);
+  e.sets = e.sets || [];
+  if(!e.sets[i]) return;
+  const n = val==='' ? '' : (field==='reps' ? parseInt(val,10) : parseFloat(val));
+  e.sets[i][field] = n==='' || isNaN(n) ? '' : n;
+  e.unit = exUnitOf(loadStore(WK.ex, []).find(x=>x.id===exId), e);
+  e.carried = false;
+  putTodayLog(day);
+}
+function delPlain(exId, i){
+  const { day, e } = ensureEnt(exId);
+  e.sets = (e.sets||[]).filter((_,idx)=>idx!==i);
+  putTodayLog(day);
+  renderWork();
 }
 function pickRoutine(id){
   const day = todayLog();
