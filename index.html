@@ -5227,24 +5227,26 @@ function routineForWeekday(rus, wd){
       const hit = rus.find(r=>normRouName(r.name)===normRouName(spec.name));
       if(hit) return hit;
     }
+    const tagged = rus.find(r=>r.program===pid && dayChar(r.name)===ch);
+    if(tagged) return tagged;
   }
-  const hits = sortRoutines(rus).filter(r=>dayChar(r.name)===ch && (r.exerciseIds||[]).length && (!pid || presetPack(r.name)===pid || !presetPack(r.name)));
+  const hits = sortRoutines(rus).filter(r=>dayChar(r.name)===ch && (!pid || r.program===pid || presetPack(r.name)===pid || !presetPack(r.name)));
   if(!hits.length) return null;
   const used = usedRoutineIds();
-  return hits.find(r=>used.has(r.id)) || hits.slice().sort((a,b)=>b.exerciseIds.length-a.exerciseIds.length)[0];
+  return hits.find(r=>used.has(r.id)) || hits[0];
 }
 function routineForToday(rus, wd){
   const ch = ['일','월','화','수','목','금','토'][wd];
+  const named = routineForWeekday(rus, wd);
   const s = wkSettings();
   const plan = s.weekPlan || {};
   const pinned = rus.find(r=>r.id===plan[String(wd)]);
-  const named = routineForWeekday(rus, wd);
-  if(pinned && dayChar(pinned.name) && dayChar(pinned.name)!==ch){
-    if(s.weekPlan){ delete s.weekPlan[String(wd)]; saveStore(WK.settings, s); }
-    return named;
+  if(pinned && dayChar(pinned.name)===ch) return pinned;
+  if(pinned && dayChar(pinned.name) && dayChar(pinned.name)!==ch && s.weekPlan){
+    delete s.weekPlan[String(wd)];
+    saveStore(WK.settings, s);
   }
-  if(pinned && (!dayChar(pinned.name) || dayChar(pinned.name)===ch)) return pinned;
-  return named;
+  return named || null;
 }
 function fillRoutineEntries(rou){
   return ((rou&&rou.exerciseIds)||[]).map(id=>copySet(id, lastSet(id)));
@@ -5256,13 +5258,15 @@ function bootTodayRoutine(){
   if(!rus.length) return;
   const wd = new Date(viewDate+'T12:00:00').getDay();
   const ch = ['일','월','화','수','목','금','토'][wd];
-  const want = routineForToday(rus, wd) || sortRoutines(rus)[0];
+  const want = routineForToday(rus, wd);
+  if(!want) return;
   const exist = log[viewDate];
   if(exist){
     const cur = rus.find(r=>r.id===exist.routineId);
     const wrongDay = !!(cur && dayChar(cur.name) && dayChar(cur.name)!==ch);
-    if(want && exist.routineId!==want.id && !exist.routineLocked && (wrongDay || entriesAreDraft(exist))){
+    if(exist.routineId!==want.id && entriesAreDraft(exist) && (wrongDay || !exist.routineLocked)){
       exist.routineId = want.id;
+      exist.routineLocked = false;
       exist.entries = fillRoutineEntries(want);
       saveStore(WK.log, log);
     }
