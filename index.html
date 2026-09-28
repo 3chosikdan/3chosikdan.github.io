@@ -4961,13 +4961,16 @@ function routineMenu(sorted, day){
       if(r && !seen.has(r.id)){ shown.push(r); seen.add(r.id); }
     });
   }
+  sorted.forEach(r=>{
+    if(pid && r.program===pid && !seen.has(r.id)){ shown.push(r); seen.add(r.id); }
+  });
   if(!shown.length){
     sorted.forEach(r=>{
       if(!presetPack(r.name) && !seen.has(r.id)){ shown.push(r); seen.add(r.id); }
     });
   }
   const hidden = sorted.filter(r=>!seen.has(r.id));
-  return { shown, hidden, programId: pid };
+  return { shown: sortRoutines(shown), hidden, programId: pid };
 }
 function programsPresent(routines){
   return WK_PRESETS.filter(p=>(p.routines||[]).some(pr=>routines.some(r=>normRouName(r.name)===normRouName(pr.name))));
@@ -5161,6 +5164,8 @@ function copySet(exId, prev){
     top: { weight: prev.top&&prev.top.weight!=null?prev.top.weight:'', reps: prev.top&&prev.top.reps!=null?prev.top.reps:'', rir: prev.top&&prev.top.rir!=null?prev.top.rir:(ex?effectiveRir(ex):1) },
     backoff: { weight: prev.backoff&&prev.backoff.weight!=null?prev.backoff.weight:'', reps: prev.backoff&&prev.backoff.reps!=null?prev.backoff.reps:'', rir: prev.backoff&&prev.backoff.rir!=null?prev.backoff.rir:0 },
     sets: (prev.sets||[]).map(s=>({ weight:s.weight!=null?s.weight:'', reps:s.reps!=null?s.reps:'', rir:s.rir!=null?s.rir:'' })),
+    noTop: !!prev.noTop,
+    noBo: !!prev.noBo,
     memo: '',
     carried: true
   };
@@ -5340,6 +5345,13 @@ function renderWork(){
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(todayLog().routineId)">종목·순서</button>
     </div>
+    ${rou ? `<label class="flabel" for="rouNameEdit" style="margin-top:12px;">루틴 이름</label>
+      <input class="txt-input" id="rouNameEdit" value="${String(rou.name||'').replace(/"/g,'')}" aria-label="루틴 이름" placeholder="수 어깨">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button type="button" class="mini-btn" style="background:#111;color:#fff;" onclick="saveCurrentRouName()">이름 저장</button>
+        <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="addNamedRoutine()">이 이름으로 오늘 루틴 추가</button>
+      </div>
+      <p class="wk-hint" style="margin:6px 0 0;">이름 저장은 이 루틴 이름을 바꿉니다. 추가는 원래 요일은 두고, 수요일처럼 다른 날에 새 루틴을 만듭니다.</p>` : ''}
     <button type="button" class="helper-link" style="margin-top:8px;" onclick="openWhy()">왜 이렇게 하나요</button>
     <details class="wk-help">
       <summary>분할 바꾸기</summary>
@@ -5395,7 +5407,8 @@ function workCardHtml(exId, day, light){
   } else cmp = '지난 세션 백오프: 아직 없음';
   const stag = isStagnantEx(exId) ? `<span class="wk-badge">2세션 정체</span>` : '';
   const sid = ex.id.replace(/['"]/g,'');
-  const topHide = light ? 'hidden' : '';
+  const showTop = !light && !ent.noTop;
+  const showBo = !ent.noBo;
   return `<div class="wk-card" id="wkc_${sid}">
     <h4><span class="nm">${ex.name}${stag}</span>
       <span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
@@ -5406,25 +5419,27 @@ function workCardHtml(exId, day, light){
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${ent.setupUsed||ex.setup||'세팅 없음 · 탭해서 적기'}</button>
-    <div class="${topHide}">
+    ${showTop ? `<div>
       <div class="wk-row"><span class="wk-lab">탑세트</span>
         <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 탑세트 중량" value="${ent.top&&ent.top.weight!=null?ent.top.weight:''}" oninput="onTopW('${sid}',this.value)">
         <span class="wk-unit">${ul} ×</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 횟수" value="${ent.top&&ent.top.reps!=null?ent.top.reps:''}" oninput="patchEnt('${sid}','top','reps',this.value)">
         <span class="wk-unit">회 RIR</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">
+        <button type="button" class="helper-link" onclick="setBlock('${sid}','top',true)">빼기</button>
       </div>
       <div class="wk-hint">6~9회 · 자력만 · RIR 0~1 · 후 2분 30초~3분</div>
-    </div>
-    <div class="wk-row"><span class="wk-lab">백오프</span>
+    </div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','top',false)">＋ 탑세트</button>`}
+    ${showBo ? `<div class="wk-row"><span class="wk-lab">백오프</span>
       <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
       <span class="wk-unit">${ul} ×</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 횟수" value="${ent.backoff&&ent.backoff.reps!=null?ent.backoff.reps:''}" oninput="patchEnt('${sid}','backoff','reps',this.value)">
       <span class="wk-unit">회 RIR</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:0}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
+      <button type="button" class="helper-link" onclick="setBlock('${sid}','bo',true)">빼기</button>
     </div>
     <div class="wk-hint" id="boHint_${sid}">${ent.carried?'지난 세션 숫자입니다. 오늘 바뀐 것만 고치세요. ':''}${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}${ul}` : ent.backoff.weight+ul) : `탑세트 × ${backoffPct()}% → ${ul==='lb'?'5lb':'2.5kg'} 반올림`}</div>
-    <div class="wk-prev">${cmp}</div>
+    <div class="wk-prev">${cmp}</div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','bo',false)">＋ 백오프</button>`}
     ${(ent.sets||[]).map((s,i)=>`<div class="wk-row"><span class="wk-lab">세트 ${i+1}</span>
         <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 세트 ${i+1} 중량" value="${s.weight!=null?s.weight:''}" oninput="patchPlain('${sid}',${i},'weight',this.value)">
         <span class="wk-unit">${ul} ×</span>
@@ -5436,6 +5451,50 @@ function workCardHtml(exId, day, light){
     <div class="wk-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
     ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
+}
+function setBlock(exId, which, off){
+  const { day, e } = ensureEnt(exId);
+  if(which==='top'){
+    e.noTop = !!off;
+    if(off) e.top = { weight:'', reps:'', rir:'' };
+  } else {
+    e.noBo = !!off;
+    if(off) e.backoff = { weight:'', reps:'', rir:'' };
+  }
+  e.carried = false;
+  putTodayLog(day);
+  renderWork();
+}
+function saveCurrentRouName(){
+  const el = document.getElementById('rouNameEdit'); if(!el) return;
+  const name = el.value.trim().replace(/['"<>]/g,'');
+  if(!name){ toast('이름을 적으세요'); return; }
+  const day = todayLog(); if(!day.routineId) return;
+  const list = loadStore(WK.rou, []);
+  const r = list.find(x=>x.id===day.routineId); if(!r) return;
+  r.name = name;
+  const pid = activeProgramId(list, day);
+  if(pid) r.program = pid;
+  saveStore(WK.rou, list);
+  toast('루틴 이름을 저장했습니다');
+  renderWork();
+}
+function addNamedRoutine(){
+  const el = document.getElementById('rouNameEdit');
+  const name = ((el&&el.value)||'').trim().replace(/['"<>]/g,'');
+  if(!name){ toast('이름을 적으세요. 예: 수 어깨'); return; }
+  const list = loadStore(WK.rou, []);
+  const day = todayLog();
+  const pid = activeProgramId(list, day);
+  const r = { id:'rou_'+Math.random().toString(36).slice(2,9), name, exerciseIds:[], light:false, program: pid||'' };
+  list.push(r);
+  saveStore(WK.rou, list);
+  day.routineId = r.id;
+  day.routineLocked = true;
+  day.entries = [];
+  putTodayLog(day);
+  toast('오늘 루틴을 만들었습니다. 종목을 넣으세요');
+  renderWork();
 }
 function addPlainSet(exId){
   const { day, e } = ensureEnt(exId);
