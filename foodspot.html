@@ -4949,6 +4949,35 @@ function sortRoutines(rus){
     return ka[0]-kb[0] || ka[1]-kb[1] || String(ka[2]).localeCompare(String(kb[2]),'ko');
   });
 }
+function routineMenu(sorted, day){
+  const plan = (wkSettings().weekPlan)||{};
+  const pinned = new Set(Object.values(plan).filter(Boolean));
+  const log = loadStore(WK.log, {});
+  const last = {};
+  Object.keys(log).sort().forEach(d=>{
+    const id = log[d] && log[d].routineId;
+    if(id) last[id] = d;
+  });
+  const cut = keyFrom(viewDate, -21);
+  const shown = [], hidden = [], seen = new Set();
+  const take = (r)=>{ if(!r || seen.has(r.id)) return; seen.add(r.id); shown.push(r); };
+  Object.keys(plan).forEach(k=>{ const r = sorted.find(x=>x.id===plan[k]); if(r) take(r); });
+  if(day.routineId) take(sorted.find(x=>x.id===day.routineId));
+  const byDay = new Map();
+  sorted.forEach(r=>{
+    if(!(last[r.id] && last[r.id] >= cut)) return;
+    const ch = dayChar(r.name) || '';
+    if(!byDay.has(ch)) byDay.set(ch, []);
+    byDay.get(ch).push(r);
+  });
+  byDay.forEach(arr=>{
+    arr.sort((a,b)=> (last[b.id]||'').localeCompare(last[a.id]||''));
+    const pin = arr.find(r=>pinned.has(r.id));
+    take(pin || arr[0]);
+  });
+  sorted.forEach(r=>{ if(!seen.has(r.id)) hidden.push(r); });
+  return { shown: sortRoutines(shown), hidden: sortRoutines(hidden) };
+}
 function compactDuplicateRoutines(){
   const rus = loadStore(WK.rou, []);
   if(!rus.length) return false;
@@ -5249,28 +5278,16 @@ function renderWork(){
   const wd = new Date(viewDate+'T12:00:00').getDay();
   const pinned = (wkSettings().weekPlan||{})[String(wd)]===day.routineId;
   const wdName = ['일','월','화','수','목','금','토'][wd];
-  const usedIds = usedRoutineIds();
   const sorted = sortRoutines(routines);
-  const mine = [], shelf = [];
-  const packsOn = new Set();
-  sorted.forEach(r=>{
-    if(usedIds.has(r.id) || r.id===day.routineId){
-      const pack = presetPack(r.name);
-      if(pack) packsOn.add(pack);
-    }
-  });
-  sorted.forEach(r=>{
-    const pack = presetPack(r.name);
-    const live = !pack || packsOn.has(pack) || usedIds.has(r.id) || r.id===day.routineId || dayChar(r.name)===wdName;
-    (live ? mine : shelf).push(r);
-  });
+  const menu = routineMenu(sorted, day);
+  const mine = menu.shown, shelf = menu.hidden;
   const curName = rou ? (String(rou.name||'루틴').replace(/[<>]/g,'')+(rou.light?' · 저강도':'')) : '루틴 없이 오늘만 적기';
   html += `<div class="flabel" style="margin:0">오늘 할 루틴</div>
-    <button type="button" class="rp" id="wkRouToggle" style="margin-top:8px;" aria-expanded="${window._rouOpen?'true':'false'}" onclick="window._rouOpen=!window._rouOpen;renderWork()">${curName}<span style="float:right;font-weight:800;">${window._rouOpen?'▴':'▾'}</span></button>
+    <button type="button" class="rp" id="wkRouToggle" style="margin-top:8px;" aria-expanded="${window._rouOpen?'true':'false'}" onclick="window._rouOpen=!window._rouOpen; if(!window._rouOpen) window._showAllRou=false; renderWork()">${curName}<span style="float:right;font-weight:800;">${window._rouOpen?'▴':'▾'}</span></button>
     ${window._rouOpen ? `<div class="rou-pick" id="wkRouList">
       <button type="button" class="rp ${day.routineId?'':'on'}" onclick="pickRoutine('')">루틴 없이 오늘만 적기</button>
       ${mine.map(r=>rouBtn(r, r.id===day.routineId)).join('')}
-      ${shelf.length && !window._showAllRou ? `<button type="button" class="helper-link" style="text-align:left;" onclick="window._showAllRou=true;renderWork()">안 쓰는 예시 ${shelf.length}개 보기</button>` : ''}
+      ${shelf.length && !window._showAllRou ? `<button type="button" class="helper-link" style="text-align:left;" onclick="window._showAllRou=true;renderWork()">다른 루틴 ${shelf.length}개</button>` : ''}
       ${window._showAllRou ? shelf.map(r=>`<div style="display:flex;align-items:center;gap:4px;">${rouBtn(r, r.id===day.routineId)}<button type="button" class="rp-x" onclick="event.stopPropagation();deleteRoutineId('${String(r.id).replace(/['"]/g,'')}')">빼기</button></div>`).join('') : ''}
       ${window._showAllRou && shelf.length ? `<button type="button" class="helper-link" style="text-align:left;" onclick="window._showAllRou=false;renderWork()">예시 접기</button>` : ''}
     </div>` : ''}
