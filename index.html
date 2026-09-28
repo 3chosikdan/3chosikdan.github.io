@@ -4899,17 +4899,19 @@ function applyPreset(pid){
     added++;
   });
   if(!added){
-    toast('이미 그 분할이 목록에 있습니다. 종목만 고치면 됩니다');
+    const s = wkSettings();
+    s.program = pid;
+    saveStore(WK.settings, s);
+    toast('이 분할만 보여 줍니다');
     renderWork();
     return;
   }
   saveStore(WK.ex, exercises);
   saveStore(WK.rou, sortRoutines(routines));
-  if(p.backoffPct){
-    const s = wkSettings();
-    s.backoffPct = p.backoffPct;
-    saveStore(WK.settings, s);
-  }
+  const s = wkSettings();
+  s.program = pid;
+  if(p.backoffPct) s.backoffPct = p.backoffPct;
+  saveStore(WK.settings, s);
   const day = todayLog();
   const firstNew = routines.find(r=>p.routines.some(pr=>normRouName(pr.name)===normRouName(r.name) && r.id.endsWith('_'+tag)));
   if(firstNew){ day.routineId = firstNew.id; putTodayLog(day); }
@@ -4950,33 +4952,62 @@ function sortRoutines(rus){
   });
 }
 function routineMenu(sorted, day){
-  const plan = (wkSettings().weekPlan)||{};
-  const pinned = new Set(Object.values(plan).filter(Boolean));
-  const log = loadStore(WK.log, {});
-  const last = {};
-  Object.keys(log).sort().forEach(d=>{
-    const id = log[d] && log[d].routineId;
-    if(id) last[id] = d;
-  });
-  const cut = keyFrom(viewDate, -21);
-  const shown = [], hidden = [], seen = new Set();
-  const take = (r)=>{ if(!r || seen.has(r.id)) return; seen.add(r.id); shown.push(r); };
-  Object.keys(plan).forEach(k=>{ const r = sorted.find(x=>x.id===plan[k]); if(r) take(r); });
-  if(day.routineId) take(sorted.find(x=>x.id===day.routineId));
-  const byDay = new Map();
-  sorted.forEach(r=>{
-    if(!(last[r.id] && last[r.id] >= cut)) return;
-    const ch = dayChar(r.name) || '';
-    if(!byDay.has(ch)) byDay.set(ch, []);
-    byDay.get(ch).push(r);
-  });
-  byDay.forEach(arr=>{
-    arr.sort((a,b)=> (last[b.id]||'').localeCompare(last[a.id]||''));
-    const pin = arr.find(r=>pinned.has(r.id));
-    take(pin || arr[0]);
-  });
-  sorted.forEach(r=>{ if(!seen.has(r.id)) hidden.push(r); });
-  return { shown: sortRoutines(shown), hidden: sortRoutines(hidden) };
+  const pid = activeProgramId(sorted, day);
+  const p = WK_PRESETS.find(x=>x.id===pid);
+  const shown = [], seen = new Set();
+  if(p){
+    p.routines.forEach(pr=>{
+      const r = sorted.find(x=>normRouName(x.name)===normRouName(pr.name));
+      if(r && !seen.has(r.id)){ shown.push(r); seen.add(r.id); }
+    });
+  }
+  if(!shown.length){
+    sorted.forEach(r=>{
+      if(!presetPack(r.name) && !seen.has(r.id)){ shown.push(r); seen.add(r.id); }
+    });
+  }
+  const hidden = sorted.filter(r=>!seen.has(r.id));
+  return { shown, hidden, programId: pid };
+}
+function programsPresent(routines){
+  return WK_PRESETS.filter(p=>(p.routines||[]).some(pr=>routines.some(r=>normRouName(r.name)===normRouName(pr.name))));
+}
+function activeProgramId(routines, day){
+  const present = programsPresent(routines).map(p=>p.id);
+  const saved = wkSettings().program;
+  if(saved && present.includes(saved)) return saved;
+  const cur = routines.find(r=>r.id===day.routineId);
+  const pack = cur && presetPack(cur.name);
+  if(pack && present.includes(pack)) return pack;
+  return present[0] || '';
+}
+function setProgram(pid){
+  const p = WK_PRESETS.find(x=>x.id===pid); if(!p) return;
+  const s = wkSettings();
+  s.program = pid;
+  if(p.backoffPct) s.backoffPct = p.backoffPct;
+  saveStore(WK.settings, s);
+  const rus = loadStore(WK.rou, []);
+  const wd = new Date(viewDate+'T12:00:00').getDay();
+  const ch = ['일','월','화','수','목','금','토'][wd];
+  const spec = (p.routines||[]).find(r=>dayChar(r.name)===ch) || p.routines[0];
+  const hit = spec && rus.find(r=>normRouName(r.name)===normRouName(spec.name));
+  if(hit){
+    const day = todayLog();
+    if(entriesAreDraft(day) || day.routineId!==hit.id){
+      if(!entriesAreDraft(day) && day.routineId && day.routineId!==hit.id){
+        if(!confirm(p.name+'으로 바꿀까요? 오늘 직접 적은 중량이 있습니다.')){ renderWork(); return; }
+      }
+      day.routineId = hit.id;
+      day.routineLocked = true;
+      day.entries = fillRoutineEntries(hit);
+      putTodayLog(day);
+    }
+  }
+  window._showAllRou = false;
+  window._rouOpen = true;
+  renderWork();
+  toast(p.name+'만 보여 줍니다');
 }
 function compactDuplicateRoutines(){
   const rus = loadStore(WK.rou, []);
@@ -5177,7 +5208,16 @@ function entriesAreDraft(day){
 }
 function routineForWeekday(rus, wd){
   const ch = ['일','월','화','수','목','금','토'][wd];
-  const hits = sortRoutines(rus).filter(r=>dayChar(r.name)===ch && (r.exerciseIds||[]).length);
+  const pid = wkSettings().program;
+  const p = WK_PRESETS.find(x=>x.id===pid);
+  if(p){
+    const spec = (p.routines||[]).find(r=>dayChar(r.name)===ch);
+    if(spec){
+      const hit = rus.find(r=>normRouName(r.name)===normRouName(spec.name));
+      if(hit) return hit;
+    }
+  }
+  const hits = sortRoutines(rus).filter(r=>dayChar(r.name)===ch && (r.exerciseIds||[]).length && (!pid || presetPack(r.name)===pid || !presetPack(r.name)));
   if(!hits.length) return null;
   const used = usedRoutineIds();
   return hits.find(r=>used.has(r.id)) || hits.slice().sort((a,b)=>b.exerciseIds.length-a.exerciseIds.length)[0];
@@ -5281,7 +5321,14 @@ function renderWork(){
   const sorted = sortRoutines(routines);
   const menu = routineMenu(sorted, day);
   const mine = menu.shown, shelf = menu.hidden;
+  const progs = programsPresent(routines);
   const curName = rou ? (String(rou.name||'루틴').replace(/[<>]/g,'')+(rou.light?' · 저강도':'')) : '루틴 없이 오늘만 적기';
+  if(progs.length>1){
+    html += `<div class="flabel" style="margin:0">쓰는 분할</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px;">
+        ${progs.map(p=>`<button type="button" class="mini-btn" style="background:${p.id===menu.programId?'#111':'#f2f2f7'};color:${p.id===menu.programId?'#fff':'#111'};" onclick="setProgram('${p.id}')">${p.name}</button>`).join('')}
+      </div>`;
+  }
   html += `<div class="flabel" style="margin:0">오늘 할 루틴</div>
     <button type="button" class="rp" id="wkRouToggle" style="margin-top:8px;" aria-expanded="${window._rouOpen?'true':'false'}" onclick="window._rouOpen=!window._rouOpen; if(!window._rouOpen) window._showAllRou=false; renderWork()">${curName}<span style="float:right;font-weight:800;">${window._rouOpen?'▴':'▾'}</span></button>
     ${window._rouOpen ? `<div class="rou-pick" id="wkRouList">
