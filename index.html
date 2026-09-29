@@ -62,6 +62,8 @@
   .gear { font-size:20px; background:none; border:none; cursor:pointer; color:#c7c7cc; }
   .hdr-btn { font-size:12.5px; font-weight:700; background:#f2f2f7; border:none; border-radius:100px; padding:7px 12px; cursor:pointer; color:#3a3a3c; white-space:nowrap; }
   .hdr-btn:active { background:#e5e5ea; }
+  .gbtn { background:#fff !important; color:#1f1f1f !important; border:1px solid #dadce0 !important; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .g-ico { font-weight:800; color:#4285f4; font-family:Arial,sans-serif; }
 
   /* ring */
   .hero { text-align:center; padding:8px 0 4px; }
@@ -1041,8 +1043,12 @@
   <div style="font-size:12px;color:#8e8e93;line-height:1.5;margin-bottom:8px;">검색에 없던 음식을 직접 넣은 목록입니다. 수정·삭제할 수 있어요.</div>
   <div id="myFoodList"></div>
 
-  <div class="flabel" style="margin-top:20px;">기록이 이 기기에만 있습니다</div>
-  <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 10px;">가입이 없어서 폰과 컴퓨터가 자동으로 붙지 않습니다. 폰에서 적고 컴퓨터에서 보려면 <b>보내기 → 그 파일을 컴퓨터에서 불러오기</b>입니다. iCloud·드라이브 폴더에 두면 두 기기에서 같은 파일을 씁니다.</p>
+  <div class="flabel" style="margin-top:20px;" id="cloudTitle">구글 계정에 저장</div>
+  <div id="cloudBox"></div>
+  <button type="button" class="helper-link" style="margin-top:8px;" onclick="showLocalBackups()">이 폰에 남은 날짜별 백업 보기 (최근 21일)</button>
+
+  <div class="flabel" style="margin-top:20px;">파일로 옮기기</div>
+  <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 10px;">로그인 없이 쓰는 중이라면, 폰에서 적고 컴퓨터에서 보려면 <b>보내기 → 그 파일을 컴퓨터에서 불러오기</b>입니다. iCloud·드라이브 폴더에 두면 두 기기에서 같은 파일을 씁니다.</p>
   <button class="mini-btn" style="background:#111;color:#fff;margin-bottom:6px;" onclick="shareBackup()">다른 기기로 보내기</button>
   <div class="frow" style="margin-bottom:6px;">
     <button class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="exportData()">파일로 저장</button>
@@ -1625,11 +1631,13 @@ function mirrorAll(){
   }, 400);
 }
 const save = () => {
+  if(window.cloudBlocking && window.cloudBlocking()) return;
   try {
     const j = JSON.stringify(S);
     localStorage.setItem('foodspot', j);
     mirrorAll();
     if(typeof snapshotPerson==='function') snapshotPerson();
+    if(window.cloudDirty) window.cloudDirty();
   } catch(_){
     try { toast('저장 공간이 부족합니다. 보낸 뒤 오래된 기록을 지워주세요'); } catch(__){}
   }
@@ -1668,7 +1676,8 @@ function loadStore(key, fallback){
   } catch(_){ return fallback; }
 }
 function saveStore(key, val){
-  try { localStorage.setItem(key, JSON.stringify(val)); if(typeof mirrorAll==='function') mirrorAll(); return true; }
+  if(window.cloudBlocking && window.cloudBlocking()) return false;
+  try { localStorage.setItem(key, JSON.stringify(val)); if(typeof mirrorAll==='function') mirrorAll(); if(window.cloudDirty) window.cloudDirty(); return true; }
   catch(_){ try{ toast('저장 공간이 부족합니다'); }catch(__){} return false; }
 }
 function snapshot(){
@@ -1813,10 +1822,12 @@ function renderSyncBar(){
   if(typeof viewDate!=='undefined' && viewDate !== todayKey()){ el.innerHTML=''; return; }
   if(S.syncHideUntil && Date.now()<S.syncHideUntil){ el.innerHTML=''; return; }
   if(!hasLocalRecords()){ el.innerHTML=''; return; }
+  if(window.cloudOn && window.cloudOn()){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="sync-bar">
-    <b>가입 없이 이 폰에 저장됩니다.</b> 날아갈까 불안하면 파일로 한 번 더 저장하세요. ${backupAgoText()}. 로그인 보관은 서버가 없어 아직 없습니다.
+    <b>지금은 이 폰에만 저장됩니다.</b> 구글로 로그인하면 계정에 저장돼서 폰을 바꿔도 그대로입니다. ${backupAgoText()}.
     <div class="sync-actions">
-      <button type="button" class="on" onclick="shareBackup()">파일로 저장</button>
+      <button type="button" class="on" onclick="cloudLogin()">구글로 로그인</button>
+      <button type="button" class="off" onclick="shareBackup()">파일로 저장</button>
       <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
       <button type="button" class="off" onclick="showLocalBackups()">이 폰 백업</button>
       <button type="button" class="off" onclick="S.syncHideUntil=Date.now()+7*86400000;save();renderSyncBar();">일주일 숨기기</button>
@@ -6166,6 +6177,7 @@ tryLoadFromHash();
 </script>
 
 <!-- 식약처 식품영양성분DB 38,749종 — 앱이 다 뜬 뒤에 붙는다(defer). 없어도 앱은 정상 동작. -->
+<script src="cloud.js?v=1"></script>
 <script defer src="fooddb.js" onerror="console.warn('fooddb.js 없음 — 엄선 DB로만 검색')"></script>
 </body>
 </html>
