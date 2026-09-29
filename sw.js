@@ -1,5 +1,5 @@
 // 3초식단 Service Worker — 오프라인 + 데이터 보존(iOS 설치 PWA)
-const CACHE = 'sikdan-v76';
+const CACHE = 'sikdan-v77';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -52,7 +52,8 @@ function raceCache(req, ms){
         if(!done && hit){ done = true; resolve(hit); }
       });
     }, ms);
-    fetch(req).then(res => {
+    // 브라우저 HTTP 캐시(깃허브 10분)를 건너뛰고 서버에 새 버전 확인 — 배포가 바로 보이게
+    fetch(req, { cache: 'no-cache' }).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
       if(!done){ done = true; clearTimeout(timer); resolve(res); }

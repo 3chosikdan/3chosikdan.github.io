@@ -413,6 +413,10 @@
   }
   .sync-bar .on { background:#111; color:#fff; }
   .sync-bar .off { background:#fff; color:#111; }
+  .cloud-line { display:block; width:calc(100% - 48px); margin:10px 24px 0; padding:10px 14px; border:none; border-radius:12px; background:#f2f2f7; color:#3a3a3c; font-size:13px; text-align:left; cursor:pointer; }
+  .cloud-line b { color:#1a73e8; }
+  html.dark .cloud-line { background:#1c1c1e; color:#c7c7cc; }
+  html.dark .cloud-line b { color:#64a8ff; }
   .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .cal-head .m { font-size:16px; font-weight:800; }
   .cal-dow { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11px; font-weight:700; color:#8e8e93; margin-bottom:6px; }
@@ -1821,8 +1825,11 @@ function renderSyncBar(){
   const el = document.getElementById('syncBar'); if(!el) return;
   if(typeof viewDate!=='undefined' && viewDate !== todayKey()){ el.innerHTML=''; return; }
   if(S.syncHideUntil && Date.now()<S.syncHideUntil){ el.innerHTML=''; return; }
-  if(!hasLocalRecords()){ el.innerHTML=''; return; }
   if(window.cloudOn && window.cloudOn()){ el.innerHTML=''; return; }
+  if(!hasLocalRecords()){
+    el.innerHTML = `<button type="button" class="cloud-line" onclick="cloudLogin()">다른 기기에 적은 기록이 있나요? <b>구글로 로그인해서 불러오기</b></button>`;
+    return;
+  }
   el.innerHTML = `<div class="sync-bar">
     <b>지금은 이 폰에만 저장됩니다.</b> 구글로 로그인하면 계정에 저장돼서 폰을 바꿔도 그대로입니다. ${backupAgoText()}.
     <div class="sync-actions">
