@@ -349,7 +349,22 @@
   .site-foot { padding:24px 24px 8px; font-size:11px; color:#8e8e93; line-height:1.75; }
   .site-foot a { color:#3a3a3c; font-weight:700; margin-right:14px; text-decoration:none; font-size:12.5px; display:inline-block; padding:3px 0; }
   .faq { margin-top:18px; }
-  .faq h2 { margin-bottom:6px; }
+  .faq h2 { margin:0; font-size:inherit; color:inherit; font-weight:inherit; }
+  .faq > summary.faq-head { list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-radius:12px; background:#f2f2f7; font-size:14px; font-weight:800; color:#3a3a3c; border:none; }
+  .faq > summary.faq-head::-webkit-details-marker { display:none; }
+  .faq > summary.faq-head::after { content:'펼치기 ▾'; font-size:11.5px; font-weight:700; color:#8e8e93; }
+  .faq[open] > summary.faq-head::after { content:'접기 ▴'; }
+  .faq[open] > summary.faq-head { margin-bottom:4px; }
+  html.dark .faq > summary.faq-head { background:#1c1c1e; color:#e5e5ea; }
+  .wk-card ~ .wk-card .wk-plain-hint { display:none; }
+  @media (max-width:480px){
+    header { display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:8px; }
+    header > div:first-child { display:contents; }
+    header .wordmark { grid-column:1; grid-row:1; white-space:nowrap; }
+    header > div:last-child { grid-column:2; grid-row:1; }
+    header .date-nav { grid-column:1 / -1; grid-row:2; }
+    .date-go, .streak { white-space:nowrap; }
+  }
   .faq details { border-bottom:1px solid #f2f2f7; padding:10px 0; }
   .faq summary { font-size:13px; font-weight:700; color:#3a3a3c; cursor:pointer; }
   .faq p { font-size:12.5px; color:#8e8e93; line-height:1.55; margin-top:6px; font-weight:500; }
@@ -721,15 +736,15 @@
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
-    <div class="faq">
-      <h2>자주 묻는 질문</h2>
+    <details class="faq">
+      <summary class="faq-head"><h2>자주 묻는 질문</h2></summary>
       <details><summary>가입해야 하나요?</summary><p>아니요. 열자마자 가입 없이 기록됩니다. 폰·컴퓨터 여러 기기에서 같은 기록을 보고 싶을 때만 구글로 로그인하면 됩니다(선택).</p></details>
       <details><summary>기록은 어디에 저장되나요?</summary><p>로그인하지 않으면 이 기기 브라우저에만 저장되고, 최근 21일치 날짜별 복사본도 이 기기에 남습니다. 구글로 로그인하면 같은 기록이 구글 계정에도 자동 저장되고, 본인만 볼 수 있습니다.</p></details>
       <details><summary>폰을 바꾸거나 기록이 사라지면요?</summary><p>로그인해 뒀다면 새 기기에서 같은 구글 계정으로 로그인하면 그대로 돌아옵니다. 로그인하지 않았다면 목표 화면의 날짜별 백업(최근 21일)이나, 미리 저장해 둔 백업 파일로 되돌릴 수 있습니다.</p></details>
       <details><summary>운동도 기록되나요?</summary><p>운동 탭에서 루틴을 고르고 종목마다 탑세트와 백오프 중량·횟수만 적습니다. 워밍업·피더 세트는 적지 않습니다. 이유는 운동 탭의 근비대 원리에 있습니다.</p></details>
       <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서 보고, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식별 비타민 값은 아직 없습니다.</p></details>
       <details><summary>칼로리는 정확한가요?</summary><p>식약처 식품영양성분 DB와 추정값입니다. 같은 음식도 식당·레시피마다 다르니 참고용으로 쓰세요.</p></details>
-    </div>
+    </details>
   </footer>
 </div>
 
@@ -5647,7 +5662,7 @@ function workCardHtml(exId, day, light){
         <button type="button" class="helper-link" onclick="delPlain('${sid}',${i})">빼기</button>
       </div>`).join('')}
     <button type="button" class="helper-link" style="margin-top:6px;" onclick="addPlainSet('${sid}')">＋ 일반 세트</button>
-    <div class="wk-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
+    <div class="wk-hint wk-plain-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
     ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
   </div>`;
 }
