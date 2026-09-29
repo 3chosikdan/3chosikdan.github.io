@@ -1643,7 +1643,7 @@ const save = () => {
     const data = typeof j==='string' ? JSON.parse(j) : j;
     if(!data || typeof data !== 'object') return;
     if(data.meals && typeof data.meals==='object'){
-      const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
+      const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:workout:done':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
       const clean = {};
       Object.keys(data).forEach(k=>{ if(!skip[k]) clean[k]=data[k]; });
       if(typeof applySnapshot==='function') applySnapshot(data, false);
@@ -1681,6 +1681,7 @@ function snapshot(){
   o['3cho:workout:routines'] = loadStore('3cho:workout:routines', []);
   o['3cho:workout:deload'] = loadStore('3cho:workout:deload', null);
   o['3cho:workout:settings'] = loadStore('3cho:workout:settings', {});
+  o['3cho:workout:done'] = loadStore('3cho:workout:done', {});
   o['3cho:people'] = loadStore('3cho:people', []);
   o['3cho:activePerson'] = localStorage.getItem('3cho:activePerson');
   o._stores = {};
@@ -1695,7 +1696,7 @@ function snapshot(){
 }
 function applySnapshot(data, replaceAll){
   if(!data || typeof data !== 'object') return;
-  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings','3cho:people'].forEach(k=>{
+  ['3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings','3cho:workout:done','3cho:people'].forEach(k=>{
     if(data[k] !== undefined) saveStore(k, data[k]);
   });
   if(data['3cho:activePerson']) localStorage.setItem('3cho:activePerson', data['3cho:activePerson']);
@@ -1705,7 +1706,7 @@ function applySnapshot(data, replaceAll){
       else localStorage.setItem(k, data._stores[k]);
     });
   }
-  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
+  const skip = { '3cho:foodstats':1, '3cho:myfoods':1, '3cho:workout:exercises':1, '3cho:workout:log':1, '3cho:workout:routines':1, '3cho:workout:deload':1, '3cho:workout:settings':1, '3cho:workout:done':1, '3cho:people':1, '3cho:activePerson':1, _stores:1 };
   if(replaceAll){
     Object.keys(data).forEach(k=>{ if(!skip[k]) S[k] = data[k]; });
   }
@@ -5097,6 +5098,97 @@ function putTodayLog(day){
   log[viewDate] = day;
   saveStore(WK.log, log);
 }
+function setDuration(v){
+  const day = todayLog();
+  const n = parseInt(v, 10);
+  day.durationMin = (!isNaN(n) && n>0 && n<=300) ? n : null;
+  day.startedAt = null;
+  putTodayLog(day);
+}
+function toggleWkTimer(){
+  const day = todayLog();
+  if(day.done){ toast('완료된 운동입니다. 시간을 고치려면 완료를 다시 누르기 전에 분을 적으세요'); day.done = false; }
+  if(day.startedAt){
+    day.durationMin = Math.max(1, Math.round((Date.now()-new Date(day.startedAt).getTime())/60000));
+    day.startedAt = null;
+  } else {
+    const already = (day.durationMin||0) * 60000;
+    day.startedAt = new Date(Date.now()-already).toISOString();
+  }
+  putTodayLog(day);
+  renderWork();
+}
+function armDurTick(){
+  if(window._durTick) clearInterval(window._durTick);
+  window._durTick = setInterval(()=>{
+    const el = document.getElementById('durIn');
+    if(!el || document.activeElement===el) return;
+    const d = todayLog();
+    if(!d.startedAt || d.done) return;
+    el.value = Math.max(1, Math.round((Date.now()-new Date(d.startedAt).getTime())/60000));
+  }, 1000);
+}
+function exNameOf(day, id){
+  if(day.savedNames && day.savedNames[id]) return day.savedNames[id];
+  const ex = loadStore(WK.ex, []).find(x=>x.id===id);
+  return ex ? ex.name : '종목';
+}
+function workLines(day){
+  const lines = [];
+  (day.entries||[]).forEach(e=>{
+    const bits = [];
+    if(!e.noTop && e.top && e.top.weight) bits.push('탑 '+e.top.weight+'×'+(e.top.reps||'?'));
+    if(!e.noBo && e.backoff && e.backoff.weight) bits.push('백 '+e.backoff.weight+'×'+(e.backoff.reps||'?'));
+    (e.sets||[]).forEach((s,i)=>{ if(s && s.weight) bits.push((i+1)+'세트 '+s.weight+'×'+(s.reps||'?')); });
+    if(bits.length) lines.push(exNameOf(day, e.exerciseId)+' · '+bits.join(' · '));
+  });
+  return lines;
+}
+function finishWorkout(){
+  const day = todayLog();
+  if(day.startedAt){
+    day.durationMin = Math.max(1, Math.round((Date.now()-new Date(day.startedAt).getTime())/60000));
+    day.startedAt = null;
+  }
+  const typed = parseInt((document.getElementById('durIn')||{}).value, 10);
+  if(!isNaN(typed) && typed>0) day.durationMin = Math.min(300, typed);
+  if(!day.durationMin){ toast('운동한 시간을 분으로 적거나 시작을 누르세요'); return; }
+  const lines = workLines(day);
+  if(!lines.length){ toast('저장할 세트가 없습니다. 중량을 적고 완료하세요'); return; }
+  const rou = loadStore(WK.rou, []).find(r=>r.id===day.routineId);
+  const names = {};
+  (day.entries||[]).forEach(e=>{ names[e.exerciseId] = exNameOf(day, e.exerciseId); });
+  day.savedNames = names;
+  day.savedRoutine = rou ? { id:rou.id, name:rou.name, exerciseIds:(rou.exerciseIds||[]).slice() } : null;
+  day.done = true;
+  day.finishedAt = new Date().toISOString();
+  putTodayLog(day);
+  const arc = loadStore('3cho:workout:done', {});
+  const list = Array.isArray(arc[viewDate]) ? arc[viewDate] : [];
+  list.push(JSON.parse(JSON.stringify(day)));
+  arc[viewDate] = list.slice(-8);
+  saveStore('3cho:workout:done', arc);
+  if(typeof mirrorAll==='function') mirrorAll();
+  toast('이 폰에 저장했습니다');
+  renderWork();
+}
+function recentWorkHtml(){
+  const log = loadStore(WK.log, {});
+  const rus = loadStore(WK.rou, []);
+  const keys = Object.keys(log).filter(k=>{
+    const d = log[k];
+    return d && workLines(d).length;
+  }).sort().reverse().slice(0, 10);
+  if(!keys.length) return '';
+  return `<div class="flabel" style="margin-top:16px;">최근 운동</div>` + keys.map(k=>{
+    const d = log[k];
+    const rou = rus.find(r=>r.id===d.routineId);
+    const name = (d.savedRoutine && d.savedRoutine.name) || (rou && rou.name) || '루틴';
+    const n = workLines(d).length;
+    const mark = d.done ? '완료' : '기록';
+    return `<button type="button" class="wk-pick" onclick="goToDate('${k}');setHomeMode('lift')"><b>${k.slice(5).replace('-','.')} · ${name}</b><span>${mark} · 종목 ${n}개${d.durationMin?' · '+d.durationMin+'분':''}</span></button>`;
+  }).join('');
+}
 function setSleepHours(v){
   const day = todayLog();
   if(v==='' || v==null){ day.sleepHours = null; }
@@ -5381,6 +5473,16 @@ function renderWork(){
   const seen = new Set();
   ids.forEach(id=>{ if(!seen.has(id)){ seen.add(id); html += workCardHtml(id, day, light); } });
   html += `<button type="button" class="mini-btn" style="margin-top:8px;background:#f2f2f7;color:#111;" onclick="openExSheet()">＋ 종목 추가</button>
+    <div class="flabel" style="margin-top:18px;">운동 시간</div>
+    <div class="wk-row">
+      <input class="wk-in" id="durIn" inputmode="numeric" aria-label="운동 시간 분" value="${day.startedAt && !day.done ? Math.max(1, Math.round((Date.now()-new Date(day.startedAt).getTime())/60000)) : (day.durationMin||'')}" onchange="setDuration(this.value)" placeholder="70">
+      <span class="wk-unit">분</span>
+      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="toggleWkTimer()">${day.startedAt && !day.done ? '멈추기' : '시작'}</button>
+    </div>
+    <p class="wk-hint">시작을 누르면 분이 올라갑니다. 끝난 뒤 숫자만 적어도 됩니다.</p>
+    <button type="button" class="mini-btn" style="margin-top:8px;" onclick="finishWorkout()">운동 완료 · 저장 확인</button>
+    ${day.done ? `<div class="wk-banner" style="margin-top:10px;">저장됨 · ${day.durationMin||0}분 · ${(day.finishedAt||'').slice(11,16)}<br>${workLines(day).map(l=>l.replace(/</g,'')).join('<br>')}</div>` : ''}
+    ${recentWorkHtml()}
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
     <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
@@ -5391,6 +5493,7 @@ function renderWork(){
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
   setSegOnly('boPctSeg', String(pct));
+  armDurTick();
 }
 function workCardHtml(exId, day, light){
   const exercises = loadStore(WK.ex, []);
