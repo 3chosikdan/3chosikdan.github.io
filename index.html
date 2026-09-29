@@ -36,7 +36,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","name":"3초식단","url":"https://3cho.kr","applicationCategory":"HealthApplication","operatingSystem":"Any","inLanguage":"ko","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"description":"바디빌딩·다이어트 식단을 가입 없이 3초 기록. 단백질·탄수·지방, 체지방, 감량·증량."}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"3초식단은 가입해야 하나요?","acceptedAnswer":{"@type":"Answer","text":"아니요. 계정이 없습니다. 식단 기록은 이 기기 브라우저에만 저장됩니다."}},{"@type":"Question","name":"바디빌딩 식단도 기록할 수 있나요?","acceptedAnswer":{"@type":"Answer","text":"단백질·탄수·지방 목표, 체지방, 감량·증량을 기준으로 설계했습니다. 닭가슴살, 그릭요거트, 프로틴쉐이크부터 한식까지 바로 검색됩니다."}},{"@type":"Question","name":"기록은 어디에 저장되나요?","acceptedAnswer":{"@type":"Answer","text":"서버로 보내지 않습니다. 기기를 바꾸면 앱 안 백업(파일 또는 카톡)이나 이동 링크로 옮길 수 있습니다."}}]}
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "가입해야 하나요?", "acceptedAnswer": {"@type": "Answer", "text": "아니요. 열자마자 가입 없이 기록됩니다. 폰·컴퓨터 여러 기기에서 같은 기록을 보고 싶을 때만 구글로 로그인하면 됩니다(선택)."}}, {"@type": "Question", "name": "기록은 어디에 저장되나요?", "acceptedAnswer": {"@type": "Answer", "text": "로그인하지 않으면 이 기기 브라우저에만 저장되고, 최근 21일치 날짜별 복사본도 이 기기에 남습니다. 구글로 로그인하면 같은 기록이 구글 계정에도 자동 저장되고, 본인만 볼 수 있습니다."}}, {"@type": "Question", "name": "폰을 바꾸거나 기록이 사라지면요?", "acceptedAnswer": {"@type": "Answer", "text": "로그인해 뒀다면 새 기기에서 같은 구글 계정으로 로그인하면 그대로 돌아옵니다. 로그인하지 않았다면 목표 화면의 날짜별 백업(최근 21일)이나, 미리 저장해 둔 백업 파일로 되돌릴 수 있습니다."}}, {"@type": "Question", "name": "운동도 기록되나요?", "acceptedAnswer": {"@type": "Answer", "text": "운동 탭에서 루틴을 고르고 종목마다 탑세트와 백오프 중량·횟수만 적습니다. 워밍업·피더 세트는 적지 않습니다. 이유는 운동 탭의 근비대 원리에 있습니다."}}]}
 </script>
 <!-- 📊 익명 이용 통계 (프라이버시 친화) — 아직 미연결. 사용하려면 아래 한 줄 주석 해제 후 GoatCounter(goatcounter.com, 무료) 가입 코드로 교체:
 <script data-goatcounter="https://3cho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -347,7 +347,7 @@
   .yest-chip:active { background:#e5e5ea; }
   .yest-all { width:100%; margin-top:8px; padding:12px; border-radius:12px; border:none; background:#111; color:#fff; font-size:13.5px; font-weight:800; cursor:pointer; }
   .site-foot { padding:24px 24px 8px; font-size:11px; color:#8e8e93; line-height:1.75; }
-  .site-foot a { color:#3a3a3c; font-weight:700; margin-right:14px; text-decoration:none; }
+  .site-foot a { color:#3a3a3c; font-weight:700; margin-right:14px; text-decoration:none; font-size:12.5px; display:inline-block; padding:3px 0; }
   .faq { margin-top:18px; }
   .faq h2 { margin-bottom:6px; }
   .faq details { border-bottom:1px solid #f2f2f7; padding:10px 0; }
@@ -415,6 +415,24 @@
   .sync-bar .off { background:#fff; color:#111; }
   .cloud-line { display:block; width:calc(100% - 48px); margin:10px 24px 0; padding:10px 14px; border:none; border-radius:12px; background:#f2f2f7; color:#3a3a3c; font-size:13px; text-align:left; cursor:pointer; }
   .cloud-line b { color:#1a73e8; }
+  .info-line { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; padding:11px 14px; border-radius:12px; background:#f2f2f7; }
+  .info-line button { border:none; background:none; padding:0; text-align:left; font-size:13.5px; color:#3a3a3c; cursor:pointer; flex:1; }
+  .info-line b { color:#111; }
+  .info-line a { font-size:12.5px; font-weight:700; color:#007aff; text-decoration:none; white-space:nowrap; }
+  html.dark .info-line { background:#1c1c1e; }
+  html.dark .info-line button { color:#c7c7cc; }
+  html.dark .info-line b { color:#f2f2f7; }
+  .wk-fold { margin-top:14px; border-radius:12px; background:#f7f7f9; }
+  .wk-fold > summary { list-style:none; cursor:pointer; padding:12px 14px; font-size:13.5px; font-weight:800; color:#3a3a3c; display:flex; justify-content:space-between; align-items:center; }
+  .wk-fold > summary::-webkit-details-marker { display:none; }
+  .wk-fold > summary::after { content:'펼치기 ▾'; font-size:11.5px; font-weight:700; color:#8e8e93; }
+  .wk-fold[open] > summary::after { content:'접기 ▴'; }
+  .wk-fold-body { padding:0 14px 12px; font-size:13px; line-height:1.7; color:#3a3a3c; }
+  .wk-fold .wk-pick { margin:0 8px 8px; width:calc(100% - 16px); }
+  .wk-saved { background:#fff8e6; }
+  html.dark .wk-fold { background:#1c1c1e; }
+  html.dark .wk-saved { background:#2a2414; }
+  html.dark .wk-fold > summary, html.dark .wk-fold-body { color:#e5e5ea; }
   html.dark .cloud-line { background:#1c1c1e; color:#c7c7cc; }
   html.dark .cloud-line b { color:#64a8ff; }
   .cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -705,10 +723,12 @@
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
     <div class="faq">
       <h2>자주 묻는 질문</h2>
-      <details><summary>가입해야 하나요?</summary><p>아니요. 계정이 없습니다. 기록은 이 폰 브라우저에만 남습니다.</p></details>
-      <details><summary>데이터는 어디에 저장되나요?</summary><p>가입은 없습니다. 이 폰에 저장되고, 날짜별 복사본도 이 폰에 남습니다. 파일로 저장을 누르면 json 파일이 생겨서 카톡·드라이브에 둘 수 있습니다. 로그인으로 서버에 올리는 기능은 아직 없습니다.</p></details>
-      <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식마다 비타민 값은 아직 없습니다.</p></details>
-      <details><summary>근비대는 어떻게 기록하나요?</summary><p>운동 탭에서 종목마다 탑세트와 백오프만 적습니다. 원리는 근비대 원리 페이지에 있습니다. 자력 반복만 세고, 고강도는 주 4회를 넘기지 않는 쪽입니다.</p></details>
+      <details><summary>가입해야 하나요?</summary><p>아니요. 열자마자 가입 없이 기록됩니다. 폰·컴퓨터 여러 기기에서 같은 기록을 보고 싶을 때만 구글로 로그인하면 됩니다(선택).</p></details>
+      <details><summary>기록은 어디에 저장되나요?</summary><p>로그인하지 않으면 이 기기 브라우저에만 저장되고, 최근 21일치 날짜별 복사본도 이 기기에 남습니다. 구글로 로그인하면 같은 기록이 구글 계정에도 자동 저장되고, 본인만 볼 수 있습니다.</p></details>
+      <details><summary>폰을 바꾸거나 기록이 사라지면요?</summary><p>로그인해 뒀다면 새 기기에서 같은 구글 계정으로 로그인하면 그대로 돌아옵니다. 로그인하지 않았다면 목표 화면의 날짜별 백업(최근 21일)이나, 미리 저장해 둔 백업 파일로 되돌릴 수 있습니다.</p></details>
+      <details><summary>운동도 기록되나요?</summary><p>운동 탭에서 루틴을 고르고 종목마다 탑세트와 백오프 중량·횟수만 적습니다. 워밍업·피더 세트는 적지 않습니다. 이유는 운동 탭의 근비대 원리에 있습니다.</p></details>
+      <details><summary>미세영양소도 나오나요?</summary><p>탄단지는 기록에서 보고, 비타민·무기질 하루 권장량은 미세영양소 계산기에서 성별·나이로 봅니다. 음식별 비타민 값은 아직 없습니다.</p></details>
+      <details><summary>칼로리는 정확한가요?</summary><p>식약처 식품영양성분 DB와 추정값입니다. 같은 음식도 식당·레시피마다 다르니 참고용으로 쓰세요.</p></details>
     </div>
   </footer>
 </div>
@@ -1074,7 +1094,7 @@
   <div class="flabel" style="margin-top:20px;">💚 3초식단이 도움이 됐다면</div>
   <button class="mini-btn" style="background:#eafaf0;color:#111;" onclick="shareApp()">📤 친구에게 알리기 — 가입 없이 링크로 끝</button>
   <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f2f2f7;">
-    <a href="privacy.html" style="font-size:12px;font-weight:700;color:#8e8e93;text-decoration:none;">개인정보처리방침 — 기록은 이 기기에만 저장됩니다</a>
+    <a href="privacy.html" style="font-size:12px;font-weight:700;color:#8e8e93;text-decoration:none;">개인정보처리방침 — 로그인하지 않으면 이 기기에만 저장됩니다</a>
     <div style="font-size:11px;color:#c7c7cc;margin-top:6px;">음식 영양 출처: 식품의약품안전처 식품영양성분 DB</div>
   </div>
 </div>
@@ -5146,11 +5166,61 @@ function armDurTick(){
     el.value = Math.max(1, Math.round((Date.now()-new Date(d.startedAt).getTime())/60000));
   }, 1000);
 }
-function exNameOf(day, id){
-  if(day.savedNames && day.savedNames[id]) return day.savedNames[id];
-  const ex = loadStore(WK.ex, []).find(x=>x.id===id);
-  return ex ? ex.name : '종목';
+function hhmm(iso){
+  const d = new Date(iso); if(isNaN(d)) return '';
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 }
+function exNameOf(day, id){
+  const ex = loadStore(WK.ex, []).find(x=>x.id===id);
+  const saved = day.savedNames && day.savedNames[id];
+  if(saved && saved!=='종목' && !(ex && ex.restored)) return saved;
+  return ex ? ex.name : (saved && saved!=='종목' ? saved : '이름 없는 종목');
+}
+/* 루틴·기록에는 있는데 종목 목록에서 빠진 종목을 되살린다.
+   이 기기의 날짜별 백업에서 원래 정보를 찾고, 없으면 '이름 없는 종목'으로 만들어 이름만 다시 적게 한다. */
+async function repairMissingExercises(){
+  try{
+    const list = loadStore(WK.ex, []); const have = new Set(list.map(x=>x.id));
+    const need = new Map();
+    loadStore(WK.rou, []).forEach(r=>(r.exerciseIds||[]).forEach(id=>{
+      if(id && !have.has(id)){ const n = need.get(id)||{}; n.rou = n.rou || r.name; need.set(id, n); }
+    }));
+    const log = loadStore(WK.log, {});
+    Object.keys(log).forEach(k=>{ const day = log[k]||{};
+      (day.entries||[]).forEach(e=>{ const id = e.exerciseId; if(!id || have.has(id)) return;
+        const n = need.get(id)||{}; const nm = day.savedNames && day.savedNames[id];
+        if(nm && nm!=='종목') n.name = nm;
+        if(!n.rou && day.savedRoutine) n.rou = day.savedRoutine.name;
+        need.set(id, n);
+      });
+    });
+    if(!need.size) return;
+    try{
+      const keys = (await idbMirror.keys()).map(String).filter(k=>k.indexOf('D:')===0).sort().reverse();
+      for(const k of keys){
+        const raw = await idbMirror.get(k); let o;
+        try{ o = typeof raw==='string' ? JSON.parse(raw) : raw; }catch(_){ continue; }
+        const pools = [ (o&&o['3cho:workout:exercises'])||[] ];
+        if(o && o._stores) Object.keys(o._stores).forEach(sk=>{ if(sk.indexOf('3cho:workout:exercises::')===0){ try{ pools.push(JSON.parse(o._stores[sk])||[]); }catch(_){} } });
+        pools.forEach(arr=>arr.forEach(x=>{ const n = x && need.get(x.id); if(n && !n.full) n.full = x; }));
+      }
+    }catch(_){}
+    const MUS = ['가슴','등','어깨','이두','삼두','대퇴사두','햄스트링','둔근','내전','종아리','복부'];
+    const fresh = loadStore(WK.ex, []); const got = new Set(fresh.map(x=>x.id));
+    let i = 0, named = 0;
+    need.forEach((n,id)=>{
+      if(got.has(id)) return;
+      if(n.full){ fresh.push(Object.assign({}, n.full)); named++; return; }
+      if(n.name){ fresh.push({ id, name:n.name, muscle: MUS.find(m=>(n.rou||'').indexOf(m)>=0)||'가슴', type:'machine_compound', setup:'', defaultRir:1 }); named++; return; }
+      i++;
+      fresh.push({ id, name:'이름 없는 종목 '+i, muscle: MUS.find(m=>(n.rou||'').indexOf(m)>=0)||'가슴', type:'machine_compound', setup:'', defaultRir:1, restored:true });
+    });
+    saveStore(WK.ex, fresh);
+    if(i) toast('목록에서 빠진 종목 '+i+'개를 되살렸습니다. 운동 탭에서 이름을 다시 적어주세요');
+    if(typeof homeMode!=='undefined' && homeMode==='lift' && typeof renderWork==='function') renderWork();
+  }catch(_){}
+}
+setTimeout(repairMissingExercises, 5000);
 function workLines(day){
   const lines = [];
   (day.entries||[]).forEach(e=>{
@@ -5187,7 +5257,7 @@ function finishWorkout(){
   arc[viewDate] = list.slice(-8);
   saveStore('3cho:workout:done', arc);
   if(typeof mirrorAll==='function') mirrorAll();
-  toast('이 폰에 저장했습니다');
+  toast((window.cloudOn && window.cloudOn()) ? '저장했습니다 · 구글 계정에도 올라갑니다' : '이 폰에 저장했습니다');
   renderWork();
 }
 function recentWorkHtml(){
@@ -5198,14 +5268,14 @@ function recentWorkHtml(){
     return d && workLines(d).length;
   }).sort().reverse().slice(0, 10);
   if(!keys.length) return '';
-  return `<div class="flabel" style="margin-top:16px;">최근 운동</div>` + keys.map(k=>{
+  return `<details class="wk-fold" ${window._wkRecentOpen?'open':''} ontoggle="window._wkRecentOpen=this.open"><summary>최근 운동 · ${keys.length}회</summary><div class="wk-fold-body" style="padding:0;">` + keys.map(k=>{
     const d = log[k];
     const rou = rus.find(r=>r.id===d.routineId);
     const name = (d.savedRoutine && d.savedRoutine.name) || (rou && rou.name) || '루틴';
     const n = workLines(d).length;
     const mark = d.done ? '완료' : '기록';
     return `<button type="button" class="wk-pick" onclick="goToDate('${k}');setHomeMode('lift')"><b>${k.slice(5).replace('-','.')} · ${name}</b><span>${mark} · 종목 ${n}개${d.durationMin?' · '+d.durationMin+'분':''}</span></button>`;
-  }).join('');
+  }).join('') + `</div></details>`;
 }
 function setSleepHours(v){
   const day = todayLog();
@@ -5465,7 +5535,7 @@ function renderWork(){
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="addNamedRoutine()">이 이름으로 오늘 루틴 추가</button>
       </div>
       <p class="wk-hint" style="margin:6px 0 0;">이름 저장은 이 루틴 이름을 바꿉니다. 추가는 원래 요일은 두고, 수요일처럼 다른 날에 새 루틴을 만듭니다.</p>` : ''}
-    <button type="button" class="helper-link" style="margin-top:8px;" onclick="openWhy()">왜 이렇게 하나요</button>
+    <div class="info-line"><button type="button" onclick="openWhy()">📖 <b>근비대 원리</b> — 왜 탑세트 하나만 적나</button><a href="hypert.html">긴 글 ›</a></div>
     <details class="wk-help">
       <summary>분할 바꾸기</summary>
       <p class="wk-hint" style="margin:8px 0;">하나만 고릅니다. 5일 분할을 고르면 그 요일만, 3분할이나 상하체·여자 루틴을 고르면 그 루틴만 위에 나옵니다.</p>
@@ -5499,7 +5569,7 @@ function renderWork(){
     </div>
     <p class="wk-hint">시작을 누르면 분이 올라갑니다. 끝난 뒤 숫자만 적어도 됩니다.</p>
     <button type="button" class="mini-btn" style="margin-top:8px;" onclick="finishWorkout()">운동 완료 · 저장 확인</button>
-    ${day.done ? `<div class="wk-banner" style="margin-top:10px;">저장됨 · ${day.durationMin||0}분 · ${(day.finishedAt||'').slice(11,16)}<br>${workLines(day).map(l=>l.replace(/</g,'')).join('<br>')}</div>` : ''}
+    ${day.done ? `<details class="wk-fold wk-saved" ${window._wkSavedOpen?'open':''} ontoggle="window._wkSavedOpen=this.open"><summary>✓ 저장됨 · ${day.durationMin||0}분${day.finishedAt?' · '+hhmm(day.finishedAt):''} · 종목 ${workLines(day).length}개</summary><div class="wk-fold-body">${workLines(day).map(l=>l.replace(/</g,'')).join('<br>')}</div></details>` : ''}
     ${recentWorkHtml()}
     <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
     <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
@@ -6184,7 +6254,7 @@ tryLoadFromHash();
 </script>
 
 <!-- 식약처 식품영양성분DB 38,749종 — 앱이 다 뜬 뒤에 붙는다(defer). 없어도 앱은 정상 동작. -->
-<script src="cloud.js?v=1"></script>
+<script src="cloud.js?v=2"></script>
 <script defer src="fooddb.js" onerror="console.warn('fooddb.js 없음 — 엄선 DB로만 검색')"></script>
 </body>
 </html>
