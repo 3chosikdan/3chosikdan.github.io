@@ -5180,8 +5180,9 @@ function exNameOf(day, id){
    이 기기의 날짜별 백업에서 원래 정보를 찾고, 없으면 '이름 없는 종목'으로 만들어 이름만 다시 적게 한다. */
 async function repairMissingExercises(){
   try{
-    const list = loadStore(WK.ex, []); const have = new Set(list.map(x=>x.id));
+    const list = loadStore(WK.ex, []); const have = new Set(list.filter(x=>!x.restored).map(x=>x.id));
     const need = new Map();
+    list.forEach(x=>{ if(x.restored) need.set(x.id, { placeholder:true }); });
     loadStore(WK.rou, []).forEach(r=>(r.exerciseIds||[]).forEach(id=>{
       if(id && !have.has(id)){ const n = need.get(id)||{}; n.rou = n.rou || r.name; need.set(id, n); }
     }));
@@ -5202,12 +5203,15 @@ async function repairMissingExercises(){
         try{ o = typeof raw==='string' ? JSON.parse(raw) : raw; }catch(_){ continue; }
         const pools = [ (o&&o['3cho:workout:exercises'])||[] ];
         if(o && o._stores) Object.keys(o._stores).forEach(sk=>{ if(sk.indexOf('3cho:workout:exercises::')===0){ try{ pools.push(JSON.parse(o._stores[sk])||[]); }catch(_){} } });
-        pools.forEach(arr=>arr.forEach(x=>{ const n = x && need.get(x.id); if(n && !n.full) n.full = x; }));
+        pools.forEach(arr=>arr.forEach(x=>{ const n = x && !x.restored && need.get(x.id); if(n && !n.full) n.full = x; }));
       }
     }catch(_){}
     const MUS = ['가슴','등','어깨','이두','삼두','대퇴사두','햄스트링','둔근','내전','종아리','복부'];
-    const fresh = loadStore(WK.ex, []); const got = new Set(fresh.map(x=>x.id));
-    let i = 0, named = 0;
+    let fresh = loadStore(WK.ex, []);
+    let i = 0, named = 0, upgraded = 0;
+    // 되살린 빈 이름 → 백업에서 진짜를 찾았으면 교체
+    fresh = fresh.map(x=>{ const n = x.restored && need.get(x.id); if(n && n.full){ upgraded++; return Object.assign({}, n.full); } return x; });
+    const got = new Set(fresh.map(x=>x.id));
     need.forEach((n,id)=>{
       if(got.has(id)) return;
       if(n.full){ fresh.push(Object.assign({}, n.full)); named++; return; }
@@ -5215,6 +5219,7 @@ async function repairMissingExercises(){
       i++;
       fresh.push({ id, name:'이름 없는 종목 '+i, muscle: MUS.find(m=>(n.rou||'').indexOf(m)>=0)||'가슴', type:'machine_compound', setup:'', defaultRir:1, restored:true });
     });
+    if(!i && !named && !upgraded) return;
     saveStore(WK.ex, fresh);
     if(i) toast('목록에서 빠진 종목 '+i+'개를 되살렸습니다. 운동 탭에서 이름을 다시 적어주세요');
     if(typeof homeMode!=='undefined' && homeMode==='lift' && typeof renderWork==='function') renderWork();
