@@ -97,28 +97,7 @@ function applyDocs(docs){
     const getL = ()=>{ if(!L0){ try{ L0 = JSON.parse(lsGet('3cho:workout:log::'+pid)||'{}')||{}; }catch(_){ L0 = {}; } } return L0; };
     byPid[pid].forEach(id=>{
       const v = docs[id]; const parts = id.split('|'); const kind = parts[1];
-      if(kind==='k'){
-      const key = id.split('|').slice(2).join('|');
-      if(key==='3cho:workout:exercises' || key==='3cho:workout:routines' || key==='3cho:myfoods'){
-        // 목록은 id로 합친다 — 한쪽 기기에만 있던 종목·루틴·내 음식이 사라지지 않게
-        const a = JSON.parse(lv)||[], b = JSON.parse(rv)||[];
-        const m = new Map();
-        b.forEach(x=>{ if(x) m.set(x.id||x.name, x); });
-        a.forEach(x=>{ if(!x) return; const k = x.id||x.name; const o = m.get(k);
-          if(o && x.restored && !o.restored) return;           // 되살린 빈 이름은 진짜 이름을 못 덮음
-          if(o && Array.isArray(o.exerciseIds) && Array.isArray(x.exerciseIds)){
-            const ids = x.exerciseIds.slice(); o.exerciseIds.forEach(i=>{ if(ids.indexOf(i)<0) ids.push(i); });
-            m.set(k, Object.assign({}, o, x, { exerciseIds: ids })); return;
-          }
-          m.set(k, x);
-        });
-        return JSON.stringify([...m.values()]);
-      }
-      if(key==='3cho:foodstats' || key==='3cho:workout:settings'){
-        return JSON.stringify(Object.assign({}, JSON.parse(rv)||{}, JSON.parse(lv)||{}));
-      }
-    }
-    if(kind==='S'){
+      if(kind==='S'){
         const s = getS(); const meals = s.meals;
         let r = {}; try{ r = v==null ? {} : (JSON.parse(v)||{}); }catch(_){}
         Object.keys(s).forEach(k=>delete s[k]); Object.assign(s, r); s.meals = meals || {};
