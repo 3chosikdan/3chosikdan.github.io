@@ -3,7 +3,8 @@
    - 로그인하면 기록을 Firestore users/{uid}/d/{docId} 에 조각내 보관.
      docId: g|people · g|done · {pid}|S · {pid}|m|날짜(식단) · {pid}|w|날짜(운동) · {pid}|k|키
      날짜 단위로 쪼개서 사진이 붙어도 1MB 문서 한도에 안 걸리고, 바뀐 날만 올라감.
-   - 지운 건 v:null 로 남겨서(tombstone) 다른 기기도 지운 걸 알게 함.
+   - 이 기기에 없는 날짜는 서버에서 지우지 않는다. 서버에 남아 있으면 다시 받아 온다.
+   - 서버의 지움 표시(v:null)도, 이 기기에 기록이 남아 있으면 그 기록으로 다시 올린다.
    - 두 기기에서 같은 날을 동시에 고치면 합친다(식단·운동은 합집합).
 */
 (function(){
@@ -180,6 +181,23 @@ function mergeDoc(id, lv, rv){
 }
 
 /* ---------- 서버에서 받기 ---------- */
+async function readDocs(ids){
+  const { fs, db } = fb;
+  const out = {};
+  const col = fs.collection(db, 'users', uid, 'd');
+  for(let i=0;i<ids.length;i+=10){
+    const chunk = ids.slice(i, i+10);
+    const snap = await fs.getDocs(fs.query(col, fs.where(fs.documentId(), 'in', chunk)));
+    const seen = {};
+    snap.forEach(d=>{
+      seen[d.id] = 1;
+      const x = d.data()||{};
+      out[d.id] = (x.v==null) ? null : String(x.v);
+    });
+    chunk.forEach(id=>{ if(!seen[id]) out[id] = null; });
+  }
+  return out;
+}
 async function pull(){
   const { fs, db } = fb;
   const since = +(lsGet(K_PULL)||0);
@@ -198,6 +216,12 @@ async function pull(){
     const rv = remote[id], lv = (id in cur) ? cur[id] : null;
     const rh = hash(rv), lh = hash(lv);
     if(rh===lh){ if(rh==null) delete H[id]; else H[id] = rh; return; }
+    if(lv==null && rv!=null){   // 이 기기에 없는 날은 서버 것을 받는다
+      apply[id] = rv; n++; H[id] = rh; return;
+    }
+    if(rv==null && lv!=null){   // 서버 지움이 이 기기의 기록을 덮지 않게. 다시 올린다
+      delete H[id]; return;
+    }
     const base = (id in H) ? H[id] : null;
     if(base===lh){                 // 이 기기는 그대로 → 서버 것 받기
       apply[id] = rv; n++;
@@ -209,6 +233,17 @@ async function pull(){
       if(rh==null) delete H[id]; else H[id] = rh;
     }
   });
+  const gapIds = Object.keys(H).filter(id => H[id] && !(id in cur) && !(id in apply) && !(id in remote));
+  if(gapIds.length){
+    try{
+      const gaps = await readDocs(gapIds);
+      Object.keys(gaps).forEach(id=>{
+        const rv = gaps[id];
+        if(rv==null){ delete H[id]; return; }
+        apply[id] = rv; n++; H[id] = hash(rv);
+      });
+    }catch(e){ console.warn('[3cho cloud] gap', e); }
+  }
   if(n){ applying = true; applyDocs(apply); }
   setH(H); if(maxT) lsSet(K_PULL, String(maxT)); // 서버 시각 기준만 저장 (기기 시계 오차 무시)
   return n;
@@ -223,7 +258,7 @@ async function push(){
     const { fs, db } = fb;
     const cur = localDocs(); const H = getH(); const ops = [];
     Object.keys(cur).forEach(id=>{ const h = hash(cur[id]); if(H[id]!==h) ops.push([id, cur[id], h]); });
-    Object.keys(H).forEach(id=>{ if(!(id in cur)) ops.push([id, null, null]); });
+    // 로컬에 없다고 서버 문서를 지우지 않는다. 한 기기가 비어 있어도 다른 기기의 날이 남는다.
     for(let i=0;i<ops.length;i+=300){
       const b = fs.writeBatch(db);
       ops.slice(i,i+300).forEach(([id,v])=>{
