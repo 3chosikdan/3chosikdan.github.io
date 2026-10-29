@@ -5519,7 +5519,23 @@ function weakMuscleText(){
   return '이번 주 적게 한 부위: ' + w.map(x=>`<b>${x.m} ${x.n}세트</b>`).join(', ') + ` <span>· 다른 부위는 보통 ${w[0].med}세트</span>`;
 }
 /* ── 종목 이름 자동완성: 한국 헬스장 기구 브랜드 + 동작 ── */
-const GYM_BRANDS = ['이카리안','파나타','사이벡스','해머','라이프','매그넘','뉴텍','짐80','테크노짐','아스널','너틸러스','매트릭스','스타트랙','DHZ','프라임'];
+/* 브랜드별 실제 머신 목록은 gymdb.js (종목 추가 창을 열 때만 불러옴). 브랜드가 목록에 없으면 아래 공통 동작으로 붙여준다. */
+let GYM_BRANDS = ['해머','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','드랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
+function loadGymDb(){
+  if(window.GYM_DB || window._gymDbLoading) return;
+  window._gymDbLoading = true;
+  const sc = document.createElement('script');
+  sc.src = 'gymdb.js?v=1'; sc.async = true;
+  sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
+  document.head.appendChild(sc);
+}
+function gymBrandOf(q){
+  const db = window.GYM_DB || [];
+  let best = null, len = 0;
+  db.forEach(b=>[b.ko].concat(b.aliases||[]).forEach(a=>{ const n = _gn(a); if(n && q.indexOf(n)===0 && n.length>len){ best = { ko:b.ko, entry:b, n }; len = n.length; } }));
+  GYM_BRANDS.forEach(b=>{ const n = _gn(b); if(q.indexOf(n)===0 && n.length>len){ best = { ko:b, entry:null, n }; len = n.length; } });
+  return best;
+}
 const GYM_MOVES = [
   ['체스트 프레스','가슴','machine_compound'],['인클라인 머신 프레스','가슴','machine_compound'],['디클라인 프레스','가슴','machine_compound'],
   ['펙덱 플라이','가슴','machine_isolation'],['케이블 플라이','가슴','cable'],['케이블 크로스오버','가슴','cable'],
@@ -5554,15 +5570,28 @@ function exSuggest(){
   const raw = (document.getElementById('exName')||{}).value || '';
   const q = _gn(raw);
   if(!q){ box.innerHTML=''; return; }
-  let brand = GYM_BRANDS.find(b=>q.indexOf(_gn(b))===0) || '';
-  const rest = brand ? q.slice(_gn(brand).length) : q;
+  const br = gymBrandOf(q);
+  const rest = br ? q.slice(br.n.length) : q;
+  const hit = name => !rest || _gn(name).indexOf(rest)>=0;
+  const head = name => _gn(name).indexOf(rest)===0 ? 0 : 1;
   const out = [];
-  if(!brand){
-    GYM_BRANDS.filter(b=>_gn(b).indexOf(q)===0 && _gn(b)!==q).slice(0,4).forEach(b=>out.push({ label:b+' …', brandOnly:b }));
+  if(!br){
+    const db = window.GYM_DB || [];
+    GYM_BRANDS.filter(b=>{ const e = db.find(x=>x.ko===b); return [b].concat((e&&e.aliases)||[]).some(a=>_gn(a).indexOf(q)===0 && _gn(a)!==q); })
+      .slice(0,4).forEach(b=>out.push({ label:b+' …', brandOnly:b }));
   }
-  const moves = GYM_MOVES.filter(m=>!rest || _gn(m[0]).indexOf(rest)>=0)
-    .sort((a,b)=>(_gn(a[0]).indexOf(rest)===0?0:1)-(_gn(b[0]).indexOf(rest)===0?0:1));
-  moves.slice(0, brand ? 8 : 6).forEach(m=>out.push({ label:(brand?brand+' ':'')+m[0], m }));
+  if(br && br.entry && br.entry.machines && br.entry.machines.length){
+    br.entry.machines.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0,10)
+      .forEach(m=>out.push({ label:br.ko+' '+m[0], m:[m[0],m[1],m[2]] }));
+  } else {
+    GYM_MOVES.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0, br ? 8 : 6)
+      .forEach(m=>out.push({ label:(br?br.ko+' ':'')+m[0], m }));
+    if(!br && rest.length>=2){
+      (window.GYM_DB||[]).forEach(b=>(b.machines||[]).forEach(m=>{
+        if(out.length<10 && _gn(m[0]).indexOf(rest)>=0 && !GYM_MOVES.some(g=>g[0]===m[0])) out.push({ label:b.ko+' '+m[0], m:[m[0],m[1],m[2]] });
+      }));
+    }
+  }
   if(!out.length){ box.innerHTML=''; return; }
   window._exSug = out;
   box.innerHTML = out.map((o,i)=>`<button type="button" onclick="pickExSug(${i})">${o.label}${o.m?`<span>${o.m[1]}</span>`:''}</button>`).join('');
@@ -6235,6 +6264,7 @@ function openExSheet(id){
   document.getElementById('exTitle').textContent = ex ? '종목 수정' : '종목 추가';
   document.getElementById('exName').value = ex ? ex.name : '';
   const sg = document.getElementById('exSug'); if(sg) sg.innerHTML = '';
+  loadGymDb();
   document.getElementById('exMuscle').value = ex ? ex.muscle : '가슴';
   document.getElementById('exType').value = ex ? ex.type : 'machine_compound';
   document.getElementById('exSetup').value = ex ? (ex.setup||'') : '';
