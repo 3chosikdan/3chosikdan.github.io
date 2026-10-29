@@ -751,6 +751,7 @@
     <a href="calc.html">하루 권장 칼로리</a>
     <a href="micro.html">미세영양소</a>
     <a href="hypert.html">근비대 원리</a>
+    <a href="machines.html">머신 브랜드 사전</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
@@ -824,6 +825,7 @@
     <a href="calc.html">하루 권장 칼로리</a>
     <a href="micro.html">미세영양소</a>
     <a href="hypert.html">근비대 원리</a>
+    <a href="machines.html">머신 브랜드 사전</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
@@ -5520,12 +5522,12 @@ function weakMuscleText(){
 }
 /* ── 종목 이름 자동완성: 한국 헬스장 기구 브랜드 + 동작 ── */
 /* 브랜드별 실제 머신 목록은 gymdb.js (종목 추가 창을 열 때만 불러옴). 브랜드가 목록에 없으면 아래 공통 동작으로 붙여준다. */
-let GYM_BRANDS = ['해머','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','드랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
+let GYM_BRANDS = ['해머','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','디랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','플렉스','메덱스','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
 function loadGymDb(){
   if(window.GYM_DB || window._gymDbLoading) return;
   window._gymDbLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'gymdb.js?v=1'; sc.async = true;
+  sc.src = 'gymdb.js?v=2'; sc.async = true;
   sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
   document.head.appendChild(sc);
 }
@@ -5571,7 +5573,8 @@ function exSuggest(){
   const q = _gn(raw);
   if(!q){ box.innerHTML=''; return; }
   const br = gymBrandOf(q);
-  const rest = br ? q.slice(br.n.length) : q;
+  let rest = br ? q.slice(br.n.length) : q;
+  if(br && /^(어벤저|어벤져|avenger)$/.test(br.n)) rest = '어벤저'+rest;   // 라인 이름으로 친 경우 그 라인만
   const hit = name => !rest || _gn(name).indexOf(rest)>=0;
   const head = name => _gn(name).indexOf(rest)===0 ? 0 : 1;
   const out = [];
