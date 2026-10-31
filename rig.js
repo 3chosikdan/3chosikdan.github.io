@@ -170,7 +170,7 @@ function rig2D(el, id, opts){
 function rig3D(el, id, opts){
   opts = opts||{}; const THREE = window.THREE; if(!THREE) return null;
   const mov = opts.move; const dark = !!opts.dark;
-  const w = el.clientWidth || 320, h = Math.round(w*0.8);
+  const w = el.clientWidth || 320, h = el.clientHeight || Math.round(w*0.8);
   const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1)); renderer.setSize(w,h);
   el.innerHTML=''; el.appendChild(renderer.domElement); renderer.domElement.style.touchAction='none';
