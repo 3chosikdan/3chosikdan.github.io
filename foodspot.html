@@ -357,6 +357,7 @@
   .faq[open] > summary.faq-head { margin-bottom:4px; }
   html.dark .faq > summary.faq-head { background:#1c1c1e; color:#e5e5ea; }
   .wk-card ~ .wk-card .wk-plain-hint { display:none; }
+  .wk-how { display:inline-block; font-size:12px; font-weight:700; color:#007aff; text-decoration:none; margin:2px 0 4px; }
   .wk-target { display:block; width:100%; text-align:left; margin:8px 0 4px; padding:10px 12px; border:none; border-radius:12px; background:#eafaf0; color:#0a8f3c; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.45; }
   .wk-target b { color:#111; }
   .wk-target span { display:block; font-size:11.5px; font-weight:600; color:#3c7a52; }
@@ -752,6 +753,7 @@
     <a href="micro.html">미세영양소</a>
     <a href="hypert.html">근비대 원리</a>
     <a href="machines.html">머신 브랜드 사전</a>
+    <a href="move.html">머신 사용법</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
@@ -826,6 +828,7 @@
     <a href="micro.html">미세영양소</a>
     <a href="hypert.html">근비대 원리</a>
     <a href="machines.html">머신 브랜드 사전</a>
+    <a href="move.html">머신 사용법</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
@@ -1164,6 +1167,7 @@
   <div class="flabel"><label for="exName">이름</label></div>
   <input class="txt-input" id="exName" aria-label="종목 이름" autocomplete="off" placeholder="예: 파나타 레그프레스 · 브랜드부터 쳐도 돼요" oninput="exSuggest()">
   <div class="ex-sug" id="exSug"></div>
+  <a href="move.html#mygym" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:#007aff;text-decoration:none;">★ 우리 헬스장 브랜드 고르기 ›</a>
   <div class="flabel">부위</div>
   <select class="txt-input" id="exMuscle" aria-label="부위">
     <option>가슴</option><option>등</option><option>어깨</option><option>이두</option><option>삼두</option>
@@ -1900,7 +1904,7 @@ function renderSyncBar(){
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
 
-const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'];
+const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings','3cho:mygym'];
 function peopleList(){ return loadStore('3cho:people', []); }
 function activePersonId(){
   const list = peopleList();
@@ -5527,10 +5531,11 @@ function loadGymDb(){
   if(window.GYM_DB || window._gymDbLoading) return;
   window._gymDbLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'gymdb.js?v=2'; sc.async = true;
+  sc.src = 'gymdb.js?v=3'; sc.async = true;
   sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
   document.head.appendChild(sc);
 }
+function myGymBrands(){ try{ const v = JSON.parse(localStorage.getItem('3cho:mygym')||'{}'); return Array.isArray(v.brands) ? v.brands : []; }catch(_){ return []; } }
 function gymBrandOf(q){
   const db = window.GYM_DB || [];
   let best = null, len = 0;
@@ -5587,6 +5592,12 @@ function exSuggest(){
     br.entry.machines.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0,10)
       .forEach(m=>out.push({ label:br.ko+' '+m[0], m:[m[0],m[1],m[2]] }));
   } else {
+    const mine = myGymBrands();
+    if(!br && mine.length && rest.length>=1){   // 우리 헬스장 브랜드 머신 먼저
+      (window.GYM_DB||[]).filter(b=>mine.indexOf(b.ko)>=0).forEach(b=>(b.machines||[]).forEach(m=>{
+        if(out.length<6 && _gn(m[0]).indexOf(rest)>=0) out.push({ label:'★ '+b.ko+' '+m[0], name:b.ko+' '+m[0], m:[m[0],m[1],m[2]] });
+      }));
+    }
     GYM_MOVES.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0, br ? 8 : 6)
       .forEach(m=>out.push({ label:(br?br.ko+' ':'')+m[0], m }));
     if(!br && rest.length>=2){
@@ -5603,7 +5614,7 @@ function pickExSug(i){
   const o = (window._exSug||[])[i]; if(!o) return;
   const inp = document.getElementById('exName');
   if(o.brandOnly){ inp.value = o.brandOnly+' '; inp.focus(); exSuggest(); return; }
-  inp.value = o.label;
+  inp.value = o.name || o.label;
   const mu = document.getElementById('exMuscle'), ty = document.getElementById('exType');
   if(mu) mu.value = o.m[1];
   if(ty) ty.value = o.m[2];
@@ -5929,6 +5940,7 @@ function workCardHtml(exId, day, light){
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
+    <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim().replace(/[<>"]/g,'') || '이 날 세팅 없음 · 탭해서 적기'}</button>
     ${(()=>{ if(!showTop) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
       return (tg ? `<button type="button" class="wk-target" onclick="useTarget('${sid}')">🎯 오늘 목표 <b>${tg.w}${ul} × ${tg.r}회</b><span>지난번 ${tg.last.w}×${tg.last.r} · ${tg.why}${tg.setupDiff?' · 세팅이 달라 참고만':''}</span></button>` : '')
