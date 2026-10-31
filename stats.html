@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>사용 숫자 | 3초식단</title>
+<style>
+  :root { --bg:#fff; --fg:#1c1c1e; --sub:#8e8e93; --line:#e5e5ea; --card:#f2f2f7; --acc:#30d158; }
+  @media (prefers-color-scheme: dark){ :root { --bg:#000; --fg:#f2f2f7; --sub:#8e8e93; --line:#2c2c2e; --card:#1c1c1e; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:16px; margin:26px 0 8px; }
+  .sub { color:var(--sub); font-size:13px; margin:0; }
+  .kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+  .kpi div { background:var(--card); border-radius:14px; padding:12px 10px; }
+  .kpi b { display:block; font-size:22px; } .kpi span { font-size:12px; color:var(--sub); }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { padding:8px 4px; border-bottom:1px solid var(--line); text-align:right; }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:var(--sub); font-weight:600; font-size:12px; }
+  .bar { height:6px; background:var(--acc); border-radius:3px; margin-top:4px; }
+  .seg { display:flex; gap:6px; margin-top:10px; }
+  .seg button { border:none; background:var(--card); color:var(--fg); border-radius:10px; padding:7px 12px; font-weight:700; cursor:pointer; }
+  .seg button.on { background:var(--fg); color:var(--bg); }
+  .err { background:#fff1f0; color:#a8071a; padding:12px; border-radius:12px; font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>머신 사용법 숫자</h1>
+  <p class="sub">페이지 열림은 같은 사람이 같은 날 여러 번 열어도 한 번만 셉니다. 개인 정보는 없고 개수만 모읍니다.</p>
+  <div class="seg" id="seg"><button data-r="7" class="on">7일</button><button data-r="30">30일</button><button data-r="all">전체</button></div>
+  <div class="kpi" id="kpi"></div>
+  <h2>머신 유형별</h2>
+  <table id="tbl"></table>
+  <h2>날짜별</h2>
+  <table id="days"></table>
+</main>
+<script src="moves.js?v=2"></script>
+<script>
+(function(){
+const BASE = 'https://firestore.googleapis.com/v1/projects/chosikdan/databases/(default)/documents/stats?pageSize=300&key=AIzaSyD17qEFamnJnI6QareudsE6_Cy7hoQ7THg';
+const NAME = {}; (window.MOVES||[]).forEach(m=>NAME[m.id]=m.name); NAME.hub='사용법 첫 화면'; NAME.etc='분류 안 된 종목';
+const num = v=>v ? Number(v.integerValue||v.doubleValue||0) : 0;
+function flat(fields){ // {v:{mapValue:{fields:{id:{integerValue}}}}} → {v:{id:n}}
+  const o = {}; Object.keys(fields||{}).forEach(k=>{ const m = fields[k].mapValue; o[k] = {}; if(m && m.fields) Object.keys(m.fields).forEach(i=>o[k][i]=num(m.fields[i])); });
+  return o;
+}
+let docs = [];
+function add(acc, d){ ['v','d3','bad','set'].forEach(k=>{ acc[k] = acc[k]||{}; Object.keys(d[k]||{}).forEach(i=>acc[k][i]=(acc[k][i]||0)+d[k][i]); }); return acc; }
+const sum = o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
+function draw(range){
+  let pick;
+  if(range==='all'){ const a = docs.find(d=>d.id==='all'); pick = a ? [a] : []; }
+  else {
+    const n = Number(range); const cut = new Date(Date.now()+9*3600e3 - (n-1)*864e5).toISOString().slice(0,10).replace(/-/g,'');
+    pick = docs.filter(d=>/^d\d{8}$/.test(d.id) && d.id.slice(1)>=cut);
+  }
+  const acc = pick.reduce((a,d)=>add(a,d.data), {});
+  document.getElementById('kpi').innerHTML = [['v','페이지 열림'],['d3','3D 보기'],['bad','실수 보기'],['set','세팅 저장']]
+    .map(([k,l])=>`<div><b>${sum(acc[k])}</b><span>${l}</span></div>`).join('');
+  const ids = new Set(); ['v','d3','bad','set'].forEach(k=>Object.keys(acc[k]||{}).forEach(i=>ids.add(i)));
+  const rows = [...ids].map(i=>({ i, v:(acc.v||{})[i]||0, d3:(acc.d3||{})[i]||0, bad:(acc.bad||{})[i]||0, set:(acc.set||{})[i]||0 }))
+    .sort((a,b)=>(b.v+b.set)-(a.v+a.set));
+  const max = Math.max(1, ...rows.map(r=>r.v));
+  document.getElementById('tbl').innerHTML = '<tr><th>유형</th><th>열림</th><th>3D</th><th>실수</th><th>세팅</th></tr>' +
+    (rows.length ? rows.map(r=>`<tr><td>${NAME[r.i]||r.i}${(window.MOVES||[]).some(m=>m.id===r.i&&m.rig)?' <small style="color:var(--acc)">●3D</small>':''}<div class="bar" style="width:${Math.round(r.v/max*100)}%"></div></td><td>${r.v}</td><td>${r.d3}</td><td>${r.bad}</td><td>${r.set}</td></tr>`).join('')
+      : '<tr><td colspan="5" style="text-align:center;color:var(--sub)">아직 숫자가 없어요</td></tr>');
+  const ds = docs.filter(d=>/^d\d{8}$/.test(d.id)).sort((a,b)=>b.id<a.id?-1:1).slice(0, range==='all'?60:Number(range));
+  document.getElementById('days').innerHTML = '<tr><th>날짜</th><th>열림</th><th>3D</th><th>실수</th><th>세팅</th></tr>' +
+    ds.map(d=>`<tr><td>${d.id.slice(1,5)}.${d.id.slice(5,7)}.${d.id.slice(7)}</td><td>${sum(d.data.v)}</td><td>${sum(d.data.d3)}</td><td>${sum(d.data.bad)}</td><td>${sum(d.data.set)}</td></tr>`).join('');
+}
+document.getElementById('seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on', x===b)); draw(b.dataset.r);
+});
+fetch(BASE).then(r=>r.json()).then(j=>{
+  if(j.error) throw new Error(j.error.message||'읽기 실패');
+  docs = (j.documents||[]).map(d=>({ id:d.name.split('/').pop(), data:flat(d.fields) }));
+  draw('7');
+}).catch(e=>{ document.getElementById('kpi').outerHTML = `<p class="err">숫자를 못 읽었어요: ${String(e.message).replace(/</g,'&lt;')}<br>Firestore 규칙에 stats 읽기 허용이 들어갔는지 확인해 주세요.</p>`; });
+})();
+</script>
+</body>
+</html>

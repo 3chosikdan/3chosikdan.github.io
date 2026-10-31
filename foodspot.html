@@ -357,6 +357,14 @@
   .faq[open] > summary.faq-head { margin-bottom:4px; }
   html.dark .faq > summary.faq-head { background:#1c1c1e; color:#e5e5ea; }
   .wk-card ~ .wk-card .wk-plain-hint { display:none; }
+  .sf-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .sf-row .sf-l { flex:1; font-size:14px; font-weight:700; }
+  .sf-row button { width:40px; height:40px; border:none; border-radius:12px; background:#f2f2f7; font-size:20px; font-weight:700; color:#1c1c1e; cursor:pointer; }
+  .sf-row input { width:64px; height:40px; text-align:center; border:1px solid #e5e5ea; border-radius:12px; font-size:17px; font-weight:800; background:#fff; color:#1c1c1e; }
+  html.dark .sf-row button { background:#2c2c2e; color:#f2f2f7; }
+  html.dark .sf-row input { background:#1c1c1e; border-color:#3a3a3c; color:#f2f2f7; }
+  .sf-chk { display:flex; align-items:center; gap:8px; margin-top:14px; font-size:13px; color:#636366; }
+  .sf-last { font-size:12px; color:#8e8e93; margin:4px 0 0; }
   .wk-how { display:inline-block; font-size:12px; font-weight:700; color:#007aff; text-decoration:none; margin:2px 0 4px; }
   .wk-target { display:block; width:100%; text-align:left; margin:8px 0 4px; padding:10px 12px; border:none; border-radius:12px; background:#eafaf0; color:#0a8f3c; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.45; }
   .wk-target b { color:#111; }
@@ -1186,6 +1194,19 @@
   <p id="exSetupHist" style="font-size:12px;color:#8e8e93;line-height:1.5;margin:6px 0 0;white-space:pre-wrap;">여기 값은 다음 기본 세팅입니다. 지난 날 기록은 바뀌지 않습니다.</p>
   <button class="save-btn" style="margin-top:14px;" onclick="saveExSheet()">저장</button>
   <button type="button" class="rec-del hidden" id="exDelBtn" onclick="delExFromSheet()">종목 삭제</button>
+</div>
+
+<div class="sheet" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="setTitle">기구 세팅</h3>
+  <p class="sf-last" id="sfLast"></p>
+  <div id="sfRows"></div>
+  <div class="flabel"><label for="sfMemo">메모</label></div>
+  <input class="txt-input" id="sfMemo" autocomplete="off" placeholder="예: 3번 머신, 손잡이 안쪽" aria-label="세팅 메모">
+  <label class="sf-chk"><input type="checkbox" id="sfDefault" checked> 다음에도 이 세팅으로 시작</label>
+  <button class="save-btn" style="margin-top:14px;" onclick="saveSetSheet()">저장</button>
+  <a id="sfHow" href="move.html" style="display:block;text-align:center;margin-top:12px;font-size:13px;font-weight:700;color:#007aff;text-decoration:none;">이 머신 세팅법 보기 ›</a>
 </div>
 
 <div class="sheet" id="rouSheet" role="dialog" aria-modal="true" aria-labelledby="rouTitle">
@@ -3944,6 +3965,8 @@ function closeSheet(){
   if(rs) rs.classList.remove('show');
   const ws = document.getElementById('whySheet');
   if(ws) ws.classList.remove('show');
+  const ss = document.getElementById('setSheet');
+  if(ss) ss.classList.remove('show');
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -5941,7 +5964,7 @@ function workCardHtml(exId, day, light){
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
     <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
-    <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim().replace(/[<>"]/g,'') || '이 날 세팅 없음 · 탭해서 적기'}</button>
+    <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? '⚙ '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : '⚙ 세팅 번호 적기 (시트·패드)'}</button>
     ${(()=>{ if(!showTop) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
       return (tg ? `<button type="button" class="wk-target" onclick="useTarget('${sid}')">🎯 오늘 목표 <b>${tg.w}${ul} × ${tg.r}회</b><span>지난번 ${tg.last.w}×${tg.last.r} · ${tg.why}${tg.setupDiff?' · 세팅이 달라 참고만':''}</span></button>` : '')
         + `<div class="wk-feed" id="feed_${sid}">${feederText(base, unit)}</div>`; })()}
@@ -6256,20 +6279,79 @@ function onTopW(exId, val){
   const h = document.getElementById('boHint_'+exId);
   if(h) h.textContent = w+' × '+backoffPct()+'% → '+bo+uLabel(unit)+' · '+(unit==='lb'?'5lb':'2.5kg')+' 반올림 · 고칠 수 있어요';
 }
+/* ── 기구 세팅: 동작 유형별 칸(시트·패드…)을 숫자로 톡톡 ── */
+function loadMoves(cb){
+  if(window.MOVES){ cb&&cb(); return; }
+  const sc = document.createElement('script'); sc.src = 'moves.js?v=2'; sc.async = true;
+  sc.onload = ()=>{ cb&&cb(); }; sc.onerror = ()=>{ cb&&cb(); };
+  document.head.appendChild(sc);
+}
+function statHit(f){ // 익명 사용 집계(개수만). 실패해도 조용히.
+  try{
+    if(!/3cho\.kr$|github\.io$/.test(location.hostname)) return;
+    const d = new Date(Date.now()+9*3600e3).toISOString().slice(0,10).replace(/-/g,'');
+    const P = 'projects/chosikdan/databases/(default)/documents/stats/';
+    const tr = [{ fieldPath:f, increment:{ integerValue:'1' } }];
+    const w = n=>({ update:{ name:P+n, fields:{} }, updateMask:{ fieldPaths:[] }, updateTransforms:tr });
+    fetch('https://firestore.googleapis.com/v1/projects/chosikdan/databases/(default)/documents:commit?key=AIzaSyD17qEFamnJnI6QareudsE6_Cy7hoQ7THg',
+      { method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:JSON.stringify({ writes:[w('all'), w('d'+d)] }) }).catch(()=>{});
+  }catch(_){}
+}
+const SF_GENERIC = ['시트','등패드','손잡이'];
+let _sf = null;
+function parseSetup(str, fields){
+  const vals = {}; const rest = [];
+  String(str||'').split(/\s*·\s*/).forEach(part=>{
+    part = part.trim(); if(!part) return;
+    const f = fields.find(l=>part.indexOf(l+' ')===0 || part===l);
+    if(f && !(f in vals)) vals[f] = part.slice(f.length).trim(); else rest.push(part);
+  });
+  return { vals, memo: rest.join(' · ') };
+}
 function editSetup(exId){
   const { day, e, ex } = ensureEnt(exId);
-  const cur = String(e.setupUsed||'');
-  const v = prompt('이 날의 기구 세팅. 다른 날은 바뀌지 않습니다.', cur);
-  if(v==null) return;
-  e.setupUsed = v.trim();
+  loadMoves(()=>{
+    const mv = (window.moveOf && ex) ? window.moveOf(ex.name) : null;
+    const fields = (mv && mv.sf) || SF_GENERIC;
+    const cur = String(e.setupUsed||'');
+    const p = parseSetup(cur, fields);
+    _sf = { exId, fields, type: mv ? mv.id : '' };
+    document.getElementById('setTitle').textContent = (ex ? ex.name : '기구') + ' 세팅';
+    const last = String((ex&&ex.setup)||'').trim();
+    document.getElementById('sfLast').textContent = last ? '기본 세팅: '+last : '번호를 적어두면 다음에 바로 맞출 수 있어요. 빈 칸은 저장 안 돼요.';
+    document.getElementById('sfRows').innerHTML = fields.map((l,i)=>`<div class="sf-row"><span class="sf-l">${l}</span>
+      <button type="button" onclick="sfStep(${i},-1)" aria-label="${l} 내리기">−</button>
+      <input id="sf_${i}" inputmode="decimal" autocomplete="off" aria-label="${l}" value="${String(p.vals[l]||'').replace(/"/g,'&quot;')}">
+      <button type="button" onclick="sfStep(${i},1)" aria-label="${l} 올리기">+</button></div>`).join('');
+    document.getElementById('sfMemo').value = p.memo;
+    document.getElementById('sfDefault').checked = true;
+    const how = document.getElementById('sfHow'); if(how) how.href = 'move.html?n='+encodeURIComponent(ex?ex.name:'');
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('setSheet').classList.add('show');
+  });
+}
+function sfStep(i, d){
+  const el = document.getElementById('sf_'+i); if(!el) return;
+  const n = parseFloat(el.value);
+  el.value = isNaN(n) ? (d>0 ? 1 : '') : Math.max(0, n+d);
+}
+function saveSetSheet(){
+  if(!_sf) return closeSheet();
+  const parts = [];
+  _sf.fields.forEach((l,i)=>{ const v = String((document.getElementById('sf_'+i)||{}).value||'').trim(); if(v) parts.push(l+' '+v); });
+  const memo = document.getElementById('sfMemo').value.trim(); if(memo) parts.push(memo);
+  const v = parts.join(' · ');
+  const { day, e } = ensureEnt(_sf.exId);
+  e.setupUsed = v;
   putTodayLog(day);
-  if(ex && v.trim() && v.trim()!==String(ex.setup||'')){
-    if(confirm('다음부터 이 종목의 기본 세팅만 이 값으로 바꿀까요?\n지난 날 기록은 그대로입니다.')){
-      const list = loadStore(WK.ex, []);
-      const x = list.find(a=>a.id===exId);
-      if(x){ x.setup = v.trim(); saveStore(WK.ex, list); }
-    }
+  if(document.getElementById('sfDefault').checked){
+    const list = loadStore(WK.ex, []);
+    const x = list.find(a=>a.id===_sf.exId);
+    if(x && String(x.setup||'')!==v){ x.setup = v; saveStore(WK.ex, list); }
   }
+  if(v) statHit('set.'+(_sf.type||'etc'));
+  _sf = null;
+  closeSheet();
   renderWork();
 }
 let _exEditId = null;

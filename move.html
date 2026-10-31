@@ -47,6 +47,9 @@
   .dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
   ol.set { margin:0 0 0 20px; font-size:14px; line-height:1.65; }
   ol.set li { margin-bottom:6px; }
+  .myset { margin-top:10px; background:#eaf6ee; color:#14532d; border-radius:12px; padding:11px 14px; font-size:13.5px; line-height:1.55; }
+  .myset b { font-weight:800; }
+  html.dark .myset { background:#123321; color:#bfe9cc; }
   .cue { background:#f2f2f7; border-radius:12px; padding:12px 14px; font-size:13.5px; line-height:1.6; }
   .ox { display:flex; flex-direction:column; gap:8px; }
   .ox div { border-radius:12px; padding:11px 14px; font-size:13.5px; line-height:1.55; }
@@ -82,7 +85,7 @@
 <div class="top"><a class="wm" href="./">3초식단<span>.</span></a><span><a class="sub" href="move.html">사용법 전체</a> · <a class="sub" href="machines.html">머신 사전</a></span></div>
 <main id="app"></main>
 <p class="foot">일반적인 운동 정보이며 의학적 조언이 아닙니다. 통증이 있으면 멈추고 전문가와 상의하세요. 동작 그림은 특정 브랜드 제품이 아닌 같은 계열 머신의 공통 궤적입니다.</p>
-<script src="moves.js?v=1"></script>
+<script src="moves.js?v=2"></script>
 <script src="gymdb.js?v=3"></script>
 <script src="rig.js?v=2"></script>
 <script>
@@ -97,6 +100,24 @@ const MYKEY = '3cho:mygym';
 function myGym(){ try{ const v = JSON.parse(localStorage.getItem(MYKEY)||'{}'); return Array.isArray(v.brands) ? v.brands : []; }catch(_){ return []; } }
 function setMyGym(list){ try{ localStorage.setItem(MYKEY, JSON.stringify({ brands:list, at:Date.now() })); }catch(_){} }
 window.toggleGym = function(b){ const L = myGym(); const i = L.indexOf(b); if(i>=0) L.splice(i,1); else L.push(b); setMyGym(L); render(); };
+/* ---------- 익명 사용 집계(개수만) ---------- */
+function statHit(f){
+  try{
+    if(!/3cho\.kr$|github\.io$/.test(location.hostname)) return;
+    if(/^v\./.test(f)){ const k='3cho:st:'+f; if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }
+    const d = new Date(Date.now()+9*3600e3).toISOString().slice(0,10).replace(/-/g,'');
+    const P = 'projects/chosikdan/databases/(default)/documents/stats/';
+    const tr = [{ fieldPath:f, increment:{ integerValue:'1' } }];
+    const w = n=>({ update:{ name:P+n, fields:{} }, updateMask:{ fieldPaths:[] }, updateTransforms:tr });
+    fetch('https://firestore.googleapis.com/v1/projects/chosikdan/databases/(default)/documents:commit?key=AIzaSyD17qEFamnJnI6QareudsE6_Cy7hoQ7THg',
+      { method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:JSON.stringify({ writes:[w('all'), w('d'+d)] }) }).catch(()=>{});
+  }catch(_){}
+}
+function mySetupFor(name){
+  if(!name) return null;
+  try{ const n = String(name).replace(/\s+/g,''); const L = JSON.parse(localStorage.getItem('3cho:workout:exercises')||'[]')||[];
+    return L.find(x=>x && String(x.name||'').replace(/\s+/g,'')===n) || null; }catch(_){ return null; }
+}
 /* ---------- 근육 지도 ---------- */
 function muscleSVG(side, p, s){
   const col = id=> p.indexOf(id)>=0 ? '#30d158' : s.indexOf(id)>=0 ? '#a8e6b8' : (dark?'#2c2c2e':'#e5e5ea');
@@ -137,8 +158,8 @@ function startAnim(mv){
   const cap = $('#cap'); if(cap) cap.innerHTML = mode==='bad'
     ? `<b>✗ ${esc(mv.x[0][0])}</b><br>→ ${esc(mv.x[0][1])}` : `<b>✓ ${esc(mv.cue[0])}</b>`;
 }
-window.setMode = function(m){ mode = m; document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on', b.dataset.m===m)); startAnim(window._mv); };
-window.go3d = function(){
+window.setMode = function(m){ if(m==='bad' && window._mv) statHit('bad.'+window._mv.id); mode = m; document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on', b.dataset.m===m)); startAnim(window._mv); };
+window.go3d = function(){ if(window._mv) statHit('d3.'+window._mv.id);
   const btn = $('#btn3d');
   if(view3d){ view3d = false; btn.textContent = '3D로 돌려보기'; $('#hint3d').classList.add('hide'); startAnim(window._mv); return; }
   const done = ()=>{ view3d = true; btn.textContent = '2D로 보기'; $('#hint3d').classList.remove('hide'); startAnim(window._mv); };
@@ -149,7 +170,7 @@ window.go3d = function(){
   document.head.appendChild(sc);
 };
 /* ---------- 화면 ---------- */
-function hub(){
+function hub(){ statHit('v.hub');
   document.title = '머신 사용법 — 세팅·근육·실수 체크 | 3초식단';
   const mine = myGym();
   let h = `<h1>머신 사용법</h1><p class="lead">머신 이름을 치면 세팅 방법, 쓰이는 근육, 자주 하는 실수를 보여줍니다. <span class="badge">동작</span> 표시가 있는 10가지는 애니메이션과 3D도 있어요.</p>
@@ -171,6 +192,7 @@ function hub(){
 }
 function detail(mv, asked){
   window._mv = mv;
+  statHit('v.'+mv.id);
   document.title = `${mv.name} 사용법 — 세팅·근육·흔한 실수 | 3초식단`;
   const mine = myGym();
   let h = `<h1>${esc(mv.name)}</h1>`;
@@ -186,6 +208,9 @@ function detail(mv, asked){
   h += `<h2>쓰이는 근육</h2><div class="mm">${muscleSVG('front', mv.p, mv.s)}${muscleSVG('back', mv.p, mv.s)}</div>
     <div class="legend"><span class="dot" style="background:#30d158"></span>주동근 ${mv.p.map(x=>MUS[x]).join(', ')}${mv.s.length?` &nbsp; <span class="dot" style="background:#a8e6b8"></span>보조 ${mv.s.map(x=>MUS[x]).join(', ')}`:''}</div>`;
   h += `<h2>세팅 체크</h2><ol class="set">${mv.set.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
+  { const ex = mySetupFor(asked); const sf = mv.sf || [];
+    if(ex && String(ex.setup||'').trim()) h += `<div class="myset">내 세팅 · <b>${esc(ex.setup)}</b><br><span style="opacity:.75">운동 탭 카드의 ⚙에서 바꿀 수 있어요.</span></div>`;
+    else if(sf.length) h += `<div class="myset">이 머신은 <b>${sf.map(esc).join(' · ')}</b> 번호만 기억하면 돼요. 맞춘 번호를 운동 탭 카드의 ⚙에 적어두면 다음엔 바로 앉아요.</div>`; }
   h += `<h2>이렇게 움직여요</h2><div class="cue">${mv.cue.map(x=>'· '+esc(x)).join('<br>')}</div>`;
   h += `<h2>자주 하는 실수</h2><div class="ox">${mv.x.map(x=>`<div class="x"><b>✗</b> ${esc(x[0])}</div><div class="o"><b>✓</b> ${esc(x[1])}</div>`).join('')}</div>`;
   // 대체 머신
