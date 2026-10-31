@@ -365,6 +365,21 @@
   html.dark .sf-row input { background:#1c1c1e; border-color:#3a3a3c; color:#f2f2f7; }
   .sf-chk { display:flex; align-items:center; gap:8px; margin-top:14px; font-size:13px; color:#636366; }
   .sf-last { font-size:12px; color:#8e8e93; margin:4px 0 0; }
+  .prot-quick { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+  .prot-quick button { border:none; background:#f2f2f7; color:#111; border-radius:100px; padding:10px 14px; font-size:14px; font-weight:800; cursor:pointer; }
+  html.dark .prot-quick button { background:#2c2c2e; color:#f2f2f7; }
+  .mode-link { display:block; margin:10px auto 0; border:none; background:none; color:#8e8e93; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .wk-quick { background:#f2f2f7; border-radius:14px; padding:10px 12px; margin:4px 0 10px; }
+  .wk-quick .q-last { font-size:12.5px; color:#636366; font-weight:600; }
+  .wk-quick .q-btns { display:flex; gap:8px; margin-top:8px; }
+  .wk-quick button { flex:1; border:none; border-radius:12px; padding:11px 8px; font-size:14px; font-weight:800; cursor:pointer; line-height:1.25; }
+  .wk-quick .q-same { background:#111; color:#fff; }
+  .wk-quick .q-up { background:#e9f9ee; color:#0a7a33; }
+  .wk-quick .q-up span { display:block; font-size:11px; font-weight:600; opacity:.8; margin-top:2px; }
+  html.dark .wk-quick { background:#1c1c1e; } html.dark .wk-quick .q-last { color:#aeaeb2; }
+  html.dark .wk-quick .q-same { background:#f2f2f7; color:#111; } html.dark .wk-quick .q-up { background:#123321; color:#6ee39a; }
+  .wk-view { margin:14px 0 4px; }
+  .wk-view button { font-size:13px; }
   .wk-how { display:inline-block; font-size:12px; font-weight:700; color:#007aff; text-decoration:none; margin:2px 0 4px; }
   .wk-target { display:block; width:100%; text-align:left; margin:8px 0 4px; padding:10px 12px; border:none; border-radius:12px; background:#eafaf0; color:#0a8f3c; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; line-height:1.45; }
   .wk-target b { color:#111; }
@@ -729,6 +744,8 @@
         <div class="kcal-sub" id="kcalGoalLabel"></div>
       </div>
     </div>
+    <div id="protQuick" class="prot-quick hidden"></div>
+    <button type="button" class="mode-link" id="protToggle" onclick="toggleProtMode()"></button>
     <div id="adjPill" class="hidden" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:100px;background:#f2f2f7;font-size:12px;font-weight:700;color:#3a3a3c;"></div>
     <div class="macros">
       <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('p')" aria-label="단백질 목표">단백질</button><div class="mbar"><div id="barP"></div></div><button type="button" class="mval mval-btn" id="valP" onclick="editDayMacro('p')" aria-label="단백질 목표 바꾸기"></button></div>
@@ -2466,6 +2483,32 @@ function cartCommit(){
                    : `✓ ${label}\n${tot.k}kcal · 단 ${ts.p}g`, true);
 }
 function dismissTip(){ S.tipHome = 1; save(); render(); }
+/* ── 단백질만 세기: 칼로리 계산이 귀찮은 사람용. 새로 온 사람은 이걸로 시작 ── */
+function protMode(){
+  if(S.protOnly == null){
+    S.protOnly = Object.values(S.meals||{}).flat().length === 0;
+    try{ save(); }catch(_){}
+  }
+  return !!S.protOnly;
+}
+function toggleProtMode(){ S.protOnly = !protMode(); save(); render(); toast(S.protOnly ? '단백질만 셉니다. 음식 검색도 그대로 돼요' : '칼로리·탄단지를 다시 봅니다'); }
+function quickProtein(g){
+  if(g == null){
+    const v = prompt('방금 먹은 단백질 몇 g? (예: 닭가슴살 1팩 ≈ 23g)', '');
+    if(v == null) return; g = parseFloat(v);
+    if(!(g>0) || g>300){ toast('숫자로 적어주세요'); return; }
+  }
+  g = Math.round(g);
+  const k = viewDate, isPast = k !== todayKey();
+  S.meals[k] = S.meals[k] || [];
+  const row = { id: Date.now()+'-'+Math.random().toString(36).slice(2,7), name:'단백질 '+g+'g', kcal:g*4, p:g, c:0, f:0,
+    slot: autoSlot(), time: isPast ? '소급 기록' : nowTime(), skipLearn:true, quickP:true };
+  S.meals[k].push(row);
+  save(); render();
+  lastUndo = { date:k, ids:[row.id] };
+  const ts = todaySum(), pT = proteinTarget();
+  toast(ts.p >= pT ? `✓ +${g}g · 단백질 달성 🎉` : `✓ +${g}g · ${Math.round(ts.p)} / ${pT}g`, true);
+}
 function dismissShareBanner(){ S.shareWk = weekKeyOf(); save(); render(); }
 function weekKeyOf(){ const d=new Date(); return keyOffset(-((d.getDay()+6)%7)); } // 이번 주 월요일
 function quickFirstLog(name){ // 첫 방문 아하 모먼트: 원탭 기록 (담기 없이 바로 확정)
@@ -3597,10 +3640,25 @@ function render(){
   const goal = t.goalKcal;
   const vMeals = S.meals[viewDate]||[];
   const s = vMeals.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
-  document.getElementById('kcalNow').textContent = s.k.toLocaleString();
-  document.getElementById('kcalGoalLabel').textContent = `/ ${goal.toLocaleString()} kcal`;
-  document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.k/goal,1));
-  document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : (isDark() ? '#f2f2f7' : '#111');
+  s.p = Math.round(s.p);
+  const prot = protMode();
+  if(prot){
+    document.getElementById('kcalNow').textContent = s.p;
+    document.getElementById('kcalGoalLabel').textContent = `/ ${t.p} g 단백질`;
+    document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.p/t.p,1));
+    document.getElementById('ringFg').style.stroke = s.p>=t.p ? '#30d158' : (isDark() ? '#f2f2f7' : '#111');
+  } else {
+    document.getElementById('kcalNow').textContent = s.k.toLocaleString();
+    document.getElementById('kcalGoalLabel').textContent = `/ ${goal.toLocaleString()} kcal`;
+    document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.k/goal,1));
+    document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : (isDark() ? '#f2f2f7' : '#111');
+  }
+  const pq = document.getElementById('protQuick');
+  if(pq){ pq.classList.toggle('hidden', !prot);
+    pq.innerHTML = prot ? [20,25,30,40].map(g=>`<button type="button" onclick="quickProtein(${g})">+${g}g</button>`).join('') + `<button type="button" onclick="quickProtein()">직접</button>` : ''; }
+  const ptg = document.getElementById('protToggle');
+  if(ptg) ptg.textContent = prot ? '칼로리·탄수·지방도 보기 ›' : '단백질만 셀래요 ›';
+  const mac = document.querySelector('#dietChrome .macros'); if(mac) mac.classList.toggle('hidden', prot);
 
   // 과식 자동 차감을 숨기지 않고 보여준다 (신뢰 포인트)
   const adjP = document.getElementById('adjPill');
@@ -3613,6 +3671,7 @@ function render(){
     adjP.classList.remove('hidden');
     adjP.textContent = `오늘 P${t.p} C${t.c} F${t.f} · ${goal.toLocaleString()} kcal`;
   } else adjP.classList.add('hidden');
+  if(prot) adjP.classList.add('hidden');
 
   // macro bars
   const setBar=(bar,val,now,target,goodColor)=>{
@@ -3632,7 +3691,7 @@ function render(){
   if(condRow) condRow.innerHTML = Object.entries(condList).map(([k,label])=>
     `<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
 
-  document.getElementById('reco').innerHTML = !isToday ? '' : recommend();
+  document.getElementById('reco').innerHTML = (!isToday || prot) ? '' : recommend();
   const recoEl = document.getElementById('reco');
   if(recoEl) recoEl.classList.toggle('hidden', !recoEl.innerHTML.trim());
   renderFill(isToday, s);
@@ -5907,12 +5966,16 @@ function renderWork(){
       <button type="button" class="helper-link" style="margin-top:10px;" onclick="clearTodayWork()">오늘 적은 중량만 지우기</button>
     </details>`;
   if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
-  html += `<div class="wk-row" style="margin:14px 0 2px;">
+  if(wkSettings().detail) html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
       <input class="wk-in" id="sleepIn" inputmode="decimal" aria-label="어제 수면 시간" value="${day.sleepHours!=null?day.sleepHours:''}" onchange="setSleepHours(this.value)" placeholder="5">
       <span class="wk-unit">시간</span>
     </div>
     <div class="wk-hint">${day.sleepHours!=null && day.sleepHours<6 ? '6시간 미만 — 정체면 무게보다 잠을 먼저 봅니다.' : '어제 몇 시간 잤는지. 정체가 나오면 원인 추적에 씁니다.'}</div>`;
+  { const det = !!wkSettings().detail;
+    html += `<div class="wk-view seg" role="group" aria-label="기록 칸 보기">
+      <button type="button" class="${det?'':'on'}" onclick="setWkDetail(false)">간단히</button>
+      <button type="button" class="${det?'on':''}" onclick="setWkDetail(true)">자세히 (RIR·피더·비교)</button></div>`; }
   const light = !!(rou && rou.light && day.routineId);
   if(light) html += `<div class="wk-banner" style="margin-top:12px;">저강도 세션 — 탑세트 없이 백오프만. 고강도는 주 4회로 제한합니다.</div>`;
   const ids = (day.routineId && rou) ? (rou.exerciseIds||[]) : (day.entries||[]).map(e=>e.exerciseId);
@@ -5942,6 +6005,50 @@ function renderWork(){
   setSegOnly('boPctSeg', String(pct));
   armDurTick();
 }
+/* ── 지난번 그대로 한 번에: 헬스장에서 키패드 안 열게 ── */
+function entDone(e){ return !!e && !e.carried && ((e.top&&e.top.weight>0)||(e.backoff&&e.backoff.weight>0)||(e.sets||[]).some(x=>x&&x.weight>0)); }
+function quickRowHtml(exId, ex, unit, ent, sid, light){
+  if(entDone(ent)) return '';
+  const prev = lastSet(exId); if(!prev) return '';
+  const pu = uLabel(exUnitOf(ex, prev));
+  const bits = [];
+  if(!light && !ent.noTop && prev.top && prev.top.weight>0) bits.push(`탑 ${prev.top.weight}×${prev.top.reps||'?'}`);
+  if(!ent.noBo && prev.backoff && prev.backoff.weight>0) bits.push(`백오프 ${prev.backoff.weight}×${prev.backoff.reps||'?'}`);
+  const ps = (prev.sets||[]).filter(x=>x&&x.weight>0); if(ps.length) bits.push(`세트 ${ps.length}개`);
+  if(!bits.length) return '';
+  const tg = (!light && !ent.noTop) ? topTarget(exId, ex, unit, ent) : null;
+  const tgDiff = tg && !(+tg.w===+prev.top.weight && +tg.r===+prev.top.reps);
+  const ul = uLabel(unit);
+  return `<div class="wk-quick">
+    <div class="q-last">지난번 · ${bits.join(' · ')}${pu}${tg&&tg.setupDiff?' · 세팅 달랐음':''}</div>
+    <div class="q-btns"><button type="button" class="q-same" onclick="sameAsLast('${sid}')">✓ 똑같이 했어요</button>${tgDiff ? `<button type="button" class="q-up" onclick="hitTarget('${sid}')">🎯 ${tg.w}${ul}×${tg.r} 성공<span>${tg.why}</span></button>` : ''}</div>
+  </div>`;
+}
+function sameAsLast(exId){
+  const { day, e } = ensureEnt(exId);
+  const prev = lastSet(exId); if(!prev) return;
+  const c = copySet(exId, prev);
+  ['unit','top','backoff','sets','noTop','noBo'].forEach(k=>{ e[k] = c[k]; });
+  if(!String(e.setupUsed||'').trim()) e.setupUsed = c.setupUsed;
+  e.carried = false;
+  putTodayLog(day); renderWork();
+  toast('✓ 지난번과 똑같이 적었어요');
+}
+function hitTarget(exId){
+  const { day, e, ex } = ensureEnt(exId);
+  const unit = exUnitOf(ex, e);
+  const tg = topTarget(exId, ex, unit, e); if(!tg) return;
+  const prev = lastSet(exId) || {};
+  const pb = prev.backoff || {};
+  e.unit = unit;
+  e.top = { weight:tg.w, reps:tg.r, rir:(e.top&&e.top.rir!=null&&e.top.rir!=='')?e.top.rir:effectiveRir(ex) };
+  if(!e.noBo) e.backoff = { weight:calcBackoff(tg.w, unit), reps:pb.reps!=null?pb.reps:'', rir:pb.rir!=null?pb.rir:0 };
+  if(!(e.sets&&e.sets.length) && prev.sets) e.sets = prev.sets.map(x=>({ weight:x.weight, reps:x.reps, rir:x.rir!=null?x.rir:'' }));
+  e.carried = false;
+  putTodayLog(day); renderWork();
+  toast('🎯 탑세트 '+tg.w+uLabel(unit)+'×'+tg.r+' 기록 · 백오프는 자동 계산');
+}
+function setWkDetail(on){ const s = wkSettings(); s.detail = !!on; saveStore(WK.settings, s); renderWork(); }
 function workCardHtml(exId, day, light){
   const exercises = loadStore(WK.ex, []);
   const ex = exercises.find(x=>x.id===exId);
@@ -5954,7 +6061,9 @@ function workCardHtml(exId, day, light){
   const sid = ex.id.replace(/['"]/g,'');
   const showTop = !light && !ent.noTop;
   const showBo = !ent.noBo;
-  return `<div class="wk-card" id="wkc_${sid}">
+  const easy = !wkSettings().detail;
+  const rirT = (inp)=> easy ? `<span class="wk-unit">회</span>` : `<span class="wk-unit">회 RIR</span>${inp}`;
+  return `<div class="wk-card${easy?' easy':''}" id="wkc_${sid}">
     <h4><span class="nm">${ex.name}${stag}</span>
       <span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
         <button type="button" class="${unit==='kg'?'on':''}" onclick="setExUnit('${sid}','kg')">kg</button>
@@ -5965,30 +6074,28 @@ function workCardHtml(exId, day, light){
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
     <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? '⚙ '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : '⚙ 세팅 번호 적기 (시트·패드)'}</button>
-    ${(()=>{ if(!showTop) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
-      return (tg ? `<button type="button" class="wk-target" onclick="useTarget('${sid}')">🎯 오늘 목표 <b>${tg.w}${ul} × ${tg.r}회</b><span>지난번 ${tg.last.w}×${tg.last.r} · ${tg.why}${tg.setupDiff?' · 세팅이 달라 참고만':''}</span></button>` : '')
-        + `<div class="wk-feed" id="feed_${sid}">${feederText(base, unit)}</div>`; })()}
+    ${quickRowHtml(exId, ex, unit, ent, sid, light)}
+    ${(()=>{ if(!showTop || easy) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
+      return `<div class="wk-feed" id="feed_${sid}">${feederText(base, unit)}</div>`; })()}
     ${showTop ? `<div>
       <div class="wk-row"><span class="wk-lab">탑세트</span>
         <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 탑세트 중량" value="${ent.top&&ent.top.weight!=null?ent.top.weight:''}" oninput="onTopW('${sid}',this.value)">
         <span class="wk-unit">${ul} ×</span>
         <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 횟수" value="${ent.top&&ent.top.reps!=null?ent.top.reps:''}" oninput="patchEnt('${sid}','top','reps',this.value)">
-        <span class="wk-unit">회 RIR</span>
-        <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">
+        ${rirT(`<input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">`)}
         <button type="button" class="helper-link" onclick="setBlock('${sid}','top',true)">빼기</button>
       </div>
-      <div class="wk-hint">${topRepHint(ex)} · 자력만 · RIR 0~1 · 후 2분 30초~3분</div>
+      ${easy ? '' : `<div class="wk-hint">${topRepHint(ex)} · 자력만 · RIR 0~1 · 후 2분 30초~3분</div>`}
     </div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','top',false)">＋ 탑세트</button>`}
     ${showBo ? `<div class="wk-row"><span class="wk-lab">백오프</span>
       <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
       <span class="wk-unit">${ul} ×</span>
       <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 횟수" value="${ent.backoff&&ent.backoff.reps!=null?ent.backoff.reps:''}" oninput="patchEnt('${sid}','backoff','reps',this.value)">
-      <span class="wk-unit">회 RIR</span>
-      <input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:0}" oninput="patchEnt('${sid}','backoff','rir',this.value)">
+      ${rirT(`<input class="wk-in" inputmode="numeric" aria-label="${ex.name} 백오프 RIR" value="${ent.backoff&&ent.backoff.rir!=null?ent.backoff.rir:0}" oninput="patchEnt('${sid}','backoff','rir',this.value)">`)}
       <button type="button" class="helper-link" onclick="setBlock('${sid}','bo',true)">빼기</button>
     </div>
-    <div class="wk-hint" id="boHint_${sid}">${ent.carried?'지난 세션 숫자입니다. 오늘 바뀐 것만 고치세요. ':''}${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}${ul}` : ent.backoff.weight+ul) : `탑세트 × ${backoffPct()}% → ${ul==='lb'?'5lb':'2.5kg'} 반올림`}</div>
-    <div class="wk-prev">${cmp}</div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','bo',false)">＋ 백오프</button>`}
+    <div class="wk-hint${easy?' hidden':''}" id="boHint_${sid}">${ent.carried?'지난 세션 숫자입니다. 오늘 바뀐 것만 고치세요. ':''}${ent.backoff&&ent.backoff.weight ? ((ent.top&&ent.top.weight)? `${ent.top.weight} × ${backoffPct()}% → ${ent.backoff.weight}${ul}` : ent.backoff.weight+ul) : `탑세트 × ${backoffPct()}% → ${ul==='lb'?'5lb':'2.5kg'} 반올림`}</div>
+    <div class="wk-prev${easy?' hidden':''}">${cmp}</div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','bo',false)">＋ 백오프</button>`}
     ${(ent.sets||[]).map((s,i)=>`<div class="wk-row"><span class="wk-lab">세트 ${i+1}</span>
         <input class="wk-in" inputmode="decimal" aria-label="${ex.name} 세트 ${i+1} 중량" value="${s.weight!=null?s.weight:''}" oninput="patchPlain('${sid}',${i},'weight',this.value)">
         <span class="wk-unit">${ul} ×</span>
@@ -5997,8 +6104,8 @@ function workCardHtml(exId, day, light){
         <button type="button" class="helper-link" onclick="delPlain('${sid}',${i})">빼기</button>
       </div>`).join('')}
     <button type="button" class="helper-link" style="margin-top:6px;" onclick="addPlainSet('${sid}')">＋ 일반 세트</button>
-    <div class="wk-hint wk-plain-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
-    ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}
+    ${easy ? '' : `<div class="wk-hint wk-plain-hint">탑·백오프가 아니면 여기 적습니다. 탑이나 백오프는 비워 둬도 됩니다.</div>
+    ${sparkSvg(backoffHist(exId).slice(-6).map(x=>x.vol), 72, 20)}`}
   </div>`;
 }
 function setBlock(exId, which, off){
