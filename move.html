@@ -95,11 +95,6 @@ const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;
 const dark = document.documentElement.classList.contains('dark');
 const MUS = { chest:'가슴', frontdelt:'전면 어깨', sidedelt:'측면 어깨', reardelt:'후면 어깨', lats:'광배근', uppertrap:'승모·능형근', erector:'척추기립근', biceps:'이두', triceps:'삼두', forearm:'전완', abs:'복직근', obliques:'복사근', quads:'대퇴사두', hams:'햄스트링', glutes:'대둔근', glutemed:'중둔근', adductors:'내전근', calves:'종아리' };
 const GROUPS = ['가슴','등','어깨','이두','삼두','대퇴사두','햄스트링','둔근','내전','종아리','복부'];
-/* ---------- 우리 헬스장 ---------- */
-const MYKEY = '3cho:mygym';
-function myGym(){ try{ const v = JSON.parse(localStorage.getItem(MYKEY)||'{}'); return Array.isArray(v.brands) ? v.brands : []; }catch(_){ return []; } }
-function setMyGym(list){ try{ localStorage.setItem(MYKEY, JSON.stringify({ brands:list, at:Date.now() })); }catch(_){} }
-window.toggleGym = function(b){ const L = myGym(); const i = L.indexOf(b); if(i>=0) L.splice(i,1); else L.push(b); setMyGym(L); render(); };
 /* ---------- 익명 사용 집계(개수만) ---------- */
 function statHit(f){
   try{
@@ -172,15 +167,12 @@ window.go3d = function(){ if(window._mv) statHit('d3.'+window._mv.id);
 /* ---------- 화면 ---------- */
 function hub(){ statHit('v.hub');
   document.title = '머신 사용법 — 세팅·근육·실수 체크 | 3초식단';
-  const mine = myGym();
   let h = `<h1>머신 사용법</h1><p class="lead">머신 이름을 치면 세팅 방법, 쓰이는 근육, 자주 하는 실수를 보여줍니다. 모든 동작에 애니메이션과 3D가 있어요.</p>
   <input class="search" id="q" type="search" placeholder="머신 이름 (예: 파나타 슈퍼 하이로우, 펙덱)" aria-label="머신 이름" autocomplete="off">
   <div id="qr" class="note" style="margin-top:8px;"></div>`;
   GROUPS.forEach(g=>{ const L = MV.filter(m=>m.grp===g); if(!L.length) return;
     h += `<h2>${g}</h2><div class="grid">` + L.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}<small>머신 ${machinesOf(m.id).length}종</small></a>`).join('') + `</div>`; });
-  h += `<h2 id="mygym">우리 헬스장 브랜드</h2><p class="note">다니는 헬스장에 있는 브랜드를 고르면 대체 머신 목록과 운동 탭 종목 추가에서 먼저 보여요. 로그인하면 다른 기기에도 따라옵니다.</p>
-  <div class="chips">` + DB.map(b=>`<button type="button" class="star${mine.indexOf(b.ko)>=0?' on':''}" onclick="toggleGym('${esc(b.ko)}')">${mine.indexOf(b.ko)>=0?'★ ':'☆ '}${esc(b.ko)}</button>`).join('') + `</div>
-  <a class="cta" href="./">운동 탭에서 바로 기록하기</a>`;
+  h += `<a class="cta" href="./">운동 탭에서 바로 기록하기</a>`;
   $('#app').innerHTML = h;
   const q = $('#q'); q.addEventListener('input', ()=>{
     const v = q.value.trim(); const r = $('#qr');
@@ -194,7 +186,6 @@ function detail(mv, asked){
   window._mv = mv;
   statHit('v.'+mv.id);
   document.title = `${mv.name} 사용법 — 세팅·근육·흔한 실수 | 3초식단`;
-  const mine = myGym();
   let h = `<h1>${esc(mv.name)}</h1>`;
   if(asked) h += `<p class="note">'${esc(asked)}'은(는) <b>${esc(mv.name)}</b> 계열이에요. 브랜드가 달라도 세팅과 궤적 원리는 같아요.</p>`;
   h += `<p class="lead">주로 <b>${mv.p.map(x=>MUS[x]).join(' · ')}</b>${mv.s.length?`, 보조로 ${mv.s.map(x=>MUS[x]).join(' · ')}`:''}을(를) 씁니다.</p>`;
@@ -216,9 +207,9 @@ function detail(mv, asked){
   // 대체 머신
   const alts = machinesOf(mv.id); const by = {};
   alts.forEach(a=>{ (by[a.brand] = by[a.brand]||[]).push(a.name); });
-  const brands = Object.keys(by).sort((a,b)=>(mine.indexOf(b)>=0)-(mine.indexOf(a)>=0));
-  h += `<h2>같은 계열 머신 · ${alts.length}종</h2><p class="note">원하는 머신이 없으면 같은 계열로 바꿔도 됩니다. ☆를 누르면 '우리 헬스장'으로 표시돼 위로 올라와요.</p>`;
-  h += brands.map(b=>`<div class="alt${mine.indexOf(b)>=0?' mine':''}"><div class="bh"><span>${esc(b)}${mine.indexOf(b)>=0?' <span class="badge">우리 헬스장</span>':''}</span><button type="button" class="star${mine.indexOf(b)>=0?' on':''}" onclick="toggleGym('${esc(b)}')">${mine.indexOf(b)>=0?'★':'☆'}</button></div><div class="ms">${by[b].map(esc).join(' · ')}</div></div>`).join('');
+  const brands = Object.keys(by);
+  h += `<h2>같은 계열 머신 · ${alts.length}종</h2><p class="note">원하는 머신이 없으면 같은 계열로 바꿔도 됩니다.</p>`;
+  h += brands.map(b=>`<div class="alt"><div class="bh"><span>${esc(b)}</span></div><div class="ms">${by[b].map(esc).join(' · ')}</div></div>`).join('');
   // 같은 부위 다른 동작
   const sib = MV.filter(m=>m.grp===mv.grp && m.id!==mv.id);
   if(sib.length) h += `<h2>${mv.grp} 다른 동작</h2><div class="grid">${sib.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}</a>`).join('')}</div>`;

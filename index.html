@@ -1192,7 +1192,6 @@
   <div class="flabel"><label for="exName">이름</label></div>
   <input class="txt-input" id="exName" aria-label="종목 이름" autocomplete="off" placeholder="예: 파나타 레그프레스 · 브랜드부터 쳐도 돼요" oninput="exSuggest()">
   <div class="ex-sug" id="exSug"></div>
-  <a href="move.html#mygym" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:#007aff;text-decoration:none;">★ 우리 헬스장 브랜드 고르기 ›</a>
   <div class="flabel">부위</div>
   <select class="txt-input" id="exMuscle" aria-label="부위">
     <option>가슴</option><option>등</option><option>어깨</option><option>이두</option><option>삼두</option>
@@ -1942,7 +1941,7 @@ function renderSyncBar(){
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
 
-const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings','3cho:mygym'];
+const LIVE_KEYS = ['foodspot','3cho:foodstats','3cho:myfoods','3cho:workout:exercises','3cho:workout:log','3cho:workout:routines','3cho:workout:deload','3cho:workout:settings'];
 function peopleList(){ return loadStore('3cho:people', []); }
 function activePersonId(){
   const list = peopleList();
@@ -5617,7 +5616,6 @@ function loadGymDb(){
   sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
   document.head.appendChild(sc);
 }
-function myGymBrands(){ try{ const v = JSON.parse(localStorage.getItem('3cho:mygym')||'{}'); return Array.isArray(v.brands) ? v.brands : []; }catch(_){ return []; } }
 function gymBrandOf(q){
   const db = window.GYM_DB || [];
   let best = null, len = 0;
@@ -5674,12 +5672,6 @@ function exSuggest(){
     br.entry.machines.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0,10)
       .forEach(m=>out.push({ label:br.ko+' '+m[0], m:[m[0],m[1],m[2]] }));
   } else {
-    const mine = myGymBrands();
-    if(!br && mine.length && rest.length>=1){   // 우리 헬스장 브랜드 머신 먼저
-      (window.GYM_DB||[]).filter(b=>mine.indexOf(b.ko)>=0).forEach(b=>(b.machines||[]).forEach(m=>{
-        if(out.length<6 && _gn(m[0]).indexOf(rest)>=0) out.push({ label:'★ '+b.ko+' '+m[0], name:b.ko+' '+m[0], m:[m[0],m[1],m[2]] });
-      }));
-    }
     GYM_MOVES.filter(m=>hit(m[0])).sort((a,b)=>head(a[0])-head(b[0])).slice(0, br ? 8 : 6)
       .forEach(m=>out.push({ label:(br?br.ko+' ':'')+m[0], m }));
     if(!br && rest.length>=2){
