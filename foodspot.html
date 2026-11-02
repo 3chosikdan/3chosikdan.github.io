@@ -6389,7 +6389,7 @@ function onTopW(exId, val){
 /* ── 기구 세팅: 동작 유형별 칸(시트·패드…)을 숫자로 톡톡 ── */
 function loadMoves(cb){
   if(window.MOVES){ cb&&cb(); return; }
-  const sc = document.createElement('script'); sc.src = 'moves.js?v=2'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'moves.js?v=3'; sc.async = true;
   sc.onload = ()=>{ cb&&cb(); }; sc.onerror = ()=>{ cb&&cb(); };
   document.head.appendChild(sc);
 }

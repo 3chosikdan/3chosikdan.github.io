@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>머신 사용법 — 세팅·근육·실수 체크 | 3초식단</title>
-<meta name="description" content="헬스장 머신 32가지 동작의 세팅 방법, 쓰이는 근육, 자주 하는 실수. 랫풀다운·하이로우·레그프레스 등 10종은 동작 애니메이션과 3D로 확인.">
+<meta name="description" content="헬스장 머신 32가지 동작의 세팅 방법, 쓰이는 근육, 자주 하는 실수. 32가지 모두 동작 애니메이션과 3D로 확인.">
 <link rel="canonical" href="https://3cho.kr/move.html">
 <meta property="og:title" content="머신 사용법 — 3초식단">
 <meta property="og:description" content="세팅·근육·흔한 실수를 머신마다 한 장으로. 동작 애니메이션과 3D까지.">
@@ -85,9 +85,9 @@
 <div class="top"><a class="wm" href="./">3초식단<span>.</span></a><span><a class="sub" href="move.html">사용법 전체</a> · <a class="sub" href="machines.html">머신 사전</a></span></div>
 <main id="app"></main>
 <p class="foot">일반적인 운동 정보이며 의학적 조언이 아닙니다. 통증이 있으면 멈추고 전문가와 상의하세요. 동작 그림은 특정 브랜드 제품이 아닌 같은 계열 머신의 공통 궤적입니다.</p>
-<script src="moves.js?v=2"></script>
+<script src="moves.js?v=3"></script>
 <script src="gymdb.js?v=3"></script>
-<script src="rig.js?v=2"></script>
+<script src="rig.js?v=3"></script>
 <script>
 (function(){
 const $ = s=>document.querySelector(s);
@@ -156,7 +156,7 @@ function startAnim(mv){
   if(view3d && window.THREE){ anim = RIG.rig3D(el, mv.id, { move:mv, bad:mode==='bad', dark }); }
   else anim = RIG.rig2D(el, mv.id, { move:mv, bad:mode==='bad', dark });
   const cap = $('#cap'); if(cap) cap.innerHTML = mode==='bad'
-    ? `<b>✗ ${esc(mv.x[0][0])}</b><br>→ ${esc(mv.x[0][1])}` : `<b>✓ ${esc(mv.cue[0])}</b>`;
+    ? (()=>{ const bx = mv.x[RIG.badIdx ? RIG.badIdx(mv.id) : 0] || mv.x[0]; return `<b>✗ ${esc(bx[0])}</b><br>→ ${esc(bx[1])}`; })() : `<b>✓ ${esc(mv.cue[0])}</b>`;
 }
 window.setMode = function(m){ if(m==='bad' && window._mv) statHit('bad.'+window._mv.id); mode = m; document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on', b.dataset.m===m)); startAnim(window._mv); };
 window.go3d = function(){ if(window._mv) statHit('d3.'+window._mv.id);
@@ -173,11 +173,11 @@ window.go3d = function(){ if(window._mv) statHit('d3.'+window._mv.id);
 function hub(){ statHit('v.hub');
   document.title = '머신 사용법 — 세팅·근육·실수 체크 | 3초식단';
   const mine = myGym();
-  let h = `<h1>머신 사용법</h1><p class="lead">머신 이름을 치면 세팅 방법, 쓰이는 근육, 자주 하는 실수를 보여줍니다. <span class="badge">동작</span> 표시가 있는 10가지는 애니메이션과 3D도 있어요.</p>
+  let h = `<h1>머신 사용법</h1><p class="lead">머신 이름을 치면 세팅 방법, 쓰이는 근육, 자주 하는 실수를 보여줍니다. 모든 동작에 애니메이션과 3D가 있어요.</p>
   <input class="search" id="q" type="search" placeholder="머신 이름 (예: 파나타 슈퍼 하이로우, 펙덱)" aria-label="머신 이름" autocomplete="off">
   <div id="qr" class="note" style="margin-top:8px;"></div>`;
   GROUPS.forEach(g=>{ const L = MV.filter(m=>m.grp===g); if(!L.length) return;
-    h += `<h2>${g}</h2><div class="grid">` + L.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}${m.rig?'<span class="badge">동작</span>':''}<small>머신 ${machinesOf(m.id).length}종</small></a>`).join('') + `</div>`; });
+    h += `<h2>${g}</h2><div class="grid">` + L.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}<small>머신 ${machinesOf(m.id).length}종</small></a>`).join('') + `</div>`; });
   h += `<h2 id="mygym">우리 헬스장 브랜드</h2><p class="note">다니는 헬스장에 있는 브랜드를 고르면 대체 머신 목록과 운동 탭 종목 추가에서 먼저 보여요. 로그인하면 다른 기기에도 따라옵니다.</p>
   <div class="chips">` + DB.map(b=>`<button type="button" class="star${mine.indexOf(b.ko)>=0?' on':''}" onclick="toggleGym('${esc(b.ko)}')">${mine.indexOf(b.ko)>=0?'★ ':'☆ '}${esc(b.ko)}</button>`).join('') + `</div>
   <a class="cta" href="./">운동 탭에서 바로 기록하기</a>`;
@@ -221,7 +221,7 @@ function detail(mv, asked){
   h += brands.map(b=>`<div class="alt${mine.indexOf(b)>=0?' mine':''}"><div class="bh"><span>${esc(b)}${mine.indexOf(b)>=0?' <span class="badge">우리 헬스장</span>':''}</span><button type="button" class="star${mine.indexOf(b)>=0?' on':''}" onclick="toggleGym('${esc(b)}')">${mine.indexOf(b)>=0?'★':'☆'}</button></div><div class="ms">${by[b].map(esc).join(' · ')}</div></div>`).join('');
   // 같은 부위 다른 동작
   const sib = MV.filter(m=>m.grp===mv.grp && m.id!==mv.id);
-  if(sib.length) h += `<h2>${mv.grp} 다른 동작</h2><div class="grid">${sib.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}${m.rig?'<span class="badge">동작</span>':''}</a>`).join('')}</div>`;
+  if(sib.length) h += `<h2>${mv.grp} 다른 동작</h2><div class="grid">${sib.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}</a>`).join('')}</div>`;
   h += `<a class="cta" href="./">이 동작 기록하러 가기 → 운동 탭</a>`;
   $('#app').innerHTML = h;
   startAnim(mv);
