@@ -36,6 +36,15 @@ function hash(s){ // cyrb53
   return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)+':'+s.length;
 }
 function say(m){ try{ toast(m); }catch(_){} }
+// 새로고침이 1분 안에 3번 넘게 반복되면 멈춘다(동기화 꼬임으로 화면이 깜빡이는 걸 막는 안전장치)
+function safeReload(ms){
+  try{
+    const now = Date.now(); let a = JSON.parse(sessionStorage.getItem('3cho:cloud:reloads')||'[]').filter(t=>now-t<60000);
+    if(a.length>=3){ console.warn('[3cho cloud] reload loop stopped'); try{ if(typeof render==='function') render(); if(typeof renderWork==='function') renderWork(); }catch(_){} return; }
+    a.push(now); sessionStorage.setItem('3cho:cloud:reloads', JSON.stringify(a));
+  }catch(_){}
+  setTimeout(()=>location.reload(), ms||0);
+}
 
 async function loadFb(){
   if(fb) return fb;
@@ -233,7 +242,13 @@ async function pull(){
       if(rh==null) delete H[id]; else H[id] = rh;
     }
   });
-  const gapIds = Object.keys(H).filter(id => H[id] && !(id in cur) && !(id in apply) && !(id in remote));
+  // 이 기기가 더 이상 쓰지 않는 조각(빠진 기능의 설정 등)은 받아도 자리가 없어 매번 다시 받게 된다 → 기억에서 지운다
+  const keys = (typeof LIVE_KEYS!=='undefined') ? LIVE_KEYS : [];
+  const usable = id => { const p = id.split('|'); if(p[1]!=='k') return true; return keys.indexOf(p.slice(2).join('|')) >= 0; };
+  Object.keys(H).forEach(id=>{ if(!usable(id)) delete H[id]; });
+  Object.keys(remote).forEach(id=>{ if(!usable(id)) delete apply[id]; });
+  n = Object.keys(apply).length;
+  const gapIds = Object.keys(H).filter(id => H[id] && usable(id) && !(id in cur) && !(id in apply) && !(id in remote));
   if(gapIds.length){
     try{
       const gaps = await readDocs(gapIds);
@@ -297,7 +312,7 @@ async function afterLogin(user, fresh){
   ready = true;
   await push();
   if(fresh) say(n ? '구글 계정의 기록을 불러왔습니다' : '이제 기록이 구글 계정에 저장됩니다');
-  if(n){ setTimeout(()=>location.reload(), fresh ? 700 : 0); }
+  if(n){ safeReload(fresh ? 700 : 0); }
 }
 
 async function cloudLogin(){
@@ -332,7 +347,7 @@ async function cloudSyncNow(){
   try{
     const n = await pull();
     await push();
-    if(n){ say('다른 기기 기록을 불러왔습니다'); setTimeout(()=>location.reload(), 500); }
+    if(n){ say('다른 기기 기록을 불러왔습니다'); safeReload(500); }
     else say('서버와 맞춰져 있습니다');
   }catch(e){ console.warn(e); say('서버 연결이 안 됩니다'); }
 }
@@ -384,7 +399,7 @@ document.addEventListener('visibilitychange', ()=>{
   if(!uid || !ready) return;
   if(document.visibilityState==='hidden'){ clearTimeout(timer); push(); }
   else {
-    pull().then(n=>{ if(n){ say('다른 기기 기록을 불러왔습니다'); setTimeout(()=>location.reload(), 500); } else push(); })
+    pull().then(n=>{ if(n){ say('다른 기기 기록을 불러왔습니다'); safeReload(500); } else push(); })
           .catch(()=>{});
   }
 });
