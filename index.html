@@ -69,19 +69,21 @@
   .hero { text-align:center; padding:8px 0 4px; }
   .ring-wrap { position:relative; width:190px; height:190px; margin:0 auto; }
   .ring-wrap svg { transform:rotate(-90deg); }
+  .ks2 { display:block; font-size:11.5px; font-weight:600; color:#aeaeb2; margin-top:3px; }
   .ring-center { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; }
   .kcal-big { font-size:46px; font-weight:800; letter-spacing:-2px; line-height:1; }
   .kcal-sub { font-size:13px; color:#8e8e93; margin-top:5px; font-weight:500; }
 
   /* macro bars */
   .macros { margin:16px 24px 0; display:flex; flex-direction:column; gap:10px; text-align:left; }
-  .mrow { display:flex; align-items:center; gap:10px; }
+  .mc-row { display:flex; align-items:center; gap:10px; }
   .mname { width:44px; font-size:12px; font-weight:800; }
   .mname-btn { background:none; border:none; padding:0; margin:0; font:inherit; font-size:12px; font-weight:800; width:44px; text-align:left; cursor:pointer; color:inherit; }
   .mbar { flex:1; height:9px; background:#f2f2f7; border-radius:6px; overflow:hidden; }
-  .mbar div { height:100%; width:0; border-radius:6px; transition:width .4s; background:#111; }
-  .mval { width:88px; text-align:right; font-size:12px; font-weight:600; color:#8e8e93; }
-  .mval-btn { background:none; border:none; padding:0; margin:0; font:inherit; cursor:pointer; color:#8e8e93; }
+  .mbar div { height:100%; width:0; border-radius:6px; transition:width .4s, background .3s; background:#111; }
+  .mval { width:92px; text-align:right; font-size:12px; font-weight:600; color:#8e8e93; white-space:nowrap; }
+  .mval b { color:#111; font-weight:800; } html.dark .mval b { color:#f2f2f7; }
+  .mval-btn { background:none; border:none; padding:0; margin:0; font:inherit; font-size:13px; font-weight:600; cursor:pointer; color:#8e8e93; }
 
   .reco {
     margin:14px 24px 0; padding:12px 16px; background:#f2f2f7; border-radius:14px;
@@ -97,6 +99,21 @@
     display:flex; justify-content:space-between; align-items:baseline;
     margin:14px 0 2px; padding-bottom:6px; border-bottom:2px solid #111;
   }
+  .slot-card { background:#fff; border:1px solid #ececf0; border-radius:18px; padding:12px 14px 4px; margin-bottom:10px; }
+  .slot-card .slot-head { margin:0; border-bottom:none; padding-bottom:4px; }
+  .slot-card .meal:last-child { border-bottom:none; }
+  .slot-card .meal .thumb { border-radius:12px; }
+  html.dark .slot-card { background:#1c1c1e; border-color:#2c2c2e; }
+  .sync-mini .sm-row { display:flex; align-items:center; gap:8px; }
+  .sync-mini .sm-row span { flex:1; font-size:12.5px; line-height:1.4; }
+  .sync-mini .sm-row button.on { white-space:nowrap; }
+  .sync-mini .sm-x { border:none; background:none; color:#c7c7cc; font-size:14px; cursor:pointer; padding:4px; }
+  .sync-mini details { margin-top:6px; } .sync-mini summary { font-size:11.5px; color:#8e8e93; cursor:pointer; font-weight:600; }
+  .yest-more { display:flex; flex-direction:column; gap:8px; margin:2px 0 6px; }
+  .yest-more button { text-align:left; border:1.5px dashed #d1d1d6; background:none; border-radius:16px; padding:11px 14px; cursor:pointer; color:#111; font-family:inherit; }
+  .yest-more b { display:block; font-size:14px; font-weight:800; }
+  .yest-more span { display:block; font-size:12px; color:#8e8e93; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  html.dark .yest-more button { border-color:#3a3a3c; color:#f2f2f7; }
   .slot-head:first-child { margin-top:0; }
   .slot-head .sn { font-size:15px; font-weight:800; }
   .slot-head .sk { font-size:13px; font-weight:700; color:#8e8e93; text-align:right; }
@@ -127,10 +144,10 @@
     font-size:11px; color:#c7c7cc; padding:6px; flex-shrink:0;
   }
   .set-save {
-    border:none; background:#eafaf0; color:#0a8f3c; font-size:11px; font-weight:800; cursor:pointer;
-    padding:4px 9px; border-radius:100px; margin-left:8px;
+    border:none; background:none; color:#aeaeb2; font-size:11.5px; font-weight:700; cursor:pointer;
+    padding:4px 6px; margin-left:4px;
   }
-  .set-save:active { background:#d4f2e0; }
+  .set-save:active { color:#0a8f3c; }
   .empty { text-align:center; color:#c7c7cc; font-size:15px; padding:28px 0; line-height:1.6; }
   .del-hint { font-size:11px; color:#c7c7cc; text-align:center; padding:8px 0 0; }
 
@@ -748,9 +765,9 @@
     <button type="button" class="mode-link" id="protToggle" onclick="toggleProtMode()"></button>
     <div id="adjPill" class="hidden" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:100px;background:#f2f2f7;font-size:12px;font-weight:700;color:#3a3a3c;"></div>
     <div class="macros">
-      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('p')" aria-label="단백질 목표">단백질</button><div class="mbar"><div id="barP"></div></div><button type="button" class="mval mval-btn" id="valP" onclick="editDayMacro('p')" aria-label="단백질 목표 바꾸기"></button></div>
-      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('c')" aria-label="탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><button type="button" class="mval mval-btn" id="valC" onclick="editDayMacro('c')" aria-label="탄수 목표 바꾸기"></button></div>
-      <div class="mrow"><button type="button" class="mname-btn" onclick="editDayMacro('f')" aria-label="지방 목표">지방</button><div class="mbar"><div id="barF"></div></div><button type="button" class="mval mval-btn" id="valF" onclick="editDayMacro('f')" aria-label="지방 목표 바꾸기"></button></div>
+      <div class="mc-row"><button type="button" class="mname-btn" onclick="editDayMacro('p')" aria-label="단백질 목표">단백질</button><div class="mbar"><div id="barP"></div></div><button type="button" class="mval mval-btn" id="valP" onclick="editDayMacro('p')" aria-label="단백질 목표 바꾸기"></button></div>
+      <div class="mc-row"><button type="button" class="mname-btn" onclick="editDayMacro('c')" aria-label="탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><button type="button" class="mval mval-btn" id="valC" onclick="editDayMacro('c')" aria-label="탄수 목표 바꾸기"></button></div>
+      <div class="mc-row"><button type="button" class="mname-btn" onclick="editDayMacro('f')" aria-label="지방 목표">지방</button><div class="mbar"><div id="barF"></div></div><button type="button" class="mval mval-btn" id="valF" onclick="editDayMacro('f')" aria-label="지방 목표 바꾸기"></button></div>
     </div>
     <div class="reco" id="reco"></div>
     <div id="fillBox" class="fill"></div>
@@ -1642,6 +1659,11 @@ const UNIT_G = {
 })();
 const EMOJI = {
   /* 구체적인 키가 먼저 — 위에서부터 순서대로 매칭됨 ("김밥"이 "밥"보다 앞) */
+  "단백질 ":"💪","훈제오리":"🍗","오리":"🍗","제육":"🥩","불고기":"🥩","스테이크":"🥩","등심":"🥩","안심":"🥩","목살":"🥩","족발":"🍖","보쌈":"🍖","곱창":"🍖","막창":"🍖",
+  "소시지":"🌭","비엔나":"🌭","베이컨":"🥓","햄":"🥓","치즈":"🧀","덮밥":"🍛","카레":"🍛","죽":"🥣","시리얼":"🥣","오트":"🥣","그래놀라":"🥣",
+  "연어":"🍣","참치":"🐟","고등어":"🐟","짜장":"🍜","짬뽕":"🍜","냉면":"🍜","쌀국수":"🍜","마라":"🌶","고구마":"🍠","감자":"🥔","옥수수":"🌽",
+  "견과":"🥜","아몬드":"🥜","땅콩":"🥜","호두":"🥜","귤":"🍊","오렌지":"🍊","딸기":"🍓","포도":"🍇","수박":"🍉","블루베리":"🫐","토마토":"🍅","브로콜리":"🥦","아보카도":"🥑","오이":"🥒","당근":"🥕",
+  "콜라":"🥤","사이다":"🥤","제로":"🥤","주스":"🧃","녹차":"🍵","와인":"🍷","막걸리":"🍶","아이스크림":"🍦","빙수":"🍧","두부":"🥢","볶음":"🍳","스크램블":"🍳","오믈렛":"🍳",
   "김밥":"🍙","주먹밥":"🍙","삼각김밥":"🍙","도시락":"🍱","떡볶이":"🌶","순대":"🌭","핫도그":"🌭","콘도그":"🌭",
   "만두":"🥟","교자":"🥟","딤섬":"🥟","돈까스":"🍱","까스":"🍱","우동":"🍜","라멘":"🍜","소바":"🍜","국수":"🍜",
   "새우":"🍤","튀김":"🍤","김치":"🥬","나물":"🥬","무침":"🥬","쌈":"🥬","조림":"🍲","구이":"🐟","생선":"🐟",
@@ -1928,15 +1950,15 @@ function renderSyncBar(){
     el.innerHTML = `<button type="button" class="cloud-line" onclick="cloudLogin()">다른 기기에 적은 기록이 있나요? <b>구글로 로그인해서 불러오기</b></button>`;
     return;
   }
-  el.innerHTML = `<div class="sync-bar">
-    <b>지금은 이 폰에만 저장됩니다.</b> 구글로 로그인하면 계정에 저장돼서 폰을 바꿔도 그대로입니다. ${backupAgoText()}.
-    <div class="sync-actions">
-      <button type="button" class="on" onclick="cloudLogin()">구글로 로그인</button>
+  el.innerHTML = `<div class="sync-bar sync-mini">
+    <div class="sm-row"><span>☁️ <b>이 폰에만 저장 중</b> · ${backupAgoText()}</span>
+      <button type="button" class="on" onclick="cloudLogin()">구글로 저장</button>
+      <button type="button" class="sm-x" aria-label="일주일 숨기기" onclick="S.syncHideUntil=Date.now()+7*86400000;save();render();">✕</button></div>
+    <details><summary>파일로 저장·불러오기</summary><div class="sync-actions">
       <button type="button" class="off" onclick="shareBackup()">파일로 저장</button>
       <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
       <button type="button" class="off" onclick="showLocalBackups()">이 폰 백업</button>
-      <button type="button" class="off" onclick="S.syncHideUntil=Date.now()+7*86400000;save();renderSyncBar();">일주일 숨기기</button>
-    </div>
+    </div></details>
   </div>`;
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
@@ -3642,16 +3664,20 @@ function render(){
   s.p = Math.round(s.p);
   const prot = protMode();
   if(prot){
-    document.getElementById('kcalNow').textContent = s.p;
-    document.getElementById('kcalGoalLabel').textContent = `/ ${t.p} g 단백질`;
+    const pl = t.p - s.p;
+    document.getElementById('kcalNow').textContent = pl>0 ? pl+'g' : '✓';
+    document.getElementById('kcalGoalLabel').innerHTML = pl>0 ? `단백질 남음<br><span class="ks2">${s.p} / ${t.p}g 먹음</span>` : `단백질 달성<br><span class="ks2">${s.p} / ${t.p}g</span>`;
     document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.p/t.p,1));
     document.getElementById('ringFg').style.stroke = s.p>=t.p ? '#30d158' : (isDark() ? '#f2f2f7' : '#111');
   } else {
-    document.getElementById('kcalNow').textContent = s.k.toLocaleString();
-    document.getElementById('kcalGoalLabel').textContent = `/ ${goal.toLocaleString()} kcal`;
+    const left = goal - s.k;
+    document.getElementById('kcalNow').textContent = left>=0 ? left.toLocaleString() : '+'+(-left).toLocaleString();
+    document.getElementById('kcalNow').style.color = left<0 ? '#ff3b30' : '';
+    document.getElementById('kcalGoalLabel').innerHTML = (left>=0 ? 'kcal 남음' : 'kcal 초과') + `<br><span class="ks2">${s.k.toLocaleString()} / ${goal.toLocaleString()} 먹음</span>`;
     document.getElementById('ringFg').style.strokeDashoffset = 515*(1-Math.min(s.k/goal,1));
     document.getElementById('ringFg').style.stroke = s.k>goal ? '#ff3b30' : (isDark() ? '#f2f2f7' : '#111');
   }
+  if(prot) document.getElementById('kcalNow').style.color = '';
   const pq = document.getElementById('protQuick');
   if(pq){ pq.classList.toggle('hidden', !prot);
     pq.innerHTML = prot ? [20,25,30,40].map(g=>`<button type="button" onclick="quickProtein(${g})">+${g}g</button>`).join('') + `<button type="button" onclick="quickProtein()">직접</button>` : ''; }
@@ -3673,15 +3699,17 @@ function render(){
   if(prot) adjP.classList.add('hidden');
 
   // macro bars
-  const setBar=(bar,val,now,target,goodColor)=>{
+  const setBar=(bar,val,now,target,color,isP)=>{
     const el=document.getElementById(bar), v=document.getElementById(val);
+    now = Math.round(now);
     el.style.width = Math.min(now/target*100,100)+'%';
-    el.style.background = now>=target ? goodColor : '#111';
-    v.textContent = `${now} / ${target} g`;
+    const over = !isP && now > target*1.05;
+    el.style.background = over ? '#ff3b30' : color;
+    v.innerHTML = (isP && now>=target ? '<span style="color:#30d158">✓ </span>' : '') + `<b style="color:${over?'#ff3b30':'inherit'}">${now}</b> / ${target}g`;
   };
-  setBar('barP','valP',s.p,t.p,'#30d158');
-  setBar('barC','valC',s.c,t.c,'#ff9500');
-  setBar('barF','valF',s.f,t.f,'#ff9500');
+  setBar('barP','valP',s.p,t.p,'#30d158',true);
+  setBar('barC','valC',s.c,t.c,'#ff9f0a');
+  setBar('barF','valF',s.f,t.f,'#ffcc00');
 
   // condition chips (여성 프로필이면 생리주기 추가) — 오늘만
   const curCond = S.condition[viewDate];
@@ -3757,6 +3785,11 @@ function render(){
     </div>`;
   } else tip.classList.add('hidden');
   renderSyncBar();
+  { // 원 위 안내는 한 번에 하나만 — 저장 안내 > 목표 설정 > 홈 화면·백업·리포트
+    const sbar = document.getElementById('syncBar');
+    if(sbar && sbar.innerHTML.trim()){ sb.classList.add('hidden'); tip.classList.add('hidden'); }
+    else if(!sb.classList.contains('hidden')) tip.classList.add('hidden');
+  }
 
   // diary (끼니별 그룹 — 커스텀 슬롯 포함, 선택 날짜 기준)
   const meals = vMeals;
@@ -3786,7 +3819,7 @@ function render(){
       const items = meals.filter(m=>(m.slot||'간식')===slot);
       if(!items.length) return;
       const t = items.reduce((a,m)=>({k:a.k+m.kcal, p:a.p+(m.p||0), c:a.c+(m.c||0), f:a.f+(m.f||0)}), {k:0,p:0,c:0,f:0});
-      html += `<div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')">세트로 저장</button></span><span class="sk">${t.k} kcal<small>${macroText(t.p,t.c,t.f)}</small></span></div>`;
+      html += `<div class="slot-card"><div class="slot-head"><span class="sn">${slot}<button class="set-save" onclick="saveSet('${slot.replace(/['"<>]/g,"")}')" aria-label="${slot} 세트로 저장">☆ 세트</button></span><span class="sk">${t.k} kcal<small>${macroText(t.p,t.c,t.f)}</small></span></div>`;
       html += items.map(m=>`
         <div class="meal" onclick="tapMeal('${m.id}')">
           <div class="thumb">${m.photo?`<img src="${m.photo}">`:emojiFor(m.name)}</div>
@@ -3794,8 +3827,16 @@ function render(){
           ${pendingDel===m.id
             ? `<div><button class="edit-btn" onclick="editMeal('${m.id}', event)">수정</button><button class="del-btn" onclick="deleteMeal('${m.id}', event)">삭제</button></div>`
             : `<div class="kcal">${m.est?'~':''}${m.kcal}</div>`}
-        </div>`).join('');
+        </div>`).join('') + `</div>`;
     });
+    // 어제 이 끼니 그대로 — 오늘 아직 안 적은 끼니만
+    if(isToday && yestMeals.length){
+      const marks = (S.replayed||{})[viewDate] || {};
+      const todaySlots = new Set(meals.map(m=>m.slot||'간식'));
+      const ys = [...new Set(yestMeals.map(m=>m.slot||'간식'))].filter(x=>!todaySlots.has(x) && !marks[x] && !marks['*']);
+      if(ys.length) html += `<div class="yest-more">${ys.map(x=>{ const it = yestMeals.filter(m=>(m.slot||'간식')===x); const k = it.reduce((a,m)=>a+m.kcal,0);
+        return `<button type="button" onclick="replayYesterday('${String(x).replace(/['"<>]/g,'')}')"><b>↺ 어제 ${x} 그대로</b><span>${it.map(m=>m.name).slice(0,3).join(', ')}${it.length>3?' 외':''} · ${k}kcal</span></button>`; }).join('')}</div>`;
+    }
     ml.innerHTML = html + `<div class="del-hint">기록을 탭하면 수정·삭제가 나와요</div>`;
   }
 
