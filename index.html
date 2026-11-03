@@ -144,6 +144,10 @@
   .set-x {
     font-size:11px; color:#c7c7cc; padding:6px; flex-shrink:0;
   }
+  .set-ed { color:#8e8e93; padding:6px 4px; }
+  .set-acts { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; margin-right:-4px; }
+  #setGrid .qn { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #setGrid .quick > div[style] { min-width:0; }
   .set-save {
     border:none; background:none; color:#aeaeb2; font-size:11.5px; font-weight:700; cursor:pointer;
     padding:4px 6px; margin-left:4px;
@@ -2870,6 +2874,17 @@ function logSet(name){
   renderCart(true);
   toast(`${name} ${items.length}개 담김 — 더 담거나 기록하세요`);
 }
+function renameSet(i, ev){
+  if(ev) ev.stopPropagation();
+  const names = Object.keys(S.sets); const old = names[i]; if(old==null) return;
+  const v = prompt('세트 이름', old); if(v==null) return;
+  const nm = v.replace(/['"<>]/g,'').trim().slice(0,20);
+  if(!nm || nm===old) return;
+  if(S.sets[nm]){ toast('이미 같은 이름의 세트가 있어요'); return; }
+  const next = {}; names.forEach(k=>{ next[k===old ? nm : k] = S.sets[k]; });   // 순서 그대로
+  S.sets = next; save(); renderSets(); hap(8);
+  toast(`'${nm}'(으)로 바꿨어요`);
+}
 function delSet(name, ev){
   if(ev) ev.stopPropagation();
   delete S.sets[name]; save(); renderSets();
@@ -2891,13 +2906,14 @@ function renderSets(){
     return;
   }
   wrap.classList.remove('hidden');
-  document.getElementById('setGrid').innerHTML = names.map(n=>{
+  document.getElementById('setGrid').innerHTML = names.map((n,i)=>{
     const items = S.sets[n];
     const t = items.reduce((a,x)=>({k:a.k+x.kcal, p:a.p+(x.p||0), c:a.c+(x.c||0), f:a.f+(x.f||0)}), {k:0,p:0,c:0,f:0});
     return `<button class="quick" onclick="logSet('${n.replace(/['"<>]/g,"")}')">
       <div class="qthumb">📦</div>
       <div style="flex:1"><div class="qn">${n}</div><div class="qk">${items.length}개 · ${t.k}kcal · ${macroText(t.p,t.c,t.f)}</div></div>
-      <span class="set-x" role="button" aria-label="세트 삭제" onclick="delSet('${n.replace(/['"<>]/g,"")}', event)">✕</span>
+      <span class="set-acts"><span class="set-x set-ed" role="button" aria-label="세트 이름 바꾸기" onclick="renameSet(${i}, event)"><svg class="i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+      <span class="set-x" role="button" aria-label="세트 삭제" onclick="delSet('${n.replace(/['"<>]/g,"")}', event)">✕</span></span>
     </button>`;
   }).join('');
 }
@@ -6224,12 +6240,12 @@ function weakMuscleText(){
 }
 /* ── 종목 이름 자동완성: 한국 헬스장 기구 브랜드 + 동작 ── */
 /* 브랜드별 실제 머신 목록은 gymdb.js (종목 추가 창을 열 때만 불러옴). 브랜드가 목록에 없으면 아래 공통 동작으로 붙여준다. */
-let GYM_BRANDS = ['해머','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','디랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','플렉스','메덱스','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
+let GYM_BRANDS = ['해머스트렝스','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','디랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','플렉스','메덱스','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
 function loadGymDb(){
   if(window.GYM_DB || window._gymDbLoading) return;
   window._gymDbLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'gymdb.js?v=3'; sc.async = true;
+  sc.src = 'gymdb.js?v=4'; sc.async = true;
   sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
   document.head.appendChild(sc);
 }
