@@ -6414,7 +6414,7 @@ function workCardHtml(exId, day, light){
     <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? '⚙ '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : '⚙ 세팅 번호 적기 (시트·패드)'}</button>
     ${quickRowHtml(exId, ex, unit, ent, sid, light)}
-    ${(()=>{ if(easy) return ''; const b = bestBefore(exId, viewDate); return b.v>0 ? `<div class="wk-1rm">지난 최고 추정 1RM <b>${Math.round(b.v)}kg</b> · ${b.d.slice(5).replace('-','/')}</div>` : ''; })()}
+    ${(()=>{ if(easy) return ''; const b = bestBefore(exId, viewDate, ex.name, String(ent.setupUsed||'').trim()); return b.v>0 ? `<div class="wk-1rm">지난 최고 추정 1RM <b>${Math.round(b.v)}kg</b> · ${b.d.slice(5).replace('-','/')}</div>` : ''; })()}
     ${(()=>{ if(!showTop || easy) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
       return `<div class="wk-feed" id="feed_${sid}">${feederText(base, unit)}</div>`; })()}
     ${showTop ? `<div>
@@ -6772,16 +6772,25 @@ function renderRest(){
 function e1rm(w, r){ w = +w||0; r = +r||0; return (w>0 && r>0) ? w*(1+Math.min(r,15)/30) : 0; }
 function entBest(e){ if(!e) return 0; const u = e.unit||'kg'; let b = 0;
   [e.top, e.backoff].concat(e.sets||[]).forEach(x=>{ if(x) b = Math.max(b, toKg(e1rm(x.weight, x.reps), u)); }); return b; }
-function bestBefore(exId, before){
-  const log = loadStore(WK.log, {}); let b = 0, d0 = '';
-  Object.keys(log).forEach(d=>{ if(d>=before) return; const e = (log[d].entries||[]).find(x=>x.exerciseId===exId); if(!e || e.carried) return; const v = entBest(e); if(v>b){ b = v; d0 = d; } });
-  return { v:b, d:d0 };
+// 같은 머신·같은 세팅끼리만 비교한다. 이름(머신)이나 세팅이 바뀐 날은 무게 기준이 달라 신기록 비교에서 뺀다.
+const _nn = x=>String(x||'').replace(/\s+/g,'').toLowerCase();
+function bestBefore(exId, before, name, setup){
+  const log = loadStore(WK.log, {}); let b = 0, d0 = '', n = 0;
+  if(name==null){ const ex = loadStore(WK.ex, []).find(x=>x.id===exId); name = ex ? ex.name : ''; }
+  Object.keys(log).forEach(d=>{ if(d>=before) return; const e = (log[d].entries||[]).find(x=>x.exerciseId===exId); if(!e || e.carried) return;
+    if(e.name && name && _nn(e.name)!==_nn(name)) return;
+    const su = String(e.setupUsed||'').trim(); if(setup && su && _nn(su)!==_nn(setup)) return;
+    const v = entBest(e); if(v>0) n++; if(v>b){ b = v; d0 = d; } });
+  return { v:b, d:d0, n };
 }
 let _prDeb = {};
 function prQueue(exId){ clearTimeout(_prDeb[exId]); _prDeb[exId] = setTimeout(()=>prCheck(exId), 1200); }
 function prCheck(exId){
   const day = todayLog(); const e = (day.entries||[]).find(x=>x.exerciseId===exId); if(!e || e.carried) return;
-  const cur = entBest(e); const prev = bestBefore(exId, viewDate);
+  const exn = loadStore(WK.ex, []).find(x=>x.id===exId);
+  const cur = entBest(e); const prev = bestBefore(exId, viewDate, exn ? exn.name : '', String(e.setupUsed||'').trim());
+  // 비교할 같은 머신 기록이 2번 미만이거나, 한 번에 20% 넘게 뛰면(머신을 바꾼 경우가 대부분) 신기록으로 치지 않는다
+  if(prev.n < 2 || cur > prev.v*1.2){ if(e.pr){ e.pr = 0; putTodayLog(day); } return; }
   if(!(prev.v>0) || cur <= prev.v + 0.4) { if(e.pr && cur <= prev.v + 0.4){ e.pr = 0; putTodayLog(day); } return; }
   const r = Math.round(cur*10)/10; if(e.pr && Math.abs(e.pr - r) < 0.05) return;
   e.pr = r; putTodayLog(day);
