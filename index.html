@@ -488,6 +488,46 @@
   .sm-pr { background:rgba(255,214,10,.14); color:#ffd60a; font-weight:800; font-size:13px; border-radius:12px; padding:9px 12px; margin:6px 0; }
   .sm-list { margin-top:8px; } .sm-list div { display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:7px 0; border-top:1px solid rgba(255,255,255,.08); } .sm-list span { color:#d1d1d6; } .sm-list b { font-variant-numeric:tabular-nums; }
   .sm-btns { margin-top:14px; } .sm-btns .save-btn { display:flex; align-items:center; justify-content:center; gap:6px; }
+  .evi { border:none; background:#eef7f1; color:#0a7a33; font-size:10.5px; font-weight:800; border-radius:6px; padding:2px 6px; margin-left:4px; cursor:pointer; vertical-align:2px; font-family:inherit; letter-spacing:.2px; }
+  html.dark .evi { background:#123321; color:#6ee39a; }
+  .tg { display:inline-block; font-size:10px; font-weight:800; border-radius:5px; padding:1px 5px; vertical-align:2px; letter-spacing:.3px; }
+  .tg-m { color:#3a3a3c; border:1px solid #d1d1d6; } .tg-e { color:#8e8e93; border:1px dashed #c7c7cc; }
+  html.dark .tg-m { color:#d1d1d6; border-color:#48484a; } html.dark .tg-e { color:#8e8e93; border-color:#48484a; }
+  #eviPop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.35); display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s; }
+  #eviPop.show { opacity:1; pointer-events:auto; }
+  .ev-card { width:100%; max-width:480px; background:#fff; border-radius:22px 22px 0 0; padding:20px 22px calc(22px + env(safe-area-inset-bottom)); transform:translateY(30px); transition:transform .3s cubic-bezier(.2,.9,.3,1); }
+  #eviPop.show .ev-card { transform:none; }
+  .ev-k { font-size:11px; font-weight:800; color:#0a7a33; letter-spacing:.5px; } .ev-card h4 { font-size:18px; font-weight:800; margin:4px 0 8px; } .ev-card p { font-size:14px; line-height:1.65; color:#3a3a3c; }
+  .ev-s { margin-top:12px; font-size:12px; color:#8e8e93; line-height:1.5; font-style:italic; } .ev-s a { color:#0a7a33; text-decoration:none; }
+  .ev-x { width:100%; margin-top:16px; border:none; background:#f2f2f7; border-radius:14px; padding:13px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; color:#111; }
+  html.dark .ev-card { background:#1c1c1e; } html.dark .ev-card p { color:#d1d1d6; } html.dark .ev-x { background:#2c2c2e; color:#f2f2f7; }
+  .evi-row { margin-top:8px; font-size:12px; color:#8e8e93; }
+  .br-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px; }
+  .br-grid div { background:#f7f7fa; border-radius:14px; padding:11px 12px; } .br-grid > div > span { display:block; font-size:11.5px; color:#8e8e93; font-weight:700; }
+  .br-grid b { display:block; font-size:22px; font-weight:800; letter-spacing:-.6px; margin-top:3px; font-variant-numeric:tabular-nums; } .br-grid b small { font-size:11.5px; color:#8e8e93; margin-left:3px; font-weight:700; }
+  .br-grid b.dn { color:#0a8f3c; } .br-grid b.up { color:#ff9f0a; }
+  html.dark .br-grid div { background:#2c2c2e; }
+  .td-big { font-size:34px; font-weight:800; letter-spacing:-1.2px; font-variant-numeric:tabular-nums; margin:4px 0 2px; } .td-big small { font-size:14px; color:#8e8e93; margin-left:4px; font-weight:700; } .td-big em { font-style:normal; font-size:16px; color:#8e8e93; margin-left:8px; font-weight:700; }
+  .td-range { position:relative; height:12px; background:#f2f2f7; border-radius:6px; margin:10px 0 12px; }
+  .td-ci { position:absolute; top:0; bottom:0; background:rgba(48,209,88,.28); border-radius:6px; } .td-pt { position:absolute; top:-3px; width:4px; height:18px; margin-left:-2px; background:#111; border-radius:2px; }
+  .td-f { position:absolute; top:-5px; width:0; height:22px; border-left:2px dashed #8e8e93; }
+  html.dark .td-range { background:#2c2c2e; } html.dark .td-pt { background:#f2f2f7; }
+  .td-row { font-size:13px; line-height:1.6; color:#3a3a3c; } html.dark .td-row { color:#d1d1d6; }
+  .td-q { font-size:11.5px; color:#8e8e93; margin-top:6px; }
+  .td-prog { height:8px; background:#f2f2f7; border-radius:4px; overflow:hidden; margin:8px 0 6px; } .td-prog i { display:block; height:100%; background:#30d158; border-radius:4px; }
+  html.dark .td-prog { background:#2c2c2e; }
+  .ff-top { display:flex; align-items:center; gap:10px; } .ff-band { font-size:12px; font-weight:800; background:#111; color:#fff; border-radius:100px; padding:4px 10px; }
+  html.dark .ff-band { background:#f2f2f7; color:#111; }
+  .ff-gauge { position:relative; height:42px; margin:6px 0 4px; } .ff-bar { position:absolute; left:0; right:0; top:10px; height:10px; border-radius:5px; background:linear-gradient(90deg,#e5e5ea,#a8e6b8 45%,#30d158 75%,#0a7a33); }
+  .ff-tick { position:absolute; top:8px; width:1px; height:14px; background:rgba(0,0,0,.18); }
+  .ff-cap { position:absolute; top:2px; width:0; height:26px; border-left:2px dashed #ff9f0a; } .ff-cap span { position:absolute; top:26px; left:-30px; width:80px; font-size:10px; font-weight:700; color:#ff9f0a; text-align:center; }
+  .ff-pt { position:absolute; top:4px; width:16px; height:22px; margin-left:-8px; background:#111; border:3px solid #fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+  html.dark .ff-pt { background:#f2f2f7; border-color:#1c1c1e; }
+  .mps { margin-top:14px; background:#fff; border-radius:14px; padding:10px 12px; } html.dark .mps { background:#2c2c2e; }
+  .mps-h { font-size:12.5px; font-weight:800; display:flex; align-items:center; gap:2px; } .mps-h span { margin-left:auto; font-size:11px; color:#8e8e93; font-weight:700; }
+  .mps-n { font-size:11.5px; color:#8e8e93; line-height:1.5; margin-top:2px; }
+  .mps-d { animation:prPop .5s cubic-bezier(.3,1.6,.5,1); }
+  html.dark .mps-l { stroke:#f2f2f7; } html.dark .mps-d { fill:#f2f2f7; stroke:#1c1c1e; }
   #restBar { position:fixed; left:50%; bottom:96px; transform:translate(-50%, 140%); opacity:0; z-index:90; display:flex; align-items:center; gap:8px; background:#111; color:#fff; border-radius:100px; padding:8px 10px 8px 8px; box-shadow:0 10px 30px rgba(0,0,0,.25); transition:transform .35s cubic-bezier(.32,.72,0,1), opacity .25s; max-width:calc(100% - 32px); }
   #restBar.show { transform:translate(-50%,0); opacity:1; }
   #restBar svg { width:40px; height:40px; transform:rotate(-90deg); flex-shrink:0; }
@@ -953,8 +993,9 @@
       <div class="stat"><div class="v" id="stWChange">–</div><div class="l">14일 체중</div></div>
       <div class="stat"><div class="v" id="stBfChange">–</div><div class="l">14일 체지방</div></div>
     </div>
+    <div id="bodySci"></div>
     <div class="chart-card">
-      <h4>몸무게 <span id="wNow" style="float:right;font-weight:800;"></span></h4><div class="tr-range" id="trRange"></div><div class="sub" id="wChartSub">최근 2주 · 초록 점선 = 7일 평균 추세</div>
+      <h4>몸무게 <span class="tg tg-m">측정</span> <span id="wNow" style="float:right;font-weight:800;"></span></h4><div class="tr-range" id="trRange"></div><div class="sub" id="wChartSub">최근 2주 · 초록 점선 = 7일 평균 추세</div>
       <div id="weightChart"></div>
       <div class="sub" id="wTrendNote" style="margin:8px 0 0;color:#3a3a3c;line-height:1.5;"></div>
     </div>
@@ -4126,6 +4167,121 @@ function fancyLine(elId, data, o){
   svg.addEventListener('touchmove', show, {passive:true}); svg.addEventListener('touchend', ()=>setTimeout(hide, 1200));
 }
 function setTrRange(n){ window._trN = n; renderTrend(); }
+/* ── 과학 근거: 숫자마다 출처를 붙인다 (요약은 우리말, 출처는 원문 그대로) ── */
+const PM = t=>'https://pubmed.ncbi.nlm.nih.gov/?term='+encodeURIComponent(t);
+const EVI = {
+  morton2018: { t:'단백질 하루 1.6g/kg', b:'근력운동과 함께 단백질을 늘리면 근육량·근력이 더 늘지만, 하루 체중 1kg당 약 1.6g을 넘으면 추가 이득이 거의 평평해집니다(49개 연구 메타분석). 프로필이 없을 때 쓰는 기본값입니다.', s:'Morton RW 외. Br J Sports Med 2018;52(6):376–384', u:PM('Morton protein supplementation resistance training meta-regression 2018') },
+  helms2014: { t:'감량기 단백질은 제지방 1kg당 2.3~3.1g', b:'칼로리를 줄이는 동안 근육을 지키려면 제지방량(LBM) 1kg당 2.3~3.1g이 필요하다는 체계적 문헌고찰입니다. 마르고 운동한 사람일수록, 적자가 클수록 위쪽 값이 맞습니다. 체지방률을 적으면 이 방식으로 계산합니다.', s:'Helms ER 외. Int J Sport Nutr Exerc Metab 2014;24(2):127–138', u:'https://pubmed.ncbi.nlm.nih.gov/24092765/' },
+  mifflin1990: { t:'기초대사량 공식', b:'체지방률을 모르면 Mifflin-St Jeor 공식(체중·키·나이·성별), 체지방률을 알면 제지방량으로 계산하는 Katch-McArdle 공식을 씁니다. 공식은 평균이라 개인차가 ±10% 안팎 납니다 — 그래서 실제 기록으로 다시 맞춥니다.', s:'Mifflin MD 외. Am J Clin Nutr 1990;51(2):241–247', u:PM('A new predictive equation for resting energy expenditure in healthy individuals') },
+  hall2011: { t:'체중 1kg ≈ 7,700kcal는 근사치', b:'먹은 양과 체중 변화로 유지칼로리를 거꾸로 계산할 때 체중 1kg을 약 7,700kcal로 봅니다. 실제로는 몸이 적응하며 변하는 근사치라, 이 앱은 결과를 한 숫자가 아니라 ± 범위와 신뢰도로 보여줍니다.', s:'Hall KD 외. Lancet 2011;378(9793):826–837', u:PM('Quantification of the effect of energy imbalance on bodyweight') },
+  kouri1995: { t:'FFMI와 자연 한계 25', b:'제지방량을 키로 보정한 지수입니다. 약물을 쓰지 않은 운동인 157명의 최고치가 약 25였습니다. 여성은 같은 기준이 보통 21~22 근처로 봅니다. 체지방률 측정 오차만큼 FFMI도 흔들립니다.', s:'Kouri EM, Pope HG 외. Clin J Sport Med 1995;5(4):223–228', u:PM('Fat-free mass index in users and nonusers of anabolic-androgenic steroids') },
+  macdougall1995: { t:'근단백 합성은 24시간 정점, 36시간 기준선', b:'무거운 웨이트 후 근단백 합성(MPS)은 4시간에 +50%, 24시간에 +109%까지 오르고, 36시간이면 기준선과 거의 같아졌습니다(+14%, 유의차 없음). 훈련된 남성 대상이라 초보자는 더 오래 갑니다.', s:'MacDougall JD 외. Can J Appl Physiol 1995;20(4):480–486', u:'https://pubmed.ncbi.nlm.nih.gov/8563679/' },
+  schoenfeld2017: { t:'주당 세트와 근성장', b:'근육 하나당 주간 세트가 늘수록 근비대가 커지는 용량-반응 관계가 있었습니다. 다만 세트가 적어도 한계 가까이 하면 효과가 큽니다 — 이 앱의 탑세트+백오프 방식은 그쪽에 가깝습니다.', s:'Schoenfeld BJ, Ogborn D, Krieger JW. J Sports Sci 2017;35(11):1073–1082', u:PM('Dose-response relationship between weekly resistance training volume and increases in muscle mass') },
+  refalo2023: { t:'한계 가까이 할수록 근비대', b:'세트를 실패 지점에 가깝게 끝낼수록 근비대가 커지는 경향이 있었습니다. 그래서 탑세트는 RIR 0~1(1개 더 못 들 정도)로 끝냅니다.', s:'Refalo MC 외. Sports Med 2023;53(3):649–665', u:PM('Influence of Resistance Training Proximity-to-Failure on Skeletal Muscle Hypertrophy meta-analysis') },
+  epley1985: { t:'추정 1RM (Epley 공식)', b:'1RM ≈ 무게 × (1 + 횟수 ÷ 30). 10회 이하에서 가장 정확하고, 15회를 넘으면 오차가 커져서 15회까지만 씁니다. 실제로 1회를 들어 본 값이 아니라 추정치입니다.', s:'Epley B. Poundage Chart. Boyd Epley Workout, 1985', u:'' },
+  nsca: { t:'강도 구간 (1RM 대비 %)', b:'근력은 1RM의 85% 이상(6회 이하), 근비대는 67~85%(6~12회), 근지구력은 67% 미만(12회 이상)이 일반 지침입니다. 다만 근비대 자체는 한계 가까이만 하면 가벼운 무게로도 비슷하게 일어납니다.', s:'NSCA, Essentials of Strength Training and Conditioning 4판(Haff & Triplett, 2016)', u:'' }
+};
+function evi(k){ return EVI[k] ? `<button type="button" class="evi" onclick="event.stopPropagation();showEvi('${k}')" aria-label="근거: ${EVI[k].t}">근거</button>` : ''; }
+function showEvi(k){
+  const e = EVI[k]; if(!e) return;
+  let el = document.getElementById('eviPop');
+  if(!el){ el = document.createElement('div'); el.id = 'eviPop'; el.setAttribute('role','dialog'); document.body.appendChild(el); el.addEventListener('click', ev=>{ if(ev.target===el) el.classList.remove('show'); }); }
+  el.innerHTML = `<div class="ev-card"><div class="ev-k">근거</div><h4>${e.t}</h4><p>${e.b}</p><div class="ev-s">${e.u?`<a href="${e.u}" target="_blank" rel="noopener">${e.s} ↗</a>`:e.s}</div><button type="button" class="ev-x" onclick="document.getElementById('eviPop').classList.remove('show')">닫기</button></div>`;
+  requestAnimationFrame(()=>el.classList.add('show'));
+}
+function tagM(){ return `<span class="tg tg-m">측정</span>`; }
+function tagE(){ return `<span class="tg tg-e">추정</span>`; }
+
+/* ── 내 몸의 실제 유지칼로리: 먹은 양 − 체중 기울기 × 7,700 ── */
+function estimateTDEE(){
+  const N = 28, days = [];
+  for(let i=-N; i<=-1; i++){ const k = keyOffset(i); const m = S.meals[k]||[]; const kc = m.reduce((a,x)=>a+(x.kcal||0),0); if(kc>=800) days.push(kc); }
+  const ws = []; for(let i=-N; i<=0; i++){ const k = keyOffset(i); if(S.weights[k]!=null) ws.push([i, +S.weights[k]]); }
+  const span = ws.length>=2 ? ws[ws.length-1][0]-ws[0][0] : 0;
+  const need = { days: Math.max(0, 10-days.length), w: Math.max(0, 6-ws.length), span: Math.max(0, 14-span) };
+  const ok = days.length>=10 && ws.length>=6 && span>=14;
+  const res = { ok, nDays: days.length, nW: ws.length, span, need };
+  if(!ok) return res;
+  const n = ws.length, mx = ws.reduce((a,p)=>a+p[0],0)/n, my = ws.reduce((a,p)=>a+p[1],0)/n;
+  let sxx = 0, sxy = 0; ws.forEach(p=>{ sxx += (p[0]-mx)**2; sxy += (p[0]-mx)*(p[1]-my); });
+  const slope = sxy/sxx; let sse = 0; ws.forEach(p=>{ sse += (p[1]-(my+slope*(p[0]-mx)))**2; });
+  const se = Math.sqrt(sse/Math.max(1,n-2)/sxx);
+  const avg = days.reduce((a,b)=>a+b,0)/days.length; const sd = Math.sqrt(days.reduce((a,b)=>a+(b-avg)**2,0)/Math.max(1,days.length-1));
+  const tdee = avg - slope*7700;
+  const err = Math.sqrt((se*7700)**2 + (sd/Math.sqrt(days.length))**2 + (avg*0.04)**2);
+  const r10 = v=>Math.round(v/10)*10;
+  Object.assign(res, { tdee:r10(tdee), err:r10(err), avg:r10(avg), slopeWeek: Math.round(slope*7*100)/100, conf: err<150?'높음':err<260?'중간':'낮음' });
+  if(S.profile){ const w = lastWeight() || S.profile.weight; const bf = latestBf() || S.profile.bf; res.formula = calcTDEE({...S.profile, bf}, w).tdee; }
+  return res;
+}
+/* ── FFMI (제지방량 지수) ── */
+function ffmiCalc(){
+  const h = S.profile && +S.profile.height; const w = lastWeight() || (S.profile && S.profile.weight); const bf = latestBf() || (S.profile && S.profile.bf);
+  if(!(h>0) || !(w>0) || !(bf>0)) return { ok:false, miss: !(h>0)?'키':!(bf>0)?'체지방률':'몸무게' };
+  const m = h/100, lbm = w*(1-bf/100), ffmi = lbm/(m*m), norm = ffmi + 6.1*(1.8-m);
+  const f = S.profile.sex==='f';
+  const bands = f ? [[0,'평균 이하'],[15,'평균'],[17,'운동하는 편'],[19,'상급'],[21,'자연 한계 근처']] : [[0,'평균 이하'],[18,'평균'],[20,'운동하는 편'],[22,'상급'],[24.5,'자연 한계 근처']];
+  let band = bands[0][1]; bands.forEach(b=>{ if(norm>=b[0]) band = b[1]; });
+  return { ok:true, ffmi:Math.round(ffmi*10)/10, norm:Math.round(norm*10)/10, lbm:Math.round(lbm*10)/10, band, f, cap: f?22:25 };
+}
+function bodySciHtml(){
+  let h = '';
+  // 이번 주 바디 리포트
+  const T = estimateTDEE(); const tr = weightTrend(); const pT = proteinTarget();
+  let pHit = 0, pDays = 0; for(let i=-6;i<=0;i++){ const m = S.meals[keyOffset(i)]||[]; if(!m.length) continue; pDays++; if(m.reduce((a,x)=>a+(x.p||0),0) >= pT*0.9) pHit++; }
+  const log = loadStore(WK.log, {}); let sess = 0; for(let i=-6;i<=0;i++){ const d = log[keyOffset(i)]; if(d && (d.entries||[]).some(e=>entSets(e)>0)) sess++; }
+  const ref = T.ok ? T.tdee : (S.profile ? baseGoal() - (S.profile.adjust||0) : null);
+  let intake7 = 0, n7 = 0; for(let i=-7;i<=-1;i++){ const kc = (S.meals[keyOffset(i)]||[]).reduce((a,x)=>a+(x.kcal||0),0); if(kc>=800){ intake7 += kc; n7++; } }
+  const bal = (ref && n7) ? Math.round((intake7/n7 - ref)/10)*10 : null;
+  h += `<div class="chart-card br-card"><h4>이번 주 바디 리포트</h4><div class="sub">지난 7일 기록으로 만든 요약이에요</div><div class="br-grid">
+    <div><span>에너지 균형 ${tagE()}</span><b class="${bal==null?'':bal<0?'dn':'up'}">${bal==null?'–':(bal>0?'+':'')+bal.toLocaleString()}<small>kcal/일</small></b></div>
+    <div><span>체중 기울기 ${tagM()}</span><b>${tr?(tr.perWeek>0?'+':'')+tr.perWeek:'–'}<small>kg/주</small></b></div>
+    <div><span>단백질 충족</span><b>${pDays?pHit+'/'+pDays:'–'}<small>일</small></b></div>
+    <div><span>운동</span><b>${sess}<small>회</small></b></div></div></div>`;
+  // 실제 유지칼로리
+  if(T.ok){
+    const diff = T.formula ? T.tdee - T.formula : null;
+    const lo = T.tdee - T.err, hi = T.tdee + T.err, a = T.tdee - T.err*2.2, z = T.tdee + T.err*2.2;
+    const pos = v=>Math.max(0, Math.min(100, (v-a)/(z-a)*100));
+    h += `<div class="chart-card tdee-card"><h4>내 몸의 실제 유지칼로리 ${tagE()} ${evi('hall2011')}</h4>
+      <div class="td-big">${T.tdee.toLocaleString()}<small>kcal</small><em>± ${T.err}</em></div>
+      <div class="td-range"><i class="td-ci" style="left:${pos(lo)}%;right:${100-pos(hi)}%"></i><i class="td-pt" style="left:${pos(T.tdee)}%"></i>${T.formula?`<i class="td-f" style="left:${pos(T.formula)}%" title="공식"></i>`:''}</div>
+      <div class="td-row">${T.formula?`공식 계산 ${T.formula.toLocaleString()} ${evi('mifflin1990')} → 내 몸은 <b>${diff>0?'+':''}${diff.toLocaleString()}</b>`:'목표 설정에서 키·나이를 넣으면 공식값과 비교해요'}</div>
+      <div class="td-row">지난 4주 평균 섭취 <b>${T.avg.toLocaleString()}</b> · 체중 <b>${T.slopeWeek>0?'+':''}${T.slopeWeek}kg/주</b></div>
+      <div class="td-q">식단 ${T.nDays}일 · 체중 ${T.nW}회 · 신뢰도 <b>${T.conf}</b> — 빠짐없이 적을수록 범위가 좁아져요</div></div>`;
+  } else {
+    const prog = Math.min(100, Math.round((Math.min(T.nDays,10)/10*0.5 + Math.min(T.nW,6)/6*0.3 + Math.min(T.span,14)/14*0.2)*100));
+    h += `<div class="chart-card tdee-card"><h4>내 몸의 실제 유지칼로리 ${evi('hall2011')}</h4><div class="sub">공식이 아니라 내 기록으로 계산해요. 2주 동안 식단과 몸무게를 적으면 열려요.</div>
+      <div class="td-prog"><i style="width:${prog}%"></i></div><div class="td-q">식단 ${T.nDays}/10일 · 체중 ${T.nW}/6회 · 기간 ${T.span}/14일</div></div>`;
+  }
+  // FFMI
+  const F = ffmiCalc();
+  if(F.ok){
+    const a = F.f?12:15, z = F.f?25:28; const pos = v=>Math.max(0, Math.min(100,(v-a)/(z-a)*100));
+    const ticks = F.f ? [15,17,19,21] : [18,20,22,24.5];
+    h += `<div class="chart-card"><h4>FFMI · 제지방량 지수 ${tagE()} ${evi('kouri1995')}</h4>
+      <div class="ff-top"><div class="td-big">${F.norm}</div><span class="ff-band">${F.band}</span></div>
+      <div class="ff-gauge"><div class="ff-bar"></div>${ticks.map(t=>`<i class="ff-tick" style="left:${pos(t)}%"></i>`).join('')}<i class="ff-cap" style="left:${pos(F.cap)}%"><span>자연 한계 ~${F.cap}</span></i><i class="ff-pt" style="left:${pos(F.norm)}%"></i></div>
+      <div class="td-row">제지방량 <b>${F.lbm}kg</b> · 키 보정 전 ${F.ffmi} · 체지방률 측정 오차만큼 흔들려요</div></div>`;
+  } else {
+    h += `<div class="chart-card"><h4>FFMI · 제지방량 지수 ${evi('kouri1995')}</h4><div class="sub">${F.miss}을(를) 기록하면 근육량이 키 대비 어느 수준인지 계산해요.</div></div>`;
+  }
+  return h;
+}
+/* ── 근단백 합성(MPS) 곡선: 지금 어디쯤인지 ── */
+function mpsCurveHtml(hours){
+  const P = [[0,0],[4,50],[12,85],[24,109],[30,60],[36,14],[48,4],[72,0]];
+  const W = 300, H = 92, L = 6, R = 8, T = 10, B = 18, X = h=>L+(W-L-R)*Math.min(h,72)/72, Y = v=>T+(H-T-B)*(1-v/120);
+  const pts = P.map(p=>[X(p[0]), Y(p[1])]);
+  const line = smoothPath(pts);
+  let cur = null; if(hours!=null && hours>=0){ const h = Math.min(hours,72); let v = 0; for(let i=0;i<P.length-1;i++){ if(h>=P[i][0] && h<=P[i+1][0]){ const k = (h-P[i][0])/(P[i+1][0]-P[i][0]); v = P[i][1]+(P[i+1][1]-P[i][1])*k; } } cur = [X(h), Y(v), Math.round(v)]; }
+  return `<div class="mps"><div class="mps-h">근단백 합성(MPS) ${evi('macdougall1995')}<span>${hours==null?'':hours>72?'기준선':'운동 후 '+Math.round(hours)+'시간'}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><path d="${line} L${X(72)} ${H-B} L${X(0)} ${H-B} Z" fill="rgba(48,209,88,.12)"/><path d="${line}" fill="none" stroke="#30d158" stroke-width="2.2"/>
+    <line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#d1d1d6" stroke-width="1"/>${[0,24,48,72].map(h=>`<text x="${X(h)}" y="${H-4}" font-size="9" fill="#aeaeb2" text-anchor="${h===0?'start':h===72?'end':'middle'}">${h}h</text>`).join('')}
+    ${cur?`<line x1="${cur[0]}" x2="${cur[0]}" y1="${T}" y2="${H-B}" stroke="#111" stroke-dasharray="2 3" class="mps-l"/><circle cx="${cur[0]}" cy="${cur[1]}" r="4.5" fill="#111" stroke="#fff" stroke-width="2" class="mps-d"/>`:''}</svg>
+    <div class="mps-n">운동 뒤 약 24시간에 정점, 36시간쯤 기준선으로 돌아와요. 회복 %(피로)와는 다른, 근육을 짓는 속도예요.</div></div>`;
+}
+function zoneOf(pct){ return pct>=85 ? '근력 구간' : pct>=67 ? '근비대 구간' : '고반복 구간'; }
 function renderTrend(){
   let sum=0, pSum=0, days=0;
   for(let i=-6;i<=0;i++){
@@ -4210,6 +4366,7 @@ function renderTrend(){
   });
   b+=`<line x1="${P}" y1="${gy2.toFixed(1)}" x2="${W-P}" y2="${gy2.toFixed(1)}" stroke="#30d158" stroke-width="1.4" stroke-dasharray="4 4"/><text x="${W-P}" y="${(gy2-5).toFixed(1)}" font-size="9.5" font-weight="700" text-anchor="end" fill="#30d158">목표 ${goal2.toLocaleString()}</text></svg>`;
   document.getElementById('kcalChart').innerHTML=b;
+  const bsc = document.getElementById('bodySci'); if(bsc){ try{ bsc.innerHTML = bodySciHtml(); }catch(e){ console.warn(e); } }
   if(typeof setHomeMode==='function') setHomeMode(homeMode);
   if(typeof renderWkJudge==='function'){ try{ renderWkJudge(); renderWkChart(); }catch(_){} }
 }
@@ -4593,6 +4750,7 @@ function previewTDEE(){
   else if(p.bf > 0 && p.bf <= 15) eta += `체지방 ${p.bf}% · <b>10~15%</b> 지방 ${m.fatPer}g/kg<br>`;
   else eta += `지방 ${m.fatPer}g/kg · 15% 이상 구간<br>`;
   eta += `BMI ${bmi} · ${bmi<18.5?'저체중':bmi<23?'정상':bmi<25?'과체중':'비만'} (아시아 기준)`;
+  eta += `<div class="evi-row">계산 근거 ${evi('mifflin1990')}${p.bf>0 && p.adjust<0 ? evi('helms2014') : evi('morton2018')}</div>`;
   const perWeek = p.adjust*7/7700; // kg/주 (음수면 감량)
   if(p.adjust!==0){
     if(p.goalType==='bf' && p.goalBf){
@@ -6531,7 +6689,7 @@ function workCardHtml(exId, day, light){
     <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? ico('sliders',13)+' '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : ico('sliders',13)+' 세팅 번호 적기 (시트·패드)'}</button>
     ${quickRowHtml(exId, ex, unit, ent, sid, light)}
-    ${(()=>{ if(easy) return ''; const b = bestBefore(exId, viewDate, ex.name, String(ent.setupUsed||'').trim()); return b.v>0 ? `<div class="wk-1rm">지난 최고 추정 1RM <b>${Math.round(b.v)}kg</b> · ${b.d.slice(5).replace('-','/')}</div>` : ''; })()}
+    ${(()=>{ if(easy) return ''; const b = bestBefore(exId, viewDate, ex.name, String(ent.setupUsed||'').trim()); if(!(b.v>0)) return ''; const tw = ent.top && +ent.top.weight; const pc = tw>0 ? Math.round(toKg(tw, unit)/b.v*100) : 0; return `<div class="wk-1rm">지난 최고 추정 1RM <b>${Math.round(b.v)}kg</b> · ${b.d.slice(5).replace('-','/')}${pc ? ` · 오늘 탑세트 <b>${pc}%</b> ${zoneOf(pc)} ${evi('nsca')}` : ''}</div>`; })()}
     ${(()=>{ if(!showTop || easy) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
       return `<div class="wk-feed" id="feed_${sid}">${feederText(base, unit)}</div>`; })()}
     ${showTop ? `<div>
@@ -6542,7 +6700,7 @@ function workCardHtml(exId, day, light){
         ${rirT(`<input class="wk-in" inputmode="numeric" aria-label="${ex.name} 탑세트 RIR" value="${ent.top&&ent.top.rir!=null?ent.top.rir:effectiveRir(ex)}" oninput="patchEnt('${sid}','top','rir',this.value)">`)}
         <button type="button" class="helper-link" onclick="setBlock('${sid}','top',true)">빼기</button>
       </div>
-      ${easy ? '' : `<div class="wk-hint">${topRepHint(ex)} · 자력만 · RIR 0~1 · 후 2분 30초~3분</div>`}
+      ${easy ? '' : `<div class="wk-hint">${topRepHint(ex)} · 자력만 · RIR 0~1 ${evi('refalo2023')} · 후 2분 30초~3분</div>`}
     </div>` : `<button type="button" class="helper-link" onclick="setBlock('${sid}','top',false)">＋ 탑세트</button>`}
     ${showBo ? `<div class="wk-row"><span class="wk-lab">백오프</span>
       <input class="wk-in" id="boW_${sid}" inputmode="decimal" aria-label="${ex.name} 백오프 중량" value="${ent.backoff&&ent.backoff.weight!=null?ent.backoff.weight:''}" oninput="patchEnt('${sid}','backoff','weight',this.value)">
@@ -6936,7 +7094,7 @@ function openExHistory(exId){
     const last = rows[rows.length-1];
     const first = same[0]||rows[0];
     const gain = Math.round((last.v - first.v)*10)/10;
-    h += `<div class="xh-stats"><div><b>${Math.round(best.v)}<small>kg</small></b><span>최고 추정 1RM · ${(+best.d.slice(5,7))}/${(+best.d.slice(8,10))}</span></div>
+    h += `<div class="xh-stats"><div><b>${Math.round(best.v)}<small>kg</small></b><span>최고 추정 1RM ${evi('epley1985')}</span></div>
       <div><b>${Math.round(last.v)}<small>kg</small></b><span>최근</span></div>
       <div><b class="${gain>0?'up':gain<0?'dn':''}">${gain>0?'+':''}${gain}<small>kg</small></b><span>처음보다</span></div></div>
       <div id="xhChart" class="xh-chart"></div>`;
@@ -7118,7 +7276,7 @@ function recoveryCardHtml(rou){
       : `<div class="rc-ok">✓ 오늘 루틴 부위는 회복됐어요. 탑세트 가도 좋아요.</div>`;
   }
   return `<button type="button" class="rc-card" onclick="openRecovery()">
-    <div class="rc-head"><b>근육 회복</b><span>자세히 ›</span></div>
+    <div class="rc-head"><b>근육 회복 <span class="tg tg-e">추정</span></b><span>자세히 ›</span></div>
     <div class="rc-maps">${bodySvg('front', R, 'bodymap rc-map')}${bodySvg('back', R, 'bodymap rc-map')}</div>
     ${sum}${rl}
     <div class="rc-legend">${['tired','mid','almost','ready'].map(k=>`<span><i style="background:${REC_COL[k]}"></i>${REC_LABEL[k]}</span>`).join('')}</div>
@@ -7144,7 +7302,7 @@ function renderRecSheet(){
   const tm = new Date(now); const nextMorning = new Date(tm.getFullYear(), tm.getMonth(), tm.getDate()+1, 8).getTime();
   const nextEve = new Date(tm.getFullYear(), tm.getMonth(), tm.getDate()+1, 19).getTime();
   const shifts = [[0,'지금'],[Math.round((nextMorning-now)/3600000),'내일 아침'],[Math.round((nextEve-now)/3600000),'내일 저녁'],[Math.round((nextEve-now)/3600000)+24,'모레 저녁']];
-  let h = `<p class="rc-sub">기록한 세트로 계산한 추정이에요. 큰 근육(등·하체·가슴)은 2~3일, 작은 근육(팔·종아리)은 1~2일 걸려요.</p>
+  let h = `<p class="rc-sub">${tagE()} 기록한 세트로 계산한 피로예요. 큰 근육(등·하체·가슴)은 2~3일, 작은 근육(팔·종아리)은 1~2일 걸려요.</p>
     <div class="rc-shift" role="group" aria-label="시점">${shifts.map(([v,l])=>`<button type="button" class="${_recShift===v?'on':''}" onclick="recShift(${v})">${l}</button>`).join('')}</div>
     <div class="rc-big${_recSel?' has-sel':''}">${bodySvg('front', R, 'bodymap rc-bmap')}${bodySvg('back', R, 'bodymap rc-bmap')}</div>
     <div class="rc-legend">${['tired','mid','almost','ready'].map(k=>`<span><i style="background:${REC_COL[k]}"></i>${REC_LABEL[k]}</span>`).join('')}<span><i style="background:${recColor('idle')}"></i>${REC_LABEL.idle}</span></div>`;
@@ -7157,6 +7315,7 @@ function renderRecSheet(){
       <div class="rd-row">${r.last ? `마지막 자극 <b>${whenText(r.last)}</b>` : '최근 2주 기록 없음'}${r.eta>0 ? ` · 회복 완료 <b>${whenText(at + r.eta*3600000)}</b>` : ''}</div>
       <div class="rd-row">최근 7일 <b>${Math.round(r.sets7*10)/10}세트</b> <span style="color:#8e8e93">(보조로 쓴 건 0.5세트)</span></div>
       ${exl.length ? `<div class="rd-ex">${exl.map(([n,c])=>`<span>${n.replace(/[<>]/g,'')} · ${c}세트</span>`).join('')}</div>` : ''}
+      ${r.last ? mpsCurveHtml((at - r.last)/3600000) : ''}
     </div>`;
   }
   h += `<div class="rc-list">${list.map(r=>`<button type="button" class="rc-item${_recSel===r.id?' on':''}" onclick="recSel('${r.id}')">
@@ -7165,7 +7324,7 @@ function renderRecSheet(){
     ${(()=>{ const P = computeRecovery(at - 7*86400000) || {}; const rows = Object.values(R).filter(r=>r.sets7>0 || (P[r.id]&&P[r.id].sets7>0)).sort((a,b)=>b.sets7-a.sets7);
       if(!rows.length) return '';
       const mx = Math.max(...rows.map(r=>Math.max(r.sets7, (P[r.id]||{}).sets7||0)), 1);
-      return `<h4 class="rc-h4">최근 7일 부위별 세트 <span>지난주 대비</span></h4><div class="rc-vol">${rows.map(r=>{ const pv = (P[r.id]||{}).sets7||0, d = Math.round((r.sets7-pv)*10)/10;
+      return `<h4 class="rc-h4">최근 7일 부위별 세트 ${evi('schoenfeld2017')}<span>지난주 대비</span></h4><div class="rc-vol">${rows.map(r=>{ const pv = (P[r.id]||{}).sets7||0, d = Math.round((r.sets7-pv)*10)/10;
         return `<div class="rv"><span class="ri-n">${NAME[r.id]}</span><span class="rv-bar"><i class="pv" style="width:${pv/mx*100}%"></i><i class="cv" style="width:${r.sets7/mx*100}%"></i></span><span class="rv-n">${Math.round(r.sets7*10)/10}<em class="${d>0?'up':d<0?'dn':''}">${d>0?'▲'+d:d<0?'▼'+(-d):'–'}</em></span></div>`; }).join('')}</div>`; })()}
     <details class="rc-how"><summary>어떻게 계산하나</summary><p>탑세트·백오프·일반 세트를 한 세트씩 세고, 그 종목이 주로 쓰는 근육엔 1세트, 보조로 쓰는 근육엔 0.5세트를 쌓아요. 쌓인 피로는 시간이 지나며 빠지는데, 큰 근육은 하루 반, 작은 근육은 하루쯤 지나면 1/3 남짓만 남는 속도예요. 잠·식단·강도에 따라 실제 회복은 달라지니 몸이 보내는 신호를 먼저 믿으세요.</p></details>`;
   body.innerHTML = h;
