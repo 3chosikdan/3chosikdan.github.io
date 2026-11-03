@@ -1,5 +1,5 @@
 // 3초식단 Service Worker — 오프라인 + 데이터 보존(iOS 설치 PWA)
-const CACHE = 'sikdan-v98';
+const CACHE = 'sikdan-v99';
 
 self.addEventListener('install', e => {
   e.waitUntil(

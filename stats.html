@@ -8,7 +8,7 @@
 <style>
   :root { --bg:#fff; --fg:#1c1c1e; --sub:#8e8e93; --line:#e5e5ea; --card:#f2f2f7; --acc:#30d158; }
   @media (prefers-color-scheme: dark){ :root { --bg:#000; --fg:#f2f2f7; --sub:#8e8e93; --line:#2c2c2e; --card:#1c1c1e; } }
-  body { margin:0; background:var(--bg); color:var(--fg); font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif; }
   main { max-width:640px; margin:0 auto; padding:20px 16px 60px; }
   h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:16px; margin:26px 0 8px; }
   .sub { color:var(--sub); font-size:13px; margin:0; }
@@ -25,6 +25,9 @@
   .seg button.on { background:var(--fg); color:var(--bg); }
   .err { background:#fff1f0; color:#a8071a; padding:12px; border-radius:12px; font-size:13px; }
 </style>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>@view-transition{navigation:auto}::view-transition-old(root){animation:vtOut .18s ease both}::view-transition-new(root){animation:vtIn .26s cubic-bezier(.2,.8,.2,1) both}@keyframes vtOut{to{opacity:0;transform:translateY(-6px)}}@keyframes vtIn{from{opacity:0;transform:translateY(8px)}}@media (prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}}</style>
 </head>
 <body>
 <main>
