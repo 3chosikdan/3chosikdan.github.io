@@ -324,7 +324,7 @@ function bounds(id, proj){
 function bounds3(id){
   const m = [1e9,1e9,1e9], M = [-1e9,-1e9,-1e9];
   [false,true].forEach(bad=>{ for(let i=0;i<=10;i++){ allPoints(id, pose(id,i/10,bad)).forEach(q=>{ for(let j=0;j<3;j++){ m[j]=Math.min(m[j],q[j]); M[j]=Math.max(M[j],q[j]); } }); } });
-  return { c:[(m[0]+M[0])/2, (m[1]+M[1])/2, (m[2]+M[2])/2], size:Math.max(M[0]-m[0], M[1]-m[1], M[2]-m[2]) + 20 };
+  return { min:m, c:[(m[0]+M[0])/2, (m[1]+M[1])/2, (m[2]+M[2])/2], size:Math.max(M[0]-m[0], M[1]-m[1], M[2]-m[2]) + 20 };
 }
 function hull(pts){
   pts = pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
@@ -390,73 +390,144 @@ function rig2D(el, id, opts){
 }
 
 /* ---------- 3D ---------- */
+// 마네킹 + 스튜디오 조명: 테이퍼 팔다리, 타원체 몸통, 둥근 패드, 금속 프레임, 바닥 그림자, 일하는 근육은 수축할 때 빛난다.
+const MUS3 = { chest:['chest','lats','uppertrap'], delt:['frontdelt','sidedelt','reardelt'], core:['abs','obliques','erector'], hip:['glutes','glutemed'],
+  ua:['biceps','triceps'], fa:['forearm'], th:['quads','hams','adductors'], sh:['calves'] };
+function lvl3(g, mov){ if(!mov) return 0; const L = MUS3[g]||[]; if((mov.p||[]).some(m=>L.indexOf(m)>=0)) return 2; if((mov.s||[]).some(m=>L.indexOf(m)>=0)) return 1; return 0; }
 function rig3D(el, id, opts){
   opts = opts||{}; const THREE = window.THREE; if(!THREE) return null; const R = RIGS[id];
   const mov = opts.move; const dark = !!opts.dark;
   const fast = !!(opts.bad && R.bad && R.bad.fast);
   const w = el.clientWidth || 320, h = el.clientHeight || Math.round(w*0.8);
-  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1)); renderer.setSize(w,h);
+  renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = dark ? 0.95 : 0.85;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   el.innerHTML=''; el.appendChild(renderer.domElement); renderer.domElement.style.touchAction='none';
   const scene = new THREE.Scene();
-  const cam = new THREE.PerspectiveCamera(36, w/h, 1, 3000);
-  scene.add(new THREE.HemisphereLight(0xffffff, dark?0x222222:0x999999, 0.95));
-  const dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(80,160,120); scene.add(dl);
+  const cam = new THREE.PerspectiveCamera(34, w/h, 1, 4000);
+  const C = s=>new THREE.Color(s).convertSRGBToLinear();
+  const junk = [];  // dispose 대상
+  // 반사용 스튜디오 환경(소프트박스 3개)
+  try {
+    const pm = new THREE.PMREMGenerator(renderer); const env = new THREE.Scene(); env.background = C(dark?'#1a1a1c':'#8a8a90');
+    const sb = (x,y,z,sx,sy,c)=>{ const m = new THREE.Mesh(new THREE.PlaneGeometry(sx,sy), new THREE.MeshBasicMaterial({ color:c, side:THREE.DoubleSide })); m.position.set(x,y,z); m.lookAt(0,0,0); env.add(m); };
+    sb(0,6,4,8,3,0xffffff); sb(-6,2,-2,3,6,0xdfe8ff); sb(6,1,-3,2,5,0xfff1e0); sb(0,-5,0,12,12, dark?0x202022:0x6a6a70);
+    const rt = pm.fromScene(env, 0.035); scene.environment = rt.texture; junk.push(rt, pm);
+  } catch(e){}
+  scene.add(new THREE.HemisphereLight(0xffffff, dark?0x1c1c1e:0x5a5a60, dark?0.25:0.22));
   const B3 = bounds3(id);
+  const key = new THREE.DirectionalLight(0xfff8f0, dark?1.6:1.5); key.position.set(B3.size*0.6, B3.size*1.4, B3.size*0.9);
+  key.castShadow = true; key.shadow.mapSize.set(1024,1024); key.shadow.bias = -0.0008; key.shadow.radius = 4;
+  const sc = key.shadow.camera; sc.left = sc.bottom = -B3.size*0.8; sc.right = sc.top = B3.size*0.8; sc.near = 1; sc.far = B3.size*4;
+  scene.add(key); scene.add(key.target);
+  const rim = new THREE.DirectionalLight(dark?0x9fffc0:0xe8fff0, dark?0.9:0.6); rim.position.set(-B3.size, B3.size*0.5, -B3.size); scene.add(rim);
   const root = new THREE.Group(); root.position.set(-B3.c[0], -B3.c[1], -B3.c[2]); scene.add(root);
-  const hex = s=>parseInt(s.slice(1),16);
-  const bodyMat = s=>new THREE.MeshStandardMaterial({ color: hex(segColor(s, mov, dark?'#8e8e93':'#aeaeb2')), roughness:0.7 });
-  const propMat = new THREE.MeshStandardMaterial({ color: dark?0x3a3a3c:0x2c2c2e, roughness:0.55, metalness:0.2 });
-  const padMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness:0.9 });
-  const up = new THREE.Vector3(0,1,0);
-  function limb(r, mat, parent){ const g = new THREE.Group(); const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r,r,1,14), mat); const s1 = new THREE.Mesh(new THREE.SphereGeometry(r,14,10), mat); const s2 = s1.clone(); g.add(cyl,s1,s2); g.userData={cyl,s1,s2}; (parent||root).add(g); return g; }
-  function place(g, a, b){ const A = new THREE.Vector3(a[0],a[1],a[2]||0), B = new THREE.Vector3(b[0],b[1],b[2]||0); const d = B.clone().sub(A); const len = Math.max(0.01, d.length());
-    const u=g.userData; u.cyl.scale.set(1,len,1); u.cyl.position.copy(A.clone().add(B).multiplyScalar(0.5)); u.cyl.quaternion.setFromUnitVectors(up, d.normalize()); u.s1.position.copy(A); u.s2.position.copy(B); }
-  const torMat = bodyMat('tor');
-  const parts = { lo: new THREE.Mesh(new THREE.BoxGeometry(1,1,1), torMat), hi: new THREE.Mesh(new THREE.BoxGeometry(1,1,1), torMat), head: new THREE.Mesh(new THREE.SphereGeometry(10,18,14), bodyMat('none')) };
-  parts.lo.rotation.order = parts.hi.rotation.order = 'YXZ';
-  root.add(parts.lo, parts.hi, parts.head);
-  const limbs = {}; [['ua',4.6],['fa',4],['th',7],['sh',5],['ft',3.2]].forEach(([s,r])=>{ limbs[s]=[limb(r,bodyMat(s==='ft'?'sh':s)), limb(r,bodyMat(s==='ft'?'sh':s))]; });
-  const propG = new THREE.Group(); root.add(propG);
+  // 바닥: 그림자 받기 + 은은한 원형 무대
+  const floorY = B3.min[1] - 1;
+  const shadowFloor = new THREE.Mesh(new THREE.PlaneGeometry(B3.size*4, B3.size*4), new THREE.ShadowMaterial({ opacity: dark?0.55:0.22 }));
+  shadowFloor.rotation.x = -Math.PI/2; shadowFloor.position.set(B3.c[0], floorY, B3.c[2]); shadowFloor.receiveShadow = true; root.add(shadowFloor);
+  { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'); const gr = g.createRadialGradient(128,128,0,128,128,128);
+    gr.addColorStop(0, dark?'rgba(48,209,88,0.16)':'rgba(0,0,0,0.10)'); gr.addColorStop(0.55, dark?'rgba(48,209,88,0.05)':'rgba(0,0,0,0.035)'); gr.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0,0,256,256); const tx = new THREE.CanvasTexture(cv); tx.encoding = THREE.sRGBEncoding;
+    const disc = new THREE.Mesh(new THREE.PlaneGeometry(B3.size*1.7, B3.size*1.7), new THREE.MeshBasicMaterial({ map:tx, transparent:true, depthWrite:false }));
+    disc.rotation.x = -Math.PI/2; disc.position.set(B3.c[0], floorY+0.2, B3.c[2]); root.add(disc); junk.push(tx); }
+  // 재질
+  const skin = C(dark?'#8a8a91':'#c9c9cf');
+  const skinMat = new THREE.MeshPhysicalMaterial({ color:skin, roughness:0.42, metalness:0, clearcoat:0.2, clearcoatRoughness:0.6, envMapIntensity:0.32 });
+  const musMat = {}; const glowing = [];
+  function matFor(g){ const L = lvl3(g, mov); if(!L) return skinMat; if(musMat[L]) return musMat[L];
+    const m = new THREE.MeshPhysicalMaterial({ color:C(L===2?'#1fb94a':'#7fd69a'), roughness:0.4, clearcoat:0.3, clearcoatRoughness:0.45, emissive:C(L===2?'#19c24c':'#4fbf70'), emissiveIntensity:0.1, envMapIntensity:0.32 });
+    m.userData.L = L; glowing.push(m); return (musMat[L] = m); }
+  const metal = new THREE.MeshStandardMaterial({ color:C(dark?'#5a5a60':'#4a4a50'), metalness:0.8, roughness:0.3, envMapIntensity:0.8 });
+  const cableMat = new THREE.MeshStandardMaterial({ color:C('#1c1c1e'), metalness:0.3, roughness:0.45 });
+  const padMat = new THREE.MeshStandardMaterial({ color:C(dark?'#2c2c30':'#26262a'), roughness:0.78, envMapIntensity:0.35 });
+  const gripMat = new THREE.MeshStandardMaterial({ color:C('#111113'), roughness:0.85 });
+  const up = new THREE.Vector3(0,1,0), vA = new THREE.Vector3(), vB = new THREE.Vector3(), vD = new THREE.Vector3();
+  const sph = new THREE.SphereGeometry(1, 32, 22); junk.push(sph);
+  const cylGeo = {};  // 테이퍼 원통: 위/아래 반지름 비율별 캐시
+  const cylOf = (ra, rb)=>{ const k = ra+'|'+rb; if(!cylGeo[k]){ cylGeo[k] = new THREE.CylinderGeometry(rb, ra, 1, 28, 1, true); junk.push(cylGeo[k]); } return cylGeo[k]; };
+  const shadowy = m=>{ m.castShadow = true; m.receiveShadow = true; return m; };
+  // 테이퍼 팔다리(A쪽 반지름 ra → B쪽 rb)
+  function limb(ra, rb, mat, parent){ const g = new THREE.Group();
+    const cyl = shadowy(new THREE.Mesh(cylOf(ra,rb), mat)); const s1 = shadowy(new THREE.Mesh(sph, mat)); const s2 = shadowy(new THREE.Mesh(sph, mat));
+    s1.scale.setScalar(ra); s2.scale.setScalar(rb); g.add(cyl,s1,s2); g.userData = { cyl, s1, s2 }; (parent||root).add(g); return g; }
+  function place(g, a, b){ vA.set(a[0],a[1],a[2]||0); vB.set(b[0],b[1],b[2]||0); vD.copy(vB).sub(vA); const len = Math.max(0.01, vD.length());
+    const u = g.userData; u.cyl.scale.set(1,len,1); u.cyl.position.copy(vA).add(vB).multiplyScalar(0.5); u.cyl.quaternion.setFromUnitVectors(up, vD.normalize()); u.s1.position.copy(vA); u.s2.position.copy(vB); }
+  // 몸통: 골반·배·가슴 타원체 + 어깨(삼각근) + 목 + 머리
+  const ell = mat=>{ const m = shadowy(new THREE.Mesh(sph, mat)); m.rotation.order = 'YXZ'; root.add(m); return m; };
+  const T = { pelvis: ell(matFor('hip')), core: ell(matFor('core')), chest: ell(matFor('chest')), head: ell(skinMat) };
+  const delts = [ell(matFor('delt')), ell(matFor('delt'))];
+  const neck = limb(4.6, 4.2, skinMat);
+  const hands = [ell(skinMat), ell(skinMat)];
+  const L3 = { ua:[4.9,3.9,'ua'], fa:[3.9,2.9,'fa'], th:[7.6,5.0,'th'], sh:[5.0,3.3,'sh'], ft:[3.3,2.4,null] };
+  const limbs = {}; Object.keys(L3).forEach(s=>{ const [ra,rb,g] = L3[s]; limbs[s] = [limb(ra,rb, g?matFor(g):skinMat), limb(ra,rb, g?matFor(g):skinMat)]; });
+  function ellAlong(m, a, b, t, rx, ry, rz, ty){ // a→b 방향으로 누운 타원체, t는 a→b 위치
+    const dx = b[0]-a[0], dy = b[1]-a[1]; m.position.set(a[0]+dx*t, a[1]+dy*t, 0); m.rotation.set(0, ty, Math.atan2(dy,dx)); m.scale.set(rx, ry, rz); }
+  // 소품: 개수·종류가 프레임마다 같으니 한 번 만들고 위치만 바꾼다
+  const propG = new THREE.Group(); root.add(propG); const pool = [];
+  const rbox = {};  // 둥근 상자 지오메트리(구를 늘려서 만듦 → 모서리 법선이 정확)
+  function rboxGeo(sx, sy, sz){ const k = [sx,sy,sz].map(v=>v.toFixed(1)).join('|'); if(rbox[k]) return rbox[k];
+    const r = Math.max(0.6, Math.min(4, Math.min(sx,sy,sz)*0.32)); const g = new THREE.SphereGeometry(r, 24, 16); const p = g.attributes.position;
+    const sg = v=>Math.abs(v)<1e-6*r?0:Math.sign(v); const hx = Math.max(0, sx/2-r), hy = Math.max(0, sy/2-r), hz = Math.max(0, sz/2-r);
+    for(let i=0;i<p.count;i++){ const x=p.getX(i), y=p.getY(i), z=p.getZ(i); p.setXYZ(i, x+sg(x)*hx, y+sg(y)*hy, z+sg(z)*hz); }
+    p.needsUpdate = true; g.computeBoundingSphere(); junk.push(g); return (rbox[k] = g); }
   function setProps(J){
-    while(propG.children.length) propG.remove(propG.children[0]);
-    propsAt(id, J).forEach(p=>{
-      if(p.kind==='box'){ const m = new THREE.Mesh(new THREE.BoxGeometry(p.len,p.th,p.depth), padMat); m.position.set(p.c[0],p.c[1],p.c[2]); m.rotation.z = rad(p.ang); propG.add(m); }
-      else if(p.kind==='box3'){ const m = new THREE.Mesh(new THREE.BoxGeometry(p.size[0],p.size[1],p.size[2]), padMat); m.position.set(p.c[0],p.c[1],p.c[2]); propG.add(m); }
-      else if(p.kind==='line'){ const l = limb(p.w*0.9, propMat, propG); place(l, p.a, p.b); }
-      else if(p.kind==='cyl'){ const m = new THREE.Mesh(new THREE.CylinderGeometry(p.r,p.r,p.len,16), p.pad?padMat:propMat); m.rotation.x = Math.PI/2; m.position.set(p.c[0],p.c[1],p.c[2]); propG.add(m); }
+    propsAt(id, J).forEach((p,i)=>{
+      let it = pool[i];
+      if(!it || it.kind!==p.kind){ if(it) propG.remove(it.obj);
+        let obj;
+        if(p.kind==='line') obj = limb(p.thin?p.w*0.55:p.w*0.9, p.thin?p.w*0.55:p.w*0.9, p.thin?cableMat:metal, propG);
+        else if(p.kind==='cyl'){ obj = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(p.r,p.r,p.len,28), p.pad?padMat:metal)); junk.push(obj.geometry); propG.add(obj); }
+        else { const s = p.kind==='box3' ? p.size : [p.len, p.th, p.depth]; obj = shadowy(new THREE.Mesh(rboxGeo(s[0],s[1],s[2]), padMat)); propG.add(obj); }
+        it = pool[i] = { kind:p.kind, obj }; }
+      const o = it.obj;
+      if(p.kind==='line') place(o, p.a, p.b);
+      else if(p.kind==='cyl'){ o.rotation.set(Math.PI/2,0,0); o.position.set(p.c[0],p.c[1],p.c[2]); }
+      else if(p.kind==='box3'){ o.position.set(p.c[0],p.c[1],p.c[2]); }
+      else { o.position.set(p.c[0],p.c[1],p.c[2]); o.rotation.set(0,0,rad(p.ang)); }
     });
   }
-  const wide = RIGS[id].A.hz!=null || R.pole || R.handT;
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(1.8,1.8,R.bar?90:2*SW+10,12), propMat); handle.rotation.x = Math.PI/2; if(!wide && !R.noHandle) root.add(handle);
-  const grips = [1,-1].map(()=>{ const m = new THREE.Mesh(new THREE.CylinderGeometry(1.8,1.8,12,10), propMat); if(wide && !R.noHandle) root.add(m); return m; });
-  const az0 = R.az!=null ? R.az : (R.view==='front' ? 1.15 : 0.55), el0 = R.el!=null ? R.el : 0.28;
+  const wide = R.A.hz!=null || R.pole || R.handT;
+  const handle = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(1.9,1.9,R.bar?90:2*SW+10,20), metal)); handle.rotation.x = Math.PI/2; if(!wide && !R.noHandle) root.add(handle); junk.push(handle.geometry);
+  const gripGeo = new THREE.CylinderGeometry(2.3,2.3,12,20); junk.push(gripGeo);
+  const grips = [1,-1].map(()=>{ const m = shadowy(new THREE.Mesh(gripGeo, gripMat)); m.rotation.x = Math.PI/2; if(wide && !R.noHandle) root.add(m); return m; });
+  // 카메라: 화면비를 보고 전신+기구가 다 들어오게
+  const az0 = R.az!=null ? R.az : (R.view==='front' ? 1.15 : 0.55), el0 = R.el!=null ? R.el : 0.26;
   let az = az0, el2 = el0, dragging=false, lx=0, ly=0;
-  const RR = B3.size*1.5;
+  const fovV = cam.fov*Math.PI/180, fovH = 2*Math.atan(Math.tan(fovV/2)*cam.aspect);
+  const RR = (B3.size*0.5) / Math.tan(Math.min(fovV, fovH)/2) * 1.07;
   function setCam(){ cam.position.set(RR*Math.sin(az)*Math.cos(el2), RR*Math.sin(el2), RR*Math.cos(az)*Math.cos(el2)); cam.lookAt(0,0,0); }
   setCam();
   const cvs = renderer.domElement;
-  cvs.addEventListener('pointerdown', e=>{ dragging=true; lx=e.clientX; ly=e.clientY; cvs.setPointerCapture(e.pointerId); });
-  cvs.addEventListener('pointermove', e=>{ if(!dragging) return; az -= (e.clientX-lx)*0.01; el2 = Math.max(-0.2, Math.min(1.3, el2 + (e.clientY-ly)*0.006)); lx=e.clientX; ly=e.clientY; setCam(); });
+  cvs.addEventListener('pointerdown', e=>{ dragging=true; auto=false; lx=e.clientX; ly=e.clientY; cvs.setPointerCapture(e.pointerId); });
+  cvs.addEventListener('pointermove', e=>{ if(!dragging) return; az -= (e.clientX-lx)*0.01; el2 = Math.max(-0.1, Math.min(1.3, el2 + (e.clientY-ly)*0.006)); lx=e.clientX; ly=e.clientY; setCam(); });
   cvs.addEventListener('pointerup', ()=>{ dragging=false; });
   let raf=0, t0=performance.now(), auto=true;
-  cvs.addEventListener('pointerdown', ()=>{ auto=false; });
-  const torBox = (m, a, b, ty, wid)=>{ const d=[b[0]-a[0], b[1]-a[1]]; const len=Math.hypot(d[0],d[1]); m.scale.set(len+4, 18, wid); m.position.set((a[0]+b[0])/2, (a[1]+b[1])/2, 0); m.rotation.set(0, ty, Math.atan2(d[1],d[0])); };
   function frame(now){
-    const J = pose(id, opts.fixedT!=null ? opts.fixedT : phase(now-t0, fast), opts.bad);
+    const ph = opts.fixedT!=null ? opts.fixedT : phase(now-t0, fast);
+    const J = pose(id, ph, opts.bad);
     const ty = Math.atan2(J.side[1].S[0]-J.S[0], J.side[1].S[2]);
-    torBox(parts.lo, J.P, J.M, 0, 30); torBox(parts.hi, J.M, J.S, ty, 36);
-    parts.head.position.set(J.Hd[0], J.Hd[1], 0);
-    [1,-1].forEach((s,i)=>{ const o = J.side[s]; place(limbs.ua[i], o.S, o.E); place(limbs.fa[i], o.E, o.W); place(limbs.th[i], o.Hp, o.K); place(limbs.sh[i], o.K, o.A); place(limbs.ft[i], o.A, o.T);
+    ellAlong(T.pelvis, J.P, J.M, -0.05, 11, 10, 15.5, 0);
+    ellAlong(T.core, J.P, J.M, 0.6, Math.hypot(J.M[0]-J.P[0], J.M[1]-J.P[1])*0.62+3, 8.6, 13.2, (ty)*0.5);
+    ellAlong(T.chest, J.M, J.S, 0.5, Math.hypot(J.S[0]-J.M[0], J.S[1]-J.M[1])*0.62+4, 10.4, 17, ty);
+    T.head.position.set(J.Hd[0], J.Hd[1], 0); T.head.scale.set(8.6, 10.2, 8.2); T.head.rotation.set(0, ty, Math.atan2(J.Hd[1]-J.S[1], J.Hd[0]-J.S[0]) - Math.PI/2);
+    place(neck, J.S, [J.S[0]+(J.Hd[0]-J.S[0])*0.6, J.S[1]+(J.Hd[1]-J.S[1])*0.6, 0]);
+    [1,-1].forEach((s,i)=>{ const o = J.side[s];
+      delts[i].position.set(o.S[0], o.S[1], o.S[2]); delts[i].scale.set(6.4, 6.2, 6.4);
+      place(limbs.ua[i], o.S, o.E); place(limbs.fa[i], o.E, o.W); place(limbs.th[i], o.Hp, o.K); place(limbs.sh[i], o.K, o.A); place(limbs.ft[i], o.A, o.T);
+      hands[i].position.set(o.W[0], o.W[1], o.W[2]); hands[i].scale.set(3.4, 3.8, 3.0);
       grips[i].position.set(o.W[0], o.W[1], o.W[2]); });
     handle.position.set(J.W[0], J.W[1], 0);
     setProps(J);
+    // 수축할수록 일하는 근육이 더 밝게
+    glowing.forEach(m=>{ m.emissiveIntensity = (m.userData.L===2 ? 0.12 + 0.55*ph : 0.06 + 0.22*ph) * (dark?1.2:1); });
     if(auto){ az = az0 + Math.sin((now-t0)/4000)*0.5; setCam(); }
     renderer.render(scene, cam);
-    raf = requestAnimationFrame(frame);
+    if(opts.fixedT==null || !frame.once){ frame.once = true; raf = requestAnimationFrame(frame); }
   }
   raf = requestAnimationFrame(frame);
-  return { stop(){ cancelAnimationFrame(raf); renderer.dispose(); } };
+  return { stop(){ cancelAnimationFrame(raf); junk.forEach(j=>{ try{ j.dispose(); }catch(e){} }); renderer.dispose(); } };
 }
 window.RIG = { ids:Object.keys(RIGS), has:id=>!!RIGS[id], badIdx:id=>(RIGS[id]&&RIGS[id].badIdx)||0, rig2D, rig3D, _pose:pose };
 })();
