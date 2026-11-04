@@ -699,4 +699,5 @@
   <url><loc>https://3cho.kr/kcal/테라500.html</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://3cho.kr/kcal/논알콜맥주.html</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://3cho.kr/kcal/고량주1잔.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://3cho.kr/routines.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>

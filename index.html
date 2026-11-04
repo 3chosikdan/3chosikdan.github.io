@@ -532,6 +532,9 @@
   .mps-n { font-size:11.5px; color:#8e8e93; line-height:1.5; margin-top:2px; }
   .mps-d { animation:prPop .5s cubic-bezier(.3,1.6,.5,1); }
   html.dark .mps-l { stroke:#f2f2f7; } html.dark .mps-d { fill:#f2f2f7; stroke:#1c1c1e; }
+  .imp-b { background:#f7f7fa; border-radius:16px; padding:12px 14px; margin-bottom:8px; } .imp-b b { font-size:15px; font-weight:800; } .imp-b > span { display:block; font-size:12px; color:#8e8e93; margin-top:2px; }
+  .imp-b ol { margin:8px 0 0 18px; font-size:13.5px; line-height:1.7; } .imp-b small { color:#aeaeb2; font-size:11px; margin-left:3px; }
+  html.dark .imp-b { background:#2c2c2e; }
   #restBar { position:fixed; left:50%; bottom:96px; transform:translate(-50%, 140%); opacity:0; z-index:90; display:flex; align-items:center; gap:8px; background:#111; color:#fff; border-radius:100px; padding:8px 10px 8px 8px; box-shadow:0 10px 30px rgba(0,0,0,.25); transition:transform .35s cubic-bezier(.32,.72,0,1), opacity .25s; max-width:calc(100% - 32px); }
   #restBar.show { transform:translate(-50%,0); opacity:1; }
   #restBar svg { width:40px; height:40px; transform:rotate(-90deg); flex-shrink:0; }
@@ -973,6 +976,7 @@
     <a href="hypert.html">근비대 원리</a>
     <a href="machines.html">머신 브랜드 사전</a>
     <a href="move.html">머신 사용법</a>
+    <a href="routines.html">헬스 루틴 13가지</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
     <div style="margin-top:8px;">칼로리는 식품의약품안전처 식품영양성분 DB 및 추정값입니다. 의학적 조언이 아닙니다.</div>
@@ -1049,6 +1053,7 @@
     <a href="hypert.html">근비대 원리</a>
     <a href="machines.html">머신 브랜드 사전</a>
     <a href="move.html">머신 사용법</a>
+    <a href="routines.html">헬스 루틴 13가지</a>
     <a href="shop.html">장보기</a>
     <a href="privacy.html">개인정보처리방침</a>
   </footer>
@@ -1438,6 +1443,13 @@
   <div class="grabber"></div>
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <div id="sumBody"></div>
+</div>
+
+<div class="sheet rec-sheet" id="impSheet" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="impTitle">루틴 가져오기</h3>
+  <div id="impBody"></div>
 </div>
 
 <div class="sheet" id="rouSheet" role="dialog" aria-modal="true" aria-labelledby="rouTitle">
@@ -2704,7 +2716,7 @@ function cartCommit(){
   });
   cart = [];
   renderCart();
-  save(); closeSheet(); render(); hap(12);
+  save(); closeSheet(); render(); hap(12); firstLogPing();
   lastUndo = { date:k, ids: added.map(x=>x.id) };
   const label = n === 1 ? first : `${first} 외 ${n-1}개`;
   if(isPast){ toast(`✓ ${parseInt(k.slice(5,7))}/${parseInt(k.slice(8,10))} ${curSlot}\n${label}`, true); return; }
@@ -2735,7 +2747,7 @@ function quickProtein(g){
   const row = { id: Date.now()+'-'+Math.random().toString(36).slice(2,7), name:'단백질 '+g+'g', kcal:g*4, p:g, c:0, f:0,
     slot: autoSlot(), time: isPast ? '소급 기록' : nowTime(), skipLearn:true, quickP:true };
   S.meals[k].push(row);
-  save(); render(); hap(10);
+  save(); render(); hap(10); firstLogPing();
   lastUndo = { date:k, ids:[row.id] };
   const ts = todaySum(), pT = proteinTarget();
   toast(ts.p >= pT ? `✓ +${g}g · 단백질 달성 🎉` : `✓ +${g}g · ${Math.round(ts.p)} / ${pT}g`, true);
@@ -4437,7 +4449,7 @@ function closeSheet(){
   if(ws) ws.classList.remove('show');
   const ss = document.getElementById('setSheet');
   if(ss) ss.classList.remove('show');
-  ['recSheet','exhSheet','sumSheet'].forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.remove('show'); });
+  ['recSheet','exhSheet','sumSheet','impSheet'].forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.remove('show'); });
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -6570,6 +6582,7 @@ function renderWork(){
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="pinWeekday()">${wdName}요일에 고정</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(todayLog().routineId)">종목·순서</button>
+      ${rou ? `<button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="shareRoutine()">${ico('share',14)} 루틴 공유</button>` : ''}
     </div>
     ${rou ? `<details class="wk-help"><summary>루틴 이름 바꾸기</summary><label class="flabel" for="rouNameEdit" style="margin-top:8px;">루틴 이름</label>
       <input class="txt-input" id="rouNameEdit" value="${String(rou.name||'').replace(/"/g,'')}" aria-label="루틴 이름" placeholder="수 어깨">
@@ -6659,7 +6672,7 @@ function sameAsLast(exId){
   if(!String(e.setupUsed||'').trim()) e.setupUsed = c.setupUsed;
   e.carried = false;
   putTodayLog(day); renderWork();
-  toast('✓ 지난번과 똑같이 적었어요'); hap(10);
+  toast('✓ 지난번과 똑같이 적었어요'); hap(10); firstLogPing();
   restQueue(exId);
 }
 function hitTarget(exId){
@@ -6984,7 +6997,7 @@ function patchEnt(exId, which, field, val){
   const { day, e } = ensureEnt(exId);
   const n = val==='' ? '' : (field==='weight' ? parseFloat(val) : parseInt(val,10));
   e[which][field] = isNaN(n) ? val : n;
-  if(field==='reps' && n>0){ e.carried = false; restQueue(exId); }
+  if(field==='reps' && n>0){ e.carried = false; restQueue(exId); firstLogPing(); }
   if((field==='weight'||field==='reps') && val!==''){ const q = document.querySelector('#wkc_'+String(exId).replace(/['"]/g,'')+' .wk-quick'); if(q) q.remove(); }
   if(field==='weight' || field==='reps') prQueue(exId);
   if(field==='weight'){
@@ -7187,11 +7200,82 @@ async function saveSummaryImage(){
   let yy = 1200;
   if(D.prs.length){ g.fillStyle = '#ffd60a'; g.font = F(800,36); g.fillText(`🏆 신기록 ${D.prs.length}개 · ${D.prs.slice(0,2).join(', ')}`, 80, yy); yy += 56; }
   g.fillStyle = '#636366'; g.font = F(600,28); g.fillText('3cho.kr · 가입 없이 바로 기록', 80, H-70);
-  const blob = await new Promise(r=>c.toBlob(r, 'image/png'));
+  const blob = await new Promise(r=>c.toBlob(r, 'image/png')); statHit('v.app_share_card');
   const file = new File([blob], `3cho-workout-${X.date}.png`, { type:'image/png' });
   try{ if(navigator.canShare && navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:'오늘 운동' }); return; } }catch(e){ if(e && e.name==='AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   toast('이미지를 저장했어요');
+}
+/* ── 루틴 공유 링크: 링크 하나로 친구에게 내 루틴을 그대로 ── */
+const MUS_SET = ['가슴','등','어깨','이두','삼두','대퇴사두','햄스트링','둔근','내전','종아리','복부'];
+async function shareRoutine(){
+  const day = todayLog(); const rou = loadStore(WK.rou, []).find(r=>r.id===day.routineId);
+  if(!rou){ toast('먼저 오늘 할 루틴을 고르세요'); return; }
+  const exs = loadStore(WK.ex, []);
+  const items = (rou.exerciseIds||[]).map(id=>exs.find(x=>x.id===id)).filter(Boolean).map(x=>[String(x.name).slice(0,40), x.muscle, x.type]);
+  if(!items.length){ toast('종목이 없는 루틴이에요'); return; }
+  let url;
+  try{ url = location.origin + '/#r=' + b64urlFromBytes(await gzip(JSON.stringify({ v:1, n:String(rou.name||'루틴').slice(0,30), note:String(rou.note||'').slice(0,120), i:items }))); }
+  catch(_){ toast('이 브라우저에선 공유 링크를 만들 수 없어요'); return; }
+  statHit('v.app_share_routine'); hap(8);
+  const text = `내 루틴 '${rou.name}' (${items.length}종목) — 3초식단에서 바로 가져가기`;
+  try{ if(navigator.share){ await navigator.share({ title: rou.name+' 루틴', text, url }); return; } }catch(e){ if(e && e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(text+'\n'+url); toast('공유 링크를 복사했어요 · 카톡에 붙여넣으세요'); }
+  catch(_){ prompt('이 링크를 복사해서 보내세요', url); }
+}
+let _imp = null;
+async function tryImportRoutineHash(){
+  const m = location.hash.match(/^#(r|rp)=([A-Za-z0-9_\-]+)$/); if(!m) return false;
+  history.replaceState(null,'',location.pathname);
+  try{
+    if(m[1]==='rp'){
+      const p = WK_PRESETS.find(x=>x.id===m[2]); if(!p) throw 0;
+      _imp = { preset:p.id, title:p.name, sub:`${p.days?'주 '+p.days+'회 · ':''}${p.level||''} · 루틴 ${p.routines.length}개`, blocks: p.routines.map(r=>({ n:r.name, note:r.note, i:r.items })) };
+    } else {
+      const d = JSON.parse(await gunzip(bytesFromB64url(m[2])));
+      if(!d || !Array.isArray(d.i) || !d.i.length) throw 0;
+      const items = d.i.slice(0,20).map(it=>[String(it[0]||'').replace(/[<>"']/g,'').slice(0,40), MUS_SET.indexOf(it[1])>=0?it[1]:'가슴', /^(machine_compound|machine_isolation|free_compound|free_isolation|cable)$/.test(it[2])?it[2]:'machine_compound']).filter(it=>it[0]);
+      _imp = { title:String(d.n||'공유받은 루틴').replace(/[<>"']/g,'').slice(0,30), note:String(d.note||'').replace(/[<>]/g,'').slice(0,120), sub:`종목 ${items.length}개`, blocks:[{ n:String(d.n||'공유받은 루틴').replace(/[<>"']/g,'').slice(0,30), note:d.note, i:items }] };
+    }
+  }catch(_){ toast('루틴 링크를 읽지 못했어요'); return false; }
+  const b = document.getElementById('impBody');
+  b.innerHTML = `<p class="rc-sub">${_imp.sub}</p>` + _imp.blocks.map(bl=>`<div class="imp-b"><b>${String(bl.n).replace(/[<>]/g,'')}</b>${bl.note?`<span>${String(bl.note).replace(/[<>]/g,'')}</span>`:''}<ol>${bl.i.map(it=>`<li>${String(it[0]).replace(/[<>]/g,'')} <small>${it[1]}</small></li>`).join('')}</ol></div>`).join('')
+    + `<button type="button" class="save-btn" style="margin-top:14px;" onclick="importRoutine(true)">${_imp.preset?'이 프로그램으로 시작':'오늘 이 루틴으로 운동'}</button>`
+    + (_imp.preset ? '' : `<button type="button" class="ev-x" onclick="importRoutine(false)">내 루틴 목록에만 추가</button>`)
+    + `<p class="wk-hint" style="text-align:center;margin-top:10px;">종목은 가져온 뒤 언제든 바꿀 수 있어요. 기존 루틴·기록은 그대로예요.</p>`;
+  document.getElementById('impTitle').textContent = _imp.title;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('impSheet').classList.add('show');
+  return true;
+}
+function importRoutine(today){
+  if(!_imp) return;
+  if(_imp.preset){ closeSheet(); setHomeMode('lift'); chooseProgram(_imp.preset); statHit('v.app_import_routine'); _imp = null; return; }
+  const exercises = loadStore(WK.ex, []); const routines = loadStore(WK.rou, []);
+  const bl = _imp.blocks[0]; let name = bl.n; const have = new Set(routines.map(r=>normRouName(r.name)));
+  if(have.has(normRouName(name))){ let k = 2; while(have.has(normRouName(name+' '+k))) k++; name = name+' '+k; }
+  const ids = bl.i.map(it=>{ const hit = exercises.find(x=>_nn(x.name)===_nn(it[0])); if(hit) return hit.id; const ex = mkEx(it[0], it[1], it[2], ''); exercises.push(ex); return ex.id; });
+  const r = { id:'rs_'+Date.now().toString(36), name, exerciseIds:ids, light:false, note: bl.note ? String(bl.note).slice(0,120) : '공유받은 루틴' };
+  routines.push(r); saveStore(WK.ex, exercises); saveStore(WK.rou, sortRoutines(routines));
+  statHit('v.app_import_routine'); hap(10);
+  closeSheet(); setHomeMode('lift');
+  if(today && viewDate===todayKey()) pickRoutine(r.id); else renderWork();
+  toast(`'${name}' 루틴을 넣었어요`); _imp = null;
+}
+/* ── 성장 지표 (개수만, 익명) ── */
+function growthPing(){
+  try{
+    const T = todayKey();
+    if(localStorage.getItem('3cho:act:last')===T) return;
+    localStorage.setItem('3cho:act:last', T);
+    statHit('v.app_active');
+    const log = loadStore(WK.log, {}); let n = 0;
+    for(let i=-6;i<=0;i++){ const k = keyOffset(i); const fed = (S.meals[k]||[]).length>0; const lifted = !!(log[k] && (log[k].entries||[]).some(e=>entSets(e)>0)); if(fed||lifted) n++; }
+    if(n>=3) statHit('v.app_active3');
+  }catch(_){}
+}
+function firstLogPing(){
+  try{ if(localStorage.getItem('3cho:first')) return; localStorage.setItem('3cho:first', todayKey()); statHit('v.app_first_log'); if(localStorage.getItem('3cho:fromGuide')) statHit('v.app_guide_first'); }catch(_){}
 }
 function loadBodyMap(cb){
   if(window.BODYMAP){ cb&&cb(); return; }
@@ -7737,7 +7821,7 @@ try { migrateV1(); } catch(_){}
 render();
 tryAddQuery();
 // 이동 링크(#load=)로 열렸으면 그 기록을 올린다 — render 뒤라 화면이 먼저 뜬다
-tryLoadFromHash();
+tryLoadFromHash(); setTimeout(()=>{ try{ tryImportRoutineHash(); }catch(_){} try{ growthPing(); }catch(_){} }, 600);
 </script>
 
 <!-- 식약처 식품영양성분DB 38,749종 — 앱이 다 뜬 뒤에 붙는다(defer). 없어도 앱은 정상 동작. -->
