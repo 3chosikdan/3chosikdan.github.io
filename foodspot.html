@@ -875,6 +875,47 @@
   html.dark .rou-pick .rp, html.dark #wkRouToggle { background:#1c1c1e; color:#f2f2f7; border-color:#3a3a3c; }
   html.dark .rou-pick .rp.on { background:#f2f2f7; color:#111; }
   html.dark .wk-banner { background:#2a2414; color:#e5e5ea; }
+  .plan-line { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:8px; }
+  .plan-line:empty { display:none; }
+  .plan-pill { border:none; background:#f2f2f7; color:#3a3a3c; border-radius:100px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .plan-pill.on { background:#e8f8ed; color:#1a7f37; } .plan-pill.neg b { color:#c26a00; } .plan-pill.ghost { background:none; border:1px dashed #d1d1d6; color:#8e8e93; }
+  .pl-sec { margin:4px 0 16px; } .pl-h { font-weight:800; font-size:15px; margin-bottom:6px; } .pl-p { font-size:13px; line-height:1.55; color:#3a3a3c; margin:0; }
+  .pl-tip { font-size:12.5px; line-height:1.55; color:#6e6e73; margin:8px 0 0; background:#f7f7f9; border-radius:12px; padding:10px 12px; }
+  .pl-bars { --pl-off:#e5e5ea; display:flex; gap:8px; align-items:flex-end; height:110px; margin-top:10px; }
+  .pl-bar { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; } .pl-bar span { font-size:11px; color:#8e8e93; font-weight:700; } .pl-bar.today span { color:#111; }
+  .pl-col { position:relative; flex:1; width:100%; background:#f7f7f9; border-radius:8px; overflow:hidden; } .pl-col i { position:absolute; left:0; right:0; bottom:0; border-radius:8px; }
+  .pl-col em { position:absolute; left:0; right:0; border-top:2px dashed #8e8e93; opacity:.5; }
+  .pl-item { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:13px; padding:8px 0; border-bottom:1px solid #f2f2f7; }
+  .pl-kinds { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .pl-kinds button { border:1px solid #e5e5ea; background:none; border-radius:100px; padding:7px 12px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; color:inherit; }
+  .pl-kinds button.on { background:#111; color:#fff; border-color:#111; }
+  .pl-guide summary { font-weight:800; cursor:pointer; } .pl-g { font-size:13px; line-height:1.55; padding:8px 0; border-bottom:1px solid #f2f2f7; }
+  .mini-btn.ghost { background:#f2f2f7 !important; color:#111 !important; }
+  .tp-card { border-radius:18px; background:#f0faf3; padding:13px 15px; margin:0 0 12px; font-size:14px; line-height:1.45; }
+  .tp-card.ok { background:#f7f7f9; } .tp-k { font-size:11px; font-weight:800; color:#1a7f37; letter-spacing:.02em; margin-bottom:3px; }
+  .tp-sub { font-size:12.5px; color:#6e6e73; margin-top:3px; } .tp-btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .tp-btns .mini-btn { width:auto; flex:1; margin:0; padding:10px 12px; font-size:13px; }
+  .chal-start { display:flex; width:100%; justify-content:space-between; align-items:center; gap:8px; border:1px dashed #d1d1d6; background:none; border-radius:14px; padding:11px 14px; margin:0 0 12px; font-family:inherit; font-size:13.5px; font-weight:800; color:inherit; cursor:pointer; text-align:left; }
+  .chal-start span { font-size:12px; color:#8e8e93; font-weight:600; }
+  .chal-card { display:block; width:100%; border:none; background:#111; color:#fff; border-radius:16px; padding:13px 15px; margin:0 0 12px; font-family:inherit; cursor:pointer; text-align:left; }
+  .chal-card.done { background:linear-gradient(135deg,#0d3b1d,#111); } .chal-top { display:flex; justify-content:space-between; gap:8px; font-size:14px; } .chal-top span { font-size:12px; color:#aeaeb2; font-weight:600; }
+  .chal-bar { height:6px; background:#2c2c2e; border-radius:3px; margin-top:9px; overflow:hidden; } .chal-bar i { display:block; height:100%; background:#30d158; border-radius:3px; }
+  .chal-head { display:flex; justify-content:space-between; align-items:baseline; gap:8px; } .chal-head b { font-size:24px; } .chal-head span { font-size:12.5px; color:#8e8e93; }
+  .chal-dots { display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin:12px 0; } .chal-dots i { aspect-ratio:1; border-radius:50%; background:#e5e5ea; } .chal-dots i.y { background:#30d158; } .chal-dots i.n { background:#ffd7d4; } .chal-dots i.f { background:none; border:1.5px dashed #d1d1d6; }
+  .chal-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; } .chal-stats div { background:#f7f7f9; border-radius:12px; padding:10px; } .chal-stats b { display:block; font-size:17px; } .chal-stats span { font-size:11px; color:#8e8e93; }
+  .chal-ba, .chal-photos { display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:start; } .chal-photos { grid-template-columns:auto 1fr; }
+  .chal-ba > div { background:#f7f7f9; border-radius:12px; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px; font-size:12px; color:#8e8e93; }
+  .chal-ba img, .chal-photos img { width:100%; max-height:220px; object-fit:cover; border-radius:10px; } .chal-photos img { width:96px; height:120px; }
+  html.dark .plan-pill { background:#1c1c1e; color:#e5e5ea; } html.dark .plan-pill.on { background:#0f2a18; color:#30d158; } html.dark .plan-pill.ghost { background:none; border-color:#3a3a3c; }
+  html.dark .pl-p { color:#d1d1d6; } html.dark .pl-tip, html.dark .pl-col, html.dark .chal-stats div, html.dark .chal-ba > div { background:#1c1c1e; color:#aeaeb2; } html.dark .pl-bars { --pl-off:#2c2c2e; } html.dark .pl-bar.today span { color:#f2f2f7; }
+  html.dark .pl-item, html.dark .pl-g { border-color:#2c2c2e; } html.dark .pl-kinds button { border-color:#3a3a3c; } html.dark .pl-kinds button.on { background:#f2f2f7; color:#111; }
+  html.dark .mini-btn.ghost { background:#2c2c2e !important; color:#f2f2f7 !important; } html.dark .tp-card { background:#0f2a18; } html.dark .chal-dots i.y { background:#30d158; } html.dark .pl-col { background:#2c2c2e !important; } html.dark #chalSheet .chal-stats div, html.dark #chalSheet .chal-ba > div, html.dark #planSheet .pl-tip { background:#2c2c2e; }
+  .plan-pill.cyc { background:#fff0f3; color:#d6204f; } html.dark .plan-pill.cyc { background:#3a1520; color:#ff8fa8; }
+  .cyc-note { margin-top:10px; background:#fff0f3; border-radius:14px; padding:11px 14px; font-size:13px; line-height:1.55; color:#3a3a3c; } .cyc-note b { color:#d6204f; }
+  .cyc-hint { margin:8px 2px 0; font-size:12px; color:#8e8e93; line-height:1.5; }
+  html.dark .cyc-note { background:#2a1218; color:#e5e5ea; } html.dark .cyc-note b { color:#ff8fa8; }
+  .pl-primary { background:#111 !important; color:#fff !important; } html.dark .pl-primary { background:#f2f2f7 !important; color:#111 !important; } html.dark .tp-card.ok { background:#1c1c1e; } html.dark .tp-sub { color:#aeaeb2; }
+  html.dark .chal-start { border-color:#3a3a3c; } html.dark .chal-card { background:#1c1c1e; } html.dark .chal-dots i { background:#2c2c2e; } html.dark .chal-dots i.n { background:#4a2320; } html.dark .chal-dots i.f { background:none; border-color:#3a3a3c; }
+
   html.dark .wk-banner b { color:#f2f2f7; }
   html.dark .wk-prev { color:#e5e5ea; }
   html.dark .wk-cal-cell { background:#2c2c2e; }
@@ -944,6 +985,7 @@
     <div id="protQuick" class="prot-quick hidden"></div>
     <button type="button" class="mode-link" id="protToggle" onclick="toggleProtMode()"></button>
     <div id="adjPill" class="hidden" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:100px;background:#f2f2f7;font-size:12px;font-weight:700;color:#3a3a3c;"></div>
+    <div id="planLine" class="plan-line"></div>
     <div class="macros">
       <div class="mc-row"><button type="button" class="mname-btn" onclick="editDayMacro('p')" aria-label="단백질 목표">단백질</button><div class="mbar"><div id="barP"></div></div><button type="button" class="mval mval-btn" id="valP" onclick="editDayMacro('p')" aria-label="단백질 목표 바꾸기"></button></div>
       <div class="mc-row"><button type="button" class="mname-btn" onclick="editDayMacro('c')" aria-label="탄수 목표">탄수</button><div class="mbar"><div id="barC"></div></div><button type="button" class="mval mval-btn" id="valC" onclick="editDayMacro('c')" aria-label="탄수 목표 바꾸기"></button></div>
@@ -956,7 +998,9 @@
 
   <section id="bodySection">
     <h2>오늘 몸 상태</h2>
+    <div id="chalBox"></div>
     <div id="weightArea"></div>
+    <div id="cycleNote"></div>
     <div id="bfArea" style="margin-top:10px;"></div>
   </section>
   </div>
@@ -1430,6 +1474,20 @@
   <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
   <h3 id="recTitle">근육 회복</h3>
   <div id="recBody"></div>
+</div>
+
+<div class="sheet rec-sheet" id="planSheet" role="dialog" aria-modal="true" aria-labelledby="planTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="planTitle">약속 · 주간 통장</h3>
+  <div id="planBody"></div>
+</div>
+
+<div class="sheet rec-sheet" id="chalSheet" role="dialog" aria-modal="true" aria-labelledby="chalTitle">
+  <div class="grabber"></div>
+  <button class="sheet-x" onclick="closeSheet()" aria-label="닫기">✕</button>
+  <h3 id="chalTitle">30일 바디 챌린지</h3>
+  <div id="chalBody"></div>
 </div>
 
 <div class="sheet rec-sheet" id="exhSheet" role="dialog" aria-modal="true" aria-labelledby="exhTitle">
@@ -2408,6 +2466,7 @@ function goalAdjust(){ // 어제 과식 → 오늘 자동 차감 (절반, 최대
 function currentGoal(){
   let g = baseGoal() + goalAdjust();
   if(S.condition[todayKey()]==='refeed') g = Math.round(g*1.1); // 리피드 데이 +10%
+  if(typeof cycleBufOn==='function') g += cycleBufOn(todayKey()); // 생리 전주 여유
   return Math.max(1100, g);
 }
 /* 단백질: 체지방률을 알면 제지방량(LBM) 기준 — 감량기 근손실 방지에 더 정확 */
@@ -3931,6 +3990,9 @@ function render(){
     adjP.textContent = `오늘 P${t.p} C${t.c} F${t.f} · ${goal.toLocaleString()} kcal`;
   } else adjP.classList.add('hidden');
   if(prot) adjP.classList.add('hidden');
+  if(typeof renderPlanLine==='function') renderPlanLine(isToday, s, goal, prot);
+  if(typeof renderChalCard==='function') renderChalCard(isToday);
+  if(typeof renderCycleNote==='function') renderCycleNote(isToday);
 
   // macro bars
   const setBar=(bar,val,now,target,color,isP)=>{
@@ -4170,6 +4232,7 @@ function fancyLine(elId, data, o){
   let s = `<svg class="fl" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:auto;overflow:visible"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity="${dark?0.32:0.18}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>`;
   for(let g=0; g<3; g++){ const v = mn + (mx-mn)*(0.2+0.3*g); s += `<line x1="${L}" x2="${W-R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="${grid}" stroke-width="1"/><text x="${W-R+5}" y="${(y(v)+3.5).toFixed(1)}" font-size="9.5" fill="${sub}">${v.toFixed(o.dec==null?1:o.dec)}</text>`; }
   if(o.goal!=null && o.goal>0) s += `<line x1="${L}" x2="${W-R}" y1="${y(o.goal).toFixed(1)}" y2="${y(o.goal).toFixed(1)}" stroke="#30d158" stroke-width="1.4" stroke-dasharray="4 4"/><text x="${L+2}" y="${(y(o.goal)-5).toFixed(1)}" font-size="9.5" font-weight="700" fill="#30d158">목표 ${o.goal}</text>`;
+  if(o.bands) o.bands.forEach(bd=>{ const st = (W-L-R)/(n-1)/2; const x0 = Math.max(L, x(bd.a)-st), x1 = Math.min(W-R, x(bd.b)+st); s += `<rect x="${x0.toFixed(1)}" y="${T}" width="${Math.max(1,x1-x0).toFixed(1)}" height="${H-T-B}" fill="${bd.col}" rx="3"/>` + (x1-x0>18 ? `<text x="${((x0+x1)/2).toFixed(1)}" y="${T+9}" font-size="8.5" fill="#ff375f" text-anchor="middle" font-weight="700">${bd.lab}</text>` : ''); });
   s += `<path d="${area}" fill="url(#${id})" class="fl-area"/>`;
   if(o.ma && o.ma.length>=2){ s += `<path d="${smoothPath(o.ma.map(p=>[x(p.i), y(p.v)]))}" fill="none" stroke="#30d158" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round" opacity=".9"/>`; }
   s += `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="fl-line" pathLength="1"/>`;
@@ -4339,10 +4402,11 @@ function renderTrend(){
   for(let i=-(N-1);i<=0;i++){ const k=keyOffset(i); if(S.weights[k]!==undefined) pts.push({i:i+N-1, v:S.weights[k]}); }
   const gw = S.profile && S.profile.goalType!=='bf' && S.profile.goalWeight;
   const maPts = pts.map(p=>({i:p.i, v:maAt(keyOffset(p.i-(N-1)))})).filter(p=>p.v!==null).map(p=>({i:p.i, v:Math.round(p.v*10)/10}));
-  fancyLine('weightChart', pts, { n:N, goal: gw||null, ma: maPts, unit:'kg', empty:'몸무게를 2일 이상 기록하면 그래프가 나와요' });
+  const cBands = (S.profile && S.profile.sex==='f' && typeof cycleBands==='function') ? cycleBands(N) : null;
+  fancyLine('weightChart', pts, { n:N, goal: gw||null, ma: maPts, unit:'kg', bands: cBands, empty:'몸무게를 2일 이상 기록하면 그래프가 나와요' });
   document.getElementById('wNow').textContent = pts.length ? pts[pts.length-1].v + ' kg' : '';
   const rs = document.getElementById('trRange'); if(rs) rs.innerHTML = [[14,'2주'],[30,'1달'],[90,'3달']].map(([v,l])=>`<button type="button" class="${N===v?'on':''}" onclick="setTrRange(${v})">${l}</button>`).join('');
-  const sb = document.getElementById('wChartSub'); if(sb) sb.textContent = `최근 ${N===14?'2주':N===30?'1달':'3달'} · 초록 점선 = 7일 평균 추세 · 그래프를 눌러 보세요`;
+  const sb = document.getElementById('wChartSub'); if(sb) sb.textContent = `최근 ${N===14?'2주':N===30?'1달':'3달'} · 초록 점선 = 7일 평균 추세${cBands && cBands.length ? ' · 분홍 = 생리·생리 전주' : ''} · 그래프를 눌러 보세요`;
 
   // 추세 해석 코멘트 — 일일 변동 멘붕 방지
   const tr = weightTrend();
@@ -4449,7 +4513,7 @@ function closeSheet(){
   if(ws) ws.classList.remove('show');
   const ss = document.getElementById('setSheet');
   if(ss) ss.classList.remove('show');
-  ['recSheet','exhSheet','sumSheet','impSheet'].forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.remove('show'); });
+  ['recSheet','exhSheet','sumSheet','impSheet','planSheet','chalSheet'].forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.remove('show'); });
   window._editId = null;
   const pbtn = document.querySelector('#stepPortion .photo-btn');
   if(pbtn) pbtn.textContent = '기록하기';
@@ -6190,7 +6254,8 @@ function topTarget(exId, ex, unit, ent){
   const step = unit==='lb' ? 5 : 2.5;
   const w = +last.w, r = +last.r;
   let t;
-  if(r >= hi) t = { w: plateRound(w+step, unit), r: lo, why: hi+'회 채움 → 무게 올리기' };
+  if(deloadState()) t = { w: plateRound(w*0.9, unit), r: Math.max(lo, Math.min(r, hi)), why: '쉬어가는 주간 · 무게 −10%' };
+  else if(r >= hi) t = { w: plateRound(w+step, unit), r: lo, why: hi+'회 채움 → 무게 올리기' };
   else if(r >= lo) t = { w, r: r+1, why: '같은 무게로 1회 더' };
   else t = { w, r: lo, why: '같은 무게로 '+lo+'회부터' };
   t.last = last;
@@ -6252,12 +6317,12 @@ function weakMuscleText(){
 }
 /* ── 종목 이름 자동완성: 한국 헬스장 기구 브랜드 + 동작 ── */
 /* 브랜드별 실제 머신 목록은 gymdb.js (종목 추가 창을 열 때만 불러옴). 브랜드가 목록에 없으면 아래 공통 동작으로 붙여준다. */
-let GYM_BRANDS = ['해머스트렝스','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','디랙스','노틸러스','아스널','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','플렉스','메덱스','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
+let GYM_BRANDS = ['해머스트렝스','파나타','짐80','사이벡스','라이프','이카리안','뉴텍','디랙스','노틸러스','아스널','짐레코','프라임','테크노짐','매트릭스','매그넘','아틀란티스','스타트랙','바디마스터','플렉스','메덱스','부티빌더','DHZ','왓슨','파라마운트','프리모션','시타델'];
 function loadGymDb(){
   if(window.GYM_DB || window._gymDbLoading) return;
   window._gymDbLoading = true;
   const sc = document.createElement('script');
-  sc.src = 'gymdb.js?v=4'; sc.async = true;
+  sc.src = 'gymdb.js?v=5'; sc.async = true;
   sc.onload = ()=>{ try{ if(window.GYM_DB){ const names = window.GYM_DB.map(b=>b.ko); GYM_BRANDS = names.concat(GYM_BRANDS.filter(b=>names.indexOf(b)<0)); exSuggest(); } }catch(_){} };
   document.head.appendChild(sc);
 }
@@ -6519,7 +6584,7 @@ function deloadState(){
 }
 function startDeload(){
   saveStore(WK.deload, { start: todayKey() });
-  toast('디로드 시작 · 7일간 RIR 3~4');
+  toast('쉬어가는 주간 시작 · 7일간 무게 −10%');
   renderWork();
 }
 function effectiveRir(ex){
@@ -6549,16 +6614,16 @@ function renderWork(){
   if(viewDate===todayKey()) bootTodayRoutine();
   const day = todayLog();
   const rou = day.routineId ? (routines.find(r=>r.id===day.routineId) || null) : null;
-  const stagnant = rou ? (rou.exerciseIds||[]).filter(isStagnantEx) : [];
+  const stagnant = rou ? (typeof stagnantList==='function' ? stagnantList(rou.exerciseIds) : (rou.exerciseIds||[]).filter(isStagnantEx)) : [];
   const dl = deloadState();
   let html = '';
   if(dl){
-    html += `<div class="wk-banner">디로드 ${dl.day}일차 · ${dl.left}일 남음 — 중량 유지, RIR 3~4에서 끝내세요.</div>`;
+    html += `<div class="wk-banner">쉬어가는 주간 ${dl.day}일차 · ${dl.left}일 남음 — 탑세트 목표가 −10%로 나와요. RIR 3~4에서 끝내세요.</div>`;
   } else if(stagnant.length>=2){
-    const names = stagnant.map(id=>{ const e=exercises.find(x=>x.id===id); return e?e.name:id; }).join(', ');
-    html += `<div class="wk-banner">⚠ 백오프가 2세션 연속 정체입니다 (${names})<br><b>디로드를 권장합니다</b> — 중량은 유지하고 RIR 3~4에서 끝내세요. 5~7일.${(function(){ const a=recentSleepAvg(); return (a!=null && a<6) ? '<br>최근 수면 평균 '+a.toFixed(1)+'시간. 무게보다 잠을 먼저 보세요.' : ''; })()}
+    const names = stagnant.slice(0,3).map(id=>{ const e=exercises.find(x=>x.id===id); return e?e.name:id; }).join(', ') + (stagnant.length>3 ? ` 외 ${stagnant.length-3}개` : '');
+    html += `<div class="wk-banner">⚠ 최근 기록이 제자리예요 (${names})<br><b>다음 7일은 쉬어가는 주간을 권해요</b> — 탑세트 무게 −10%, RIR 3~4에서 끝내기. 쉬고 나면 대개 다시 올라가요.${(function(){ const a=recentSleepAvg(); return (a!=null && a<6) ? '<br>최근 수면 평균 '+a.toFixed(1)+'시간. 무게보다 잠을 먼저 보세요.' : ''; })()}
       <div class="frow" style="margin-top:8px;margin-bottom:0;">
-        <button type="button" class="mini-btn" onclick="startDeload()">디로드 시작</button>
+        <button type="button" class="mini-btn" onclick="startDeload()">쉬어가는 주간 시작</button>
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="this.closest('.wk-banner').remove()">나중에</button>
       </div></div>`;
   }
@@ -6570,6 +6635,7 @@ function renderWork(){
   const menu = routineMenu(sorted, day);
   const mine = menu.shown;
   const curName = rou ? (String(rou.name||'루틴').replace(/[<>]/g,'')+(rou.light?' · 저강도':'')) : '루틴 없이 오늘만 적기';
+  if(typeof todayPickHtml==='function') html += todayPickHtml(routines, day, rou);
   html += recoveryCardHtml(rou);
   html += `<div class="flabel" style="margin:0">오늘 할 루틴</div>
     <button type="button" class="rp" id="wkRouToggle" style="margin-top:8px;" aria-expanded="${window._rouOpen?'true':'false'}" onclick="window._rouOpen=!window._rouOpen; renderWork()">${curName}<span style="float:right;font-weight:800;">${window._rouOpen?'▴':'▾'}</span></button>
@@ -7827,5 +7893,376 @@ tryLoadFromHash(); setTimeout(()=>{ try{ tryImportRoutineHash(); }catch(_){} try
 <!-- 식약처 식품영양성분DB 38,749종 — 앱이 다 뜬 뒤에 붙는다(defer). 없어도 앱은 정상 동작. -->
 <script src="cloud.js?v=5"></script>
 <script defer src="fooddb.js" onerror="console.warn('fooddb.js 없음 — 엄선 DB로만 검색')"></script>
+<script>
+/* ============ v107: 오늘 뭐하지 · 약속 모드 · 주간 칼로리 통장 · 30일 바디 챌린지 · 정체(e1RM) ============ */
+/* ── 6. 정체: 탑세트 추정 1RM이 2주 넘게 제자리 ── */
+function e1Stagnant(exId){
+  const h = topHist(exId).filter(x=>+x.r>0);
+  if(h.length < 4) return false;
+  const L = h.slice(-4);
+  if(L.some(x=>x.unit!==L[0].unit || (x.setup||'')!==(L[0].setup||''))) return false;
+  const span = (new Date(L[3].date) - new Date(L[0].date))/86400000;
+  if(span < 14) return false;
+  const e = x=>e1rm(x.w, x.r);
+  const before = Math.max(e(L[0]), e(L[1])), after = Math.max(e(L[2]), e(L[3]));
+  return before>0 && after <= before*1.01;
+}
+function stagnantList(ids){ return (ids||[]).filter(id=>isStagnantEx(id) || e1Stagnant(id)); }
+
+/* ── 3. 오늘 뭐하지: 회복 + 마지막으로 한 날 → 오늘 할 루틴 ── */
+function lastDoneOf(rid){
+  const log = loadStore(WK.log, {});
+  const ks = Object.keys(log).filter(d=>d<todayKey() && log[d] && log[d].routineId===rid && (log[d].entries||[]).some(entDone)).sort();
+  return ks.length ? ks[ks.length-1] : null;
+}
+function todayPickHtml(routines, day, rou){
+  if(viewDate!==todayKey() || !window.BODYMAP || (routines||[]).length<2) return '';
+  if((day.entries||[]).some(entDone)) return '';
+  if(window._pickHide===todayKey()) return '';
+  const R = computeRecovery(Date.now()); if(!R) return '';
+  const exs = loadStore(WK.ex, []), NAME = window.BODYMAP.NAME;
+  const today0 = new Date(todayKey()+'T00:00:00').getTime();
+  const cand = routines.filter(r=>(r.exerciseIds||[]).length && !r.light).map(r=>{
+    const ps = new Set(); (r.exerciseIds||[]).forEach(id=>{ const ex = exs.find(x=>x.id===id); exRegions(ex).p.forEach(x=>ps.add(x)); });
+    const list = [...ps].map(id=>R[id]).filter(Boolean);
+    if(!list.length) return null;
+    const min = Math.min(...list.map(x=>x.pct)), avg = Math.round(list.reduce((a,x)=>a+x.pct,0)/list.length);
+    const ld = lastDoneOf(r.id); const since = ld ? Math.round((today0 - new Date(ld+'T00:00:00').getTime())/86400000) : 99;
+    const low = list.filter(x=>x.pct<70).sort((a,b)=>a.pct-b.pct);
+    return { r, min, avg, since, low };
+  }).filter(Boolean);
+  if(!cand.length) return '';
+  cand.sort((a,b)=>((b.min>=70)-(a.min>=70)) || (b.since-a.since) || (b.avg-a.avg));
+  const best = cand[0];
+  const nm = s=>String(s||'루틴').replace(/[<>]/g,'');
+  const sinceTxt = best.since>=99 ? '아직 안 한 루틴' : best.since===1 ? '어제 마지막' : best.since+'일 전 마지막';
+  let tgt = '';
+  const fid = (best.r.exerciseIds||[])[0], fex = exs.find(x=>x.id===fid);
+  if(fex){ const t = topTarget(fid, fex, exUnitOf(fex, null), null); if(t) tgt = `<div class="tp-sub">첫 종목 ${nm(fex.name)} · 탑세트 목표 <b>${t.w}${uLabel(exUnitOf(fex,null))} × ${t.r}회</b></div>`; }
+  if(rou && best.r.id===rou.id){
+    return `<div class="tp-card ok"><div class="tp-k">오늘 뭐하지</div><b>지금 고른 '${nm(rou.name)}'가 오늘 제일 좋아요</b><div class="tp-sub">해당 부위 회복 ${best.avg}% · ${sinceTxt}</div>${tgt}</div>`;
+  }
+  if(best.min < 70){
+    return `<div class="tp-card"><div class="tp-k">오늘 뭐하지</div><b>전 부위가 아직 회복 중이에요</b><div class="tp-sub">가장 나은 건 '${nm(best.r.name)}'(최저 ${best.min}%). 가볍게 백오프만 하거나 쉬어도 좋아요.</div>
+      <div class="tp-btns"><button type="button" class="mini-btn" onclick="pickRoutine('${best.r.id}')">이걸로 하기</button><button type="button" class="mini-btn ghost" onclick="window._pickHide=todayKey(); renderWork()">닫기</button></div></div>`;
+  }
+  return `<div class="tp-card"><div class="tp-k">오늘 뭐하지</div><b>오늘은 '${nm(best.r.name)}' 추천</b><div class="tp-sub">해당 부위 회복 ${best.avg}% · ${sinceTxt}</div>${tgt}
+    <div class="tp-btns"><button type="button" class="mini-btn" onclick="pickRoutine('${best.r.id}')">이걸로 바꾸기</button><button type="button" class="mini-btn ghost" onclick="window._pickHide=todayKey(); renderWork()">지금 루틴 그대로</button></div></div>`;
+}
+
+/* ── 4·5. 약속(외식) 모드 + 주간 칼로리 통장 ── */
+const PLAN_KINDS = [
+  ['고깃집',1100,'삼겹살보다 목살·소고기 안심/우둔처럼 기름 적은 부위. 공깃밥·냉면은 빼고 쌈채소로 양 채우기. 된장찌개는 괜찮아요.'],
+  ['치킨·피자',1200,'후라이드 반 마리만 해도 1,000kcal 안팎. 양념·치즈 추가는 더 올라가요. 껍질 조금 떼고, 음료는 제로로.'],
+  ['술자리',1000,'술보다 안주가 칼로리의 대부분. 두부김치·골뱅이·회·어묵탕 쪽으로. 전·튀김·마른안주는 피하기. 술 한 잔에 물 한 잔.'],
+  ['중식',900,'짜장·짬뽕 한 그릇이 700~900kcal. 탕수육은 나눠 먹는 만큼만. 볶음밥보다 면 반 그릇 + 요리 쪽이 단백질이 나아요.'],
+  ['횟집·일식',700,'회는 단백질 많고 칼로리 낮은 최고의 외식. 초밥은 밥이 탄수라 개수만 세기. 튀김·마요 들어간 롤은 줄이기.'],
+  ['뷔페',1500,'첫 접시는 고기·생선 + 채소로 시작. 밥·면·빵은 한 번만. 디저트는 한 접시로 끝내기.'],
+  ['그냥 외식',800,'메뉴를 미리 정하고 가면 덜 먹어요. 국물은 다 마시지 않기.'],
+];
+function plansOf(){ S.plans = S.plans || {}; return S.plans; }
+function weekBank(){
+  if(!S.profile) return null;
+  const mon = weekKeyOf(), today = todayKey(), g = baseGoal();
+  const days = []; let bank = 0;
+  for(let i=0;i<7;i++){
+    const d = new Date(mon+'T12:00:00'); d.setDate(d.getDate()+i); const k = ymd(d);
+    const eaten = (S.meals[k]||[]).reduce((a,m)=>a+(m.kcal||0),0);
+    const logged = eaten >= 500;
+    const gd = g + cycleBufOn(k);
+    if(k < today && logged) bank += gd - eaten;
+    days.push({ k, eaten, logged, past: k<today, today: k===today, g: gd, buf: gd>g });
+  }
+  const left = days.filter(d=>!d.past).length;
+  return { bank: Math.round(bank), days, g, left, any: days.some(d=>d.past && d.logged) };
+}
+function renderPlanLine(isToday, s, goal, prot){
+  const el = document.getElementById('planLine'); if(!el) return;
+  if(!isToday || prot){ el.innerHTML = ''; return; }
+  const P = plansOf(), today = todayKey(); let h = '';
+  const p = P[today];
+  if(p){
+    const slotEaten = (S.meals[today]||[]).filter(m=>m.slot===p.slot).reduce((a,m)=>a+(m.kcal||0),0);
+    if(!slotEaten){
+      const before = goal - p.kcal - s.k;
+      h += `<button type="button" class="plan-pill on" onclick="openPlan()">🍽 ${p.slot} ${p.kind}에 ${p.kcal.toLocaleString()} 남겨둠 · 그 전까지 <b>${before>=0?before.toLocaleString():'0'}</b>kcal</button>`;
+    } else h += `<button type="button" class="plan-pill on" onclick="openPlan()">🍽 ${p.slot} ${p.kind} 기록됨 · 넘친 건 내일 절반만 자동 반영</button>`;
+  }
+  const B = weekBank();
+  if(B && B.any){
+    const v = B.bank, pos = v>=0;
+    h += `<button type="button" class="plan-pill ${pos?'':'neg'}" onclick="openPlan()">이번 주 통장 <b>${pos?'+':'−'}${Math.abs(v).toLocaleString()}</b>kcal</button>`;
+  }
+  if(typeof cycleBufOn==='function' && cycleBufOn(today)) h += `<button type="button" class="plan-pill cyc" onclick="openPlan()">생리 전주 +${CYCLE_BUF}kcal 여유</button>`;
+  if(!p && S.profile) h += `<button type="button" class="plan-pill ghost" onclick="openPlan(true)">약속 있어요</button>`;
+  el.innerHTML = h;
+}
+function openPlan(form){
+  window._planForm = form ? { day:0, slot:'저녁', kind:0 } : (window._planForm || null);
+  renderPlanSheet();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('planSheet').classList.add('show');
+}
+function planDayKey(off){ return keyOffset(off); }
+function renderPlanSheet(){
+  const body = document.getElementById('planBody'); if(!body) return;
+  const P = plansOf(); const F = window._planForm; let h = '';
+  const B = weekBank();
+  if(B){
+    const max = Math.max(B.g*1.3, ...B.days.map(d=>d.eaten), 1);
+    h += `<div class="pl-sec"><div class="pl-h">이번 주 칼로리 통장</div>
+      <p class="pl-p">하루 목표 ${B.g.toLocaleString()}kcal 기준으로, 기록한 날에 덜 먹은 만큼 쌓이고 더 먹은 만큼 빠져요. 하루 단위보다 <b>일주일 단위</b>로 맞추면 됩니다.</p>
+      <div class="pl-bars">${B.days.map(d=>{ const wd = ['월','화','수','목','금','토','일'][B.days.indexOf(d)];
+        const hgt = Math.round(Math.min(d.eaten,max)/max*100), gl = Math.round(B.g/max*100);
+        const col = !d.logged ? 'var(--pl-off)' : d.eaten>B.g ? '#ff9f0a' : '#30d158';
+        return `<div class="pl-bar ${d.today?'today':''}"><div class="pl-col"><i style="height:${d.logged||d.today?hgt:0}%;background:${col}"></i><em style="bottom:${gl}%"></em></div><span>${wd}</span></div>`; }).join('')}</div>
+      <p class="pl-p" style="margin-top:8px;">${B.any ? (B.bank>=0
+        ? `지금 <b style="color:#30d158">+${B.bank.toLocaleString()}kcal</b> 남았어요. 주말 약속에 써도 이번 주는 목표 안이에요.`
+        : `지금 <b style="color:#ff9f0a">−${(-B.bank).toLocaleString()}kcal</b>예요. 남은 ${B.left}일 동안 하루 ${Math.round(-B.bank/Math.max(1,B.left)).toLocaleString()}kcal씩 덜 먹으면 맞춰져요. 무리해서 한 번에 갚지 마세요.`)
+        : '월요일부터 기록이 쌓이면 여기 숫자가 생겨요.'}</p></div>`;
+  }
+  if(typeof cyclePlanHtml==='function') h += cyclePlanHtml();
+  h += `<div class="pl-sec"><div class="pl-h">약속·회식 미리 적기</div>`;
+  const list = Object.keys(P).filter(k=>k>=todayKey()).sort();
+  if(list.length) h += list.map(k=>{ const p = P[k]; return `<div class="pl-item"><span>${k===todayKey()?'오늘':k===keyOffset(1)?'내일':fmtDate(k)} · ${p.slot} · ${p.kind} <b>${p.kcal.toLocaleString()}kcal</b></span><button type="button" class="helper-link" onclick="delPlan('${k}')">지우기</button></div>`; }).join('');
+  if(!F) h += `<button type="button" class="mini-btn" style="margin-top:8px;" onclick="window._planForm={day:0,slot:'저녁',kind:0}; renderPlanSheet()">＋ 약속 추가</button>`;
+  else {
+    const slots = (S.slots||['아침','점심','저녁','간식']);
+    h += `<div class="pl-form">
+      <div class="seg">${['오늘','내일','모레'].map((t,i)=>`<button type="button" class="${F.day===i?'on':''}" onclick="window._planForm.day=${i}; renderPlanSheet()">${t}</button>`).join('')}</div>
+      <div class="seg" style="margin-top:8px;">${slots.map(sl=>`<button type="button" class="${F.slot===sl?'on':''}" onclick="window._planForm.slot='${sl.replace(/'/g,'')}'; renderPlanSheet()">${sl}</button>`).join('')}</div>
+      <div class="pl-kinds">${PLAN_KINDS.map((k,i)=>`<button type="button" class="${F.kind===i?'on':''}" onclick="window._planForm.kind=${i}; window._planForm.kcal=null; renderPlanSheet()">${k[0]}</button>`).join('')}</div>
+      <label class="flabel" for="plKcal" style="margin-top:10px;">예상 칼로리</label>
+      <input class="txt-input" id="plKcal" inputmode="numeric" value="${F.kcal!=null?F.kcal:PLAN_KINDS[F.kind][1]}" oninput="window._planForm.kcal=this.value">
+      <p class="pl-tip">💡 ${PLAN_KINDS[F.kind][2]}</p>
+      <button type="button" class="mini-btn pl-primary" style="margin-top:10px;" onclick="savePlan()">저장</button>
+      <button type="button" class="mini-btn ghost" style="margin-top:10px;" onclick="window._planForm=null; renderPlanSheet()">취소</button></div>`;
+  }
+  h += `<p class="pl-p" style="margin-top:10px;">저장하면 그날 홈에 "그 전까지 몇 kcal"가 떠요. 약속 때 더 먹어도 다음 날 넘친 만큼의 절반(최대 250)만 자동으로 줄어들어요.</p></div>`;
+  h += `<details class="pl-sec pl-guide"><summary>메뉴별 고르는 법</summary>${PLAN_KINDS.map(k=>`<div class="pl-g"><b>${k[0]}</b> · 보통 ${k[1].toLocaleString()}kcal 안팎<br>${k[2]}</div>`).join('')}</details>`;
+  body.innerHTML = h;
+}
+function savePlan(){
+  const F = window._planForm; if(!F) return;
+  const kcal = Math.round(+(F.kcal!=null ? F.kcal : PLAN_KINDS[F.kind][1]));
+  if(!(kcal>0 && kcal<6000)){ toast('칼로리를 숫자로 적어주세요'); return; }
+  const P = plansOf(); P[planDayKey(F.day)] = { slot:F.slot, kind:PLAN_KINDS[F.kind][0], kcal };
+  Object.keys(P).forEach(k=>{ if(k < keyOffset(-14)) delete P[k]; });
+  window._planForm = null; save(); statHit('v.app_plan'); renderPlanSheet(); render(); toast('약속을 적어뒀어요');
+}
+function delPlan(k){ const P = plansOf(); delete P[k]; save(); renderPlanSheet(); render(); }
+
+/* ── 1. 30일 바디 챌린지 ── */
+const CHAL_GOALS = { cut:'감량', bulk:'증량', recomp:'유지하며 몸 만들기' };
+function chalPhotos(){ try{ return JSON.parse(localStorage.getItem('3cho_chal_photo')||'{}'); }catch(_){ return {}; } }
+function chalSavePhoto(which, dataUrl){ const p = chalPhotos(); p[which] = dataUrl; try{ localStorage.setItem('3cho_chal_photo', JSON.stringify(p)); return true; }catch(_){ toast('사진이 너무 커서 저장하지 못했어요'); return false; } }
+function chalInfo(){
+  const C = S.chal; if(!C || !C.start) return null;
+  const s0 = new Date(C.start+'T00:00:00').getTime(), t0 = new Date(todayKey()+'T00:00:00').getTime();
+  const day = Math.floor((t0-s0)/86400000)+1;
+  const dots = []; let logged = 0;
+  for(let i=0;i<30;i++){ const d = new Date(C.start+'T12:00:00'); d.setDate(d.getDate()+i); const k = ymd(d);
+    const ok = (S.meals[k]||[]).length>0 || S.weights[k]!=null; if(ok && i<day) logged++; dots.push({ k, ok, future: i>=day }); }
+  const endK = dots[29].k;
+  const nowW = maAt(todayKey()<endK ? todayKey() : endK) || lastWeight();
+  const dw = (nowW!=null && C.w0) ? Math.round((nowW - C.w0)*10)/10 : null;
+  return { C, day: Math.min(day, 31), done: day>30, dots, logged, dw, nowW, endK };
+}
+function renderChalCard(isToday){
+  const el = document.getElementById('chalBox'); if(!el) return;
+  if(!isToday){ el.innerHTML = ''; return; }
+  const I = chalInfo();
+  if(!I){ el.innerHTML = `<button type="button" class="chal-start" onclick="openChal()">30일 바디 챌린지 <span>30일 뒤 비포·애프터 리포트 카드 ›</span></button>`; return; }
+  const pct = Math.min(100, Math.round(Math.min(I.day,30)/30*100));
+  const dwTxt = I.dw==null ? '' : ` · 체중 ${I.dw>0?'+':''}${I.dw}kg`;
+  el.innerHTML = `<button type="button" class="chal-card ${I.done?'done':''}" onclick="openChal()">
+    <div class="chal-top"><b>${I.done ? '🏁 30일 완료 — 리포트 카드 만들기' : `30일 챌린지 D+${I.day}`}</b><span>${I.logged}/${Math.min(I.day,30)}일 기록${dwTxt}</span></div>
+    <div class="chal-bar"><i style="width:${pct}%"></i></div></button>`;
+}
+function openChal(){
+  renderChalSheet();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('chalSheet').classList.add('show');
+}
+function chalPick(which){
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture','environment');
+  inp.onchange = ()=>{ const f = inp.files && inp.files[0]; if(!f) return;
+    const img = new Image(); const url = URL.createObjectURL(f);
+    img.onload = ()=>{ const M = 720, r = Math.min(1, M/Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width*r); c.height = Math.round(img.height*r);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      if(chalSavePhoto(which, c.toDataURL('image/jpeg', 0.78))){ renderChalSheet(); toast(which==='b'?'시작 사진을 이 기기에만 저장했어요':'지금 사진을 이 기기에만 저장했어요'); } };
+    img.src = url; };
+  inp.click();
+}
+function startChal(){
+  const g = (document.querySelector('#chalGoal button.on')||{}).dataset; const goal = (g && g.v) || 'cut';
+  const w = parseFloat((document.getElementById('chalW')||{}).value);
+  if(!(w>25 && w<300)){ toast('시작 체중을 적어주세요'); return; }
+  S.chal = { start: todayKey(), w0: Math.round(w*10)/10, goal };
+  if(S.weights[todayKey()]==null) S.weights[todayKey()] = S.chal.w0;
+  save(); statHit('v.app_chal_start'); hap(12); renderChalSheet(); render(); toast('30일 챌린지 시작! 매일 한 번만 적으면 돼요');
+}
+function endChal(){ if(!confirm('챌린지를 끝낼까요? 기록과 사진은 그대로 남아요.')) return; S.chalPast = (S.chalPast||[]).concat([S.chal]).slice(-5); delete S.chal; save(); closeSheet(); render(); }
+function chalStats(I){
+  const C = I.C, ks = I.dots.filter(d=>!d.future).map(d=>d.k), past = ks.filter(k=>k<todayKey());
+  const md = past.filter(k=>(S.meals[k]||[]).reduce((a,m)=>a+(m.kcal||0),0)>=500);
+  const avgK = md.length ? Math.round(md.reduce((a,k)=>a+(S.meals[k]||[]).reduce((s,m)=>s+(m.kcal||0),0),0)/md.length) : null;
+  const avgP = md.length ? Math.round(md.reduce((a,k)=>a+(S.meals[k]||[]).reduce((s,m)=>s+(m.p||0),0),0)/md.length) : null;
+  const log = loadStore(WK.log, {}); const wk = ks.filter(k=>log[k] && (log[k].entries||[]).some(entDone)).length;
+  const T = estimateTDEE();
+  return { avgK, avgP, wk, tdee: T.ok ? T.tdee : null, mealDays: md.length };
+}
+function renderChalSheet(){
+  const body = document.getElementById('chalBody'); if(!body) return;
+  const I = chalInfo(); const ph = chalPhotos();
+  if(!I){
+    const w = lastWeight() || (S.profile && S.profile.weight) || '';
+    body.innerHTML = `<p class="pl-p">30일 동안 <b>하루 한 번만</b> 적으면 돼요. 끼니든 몸무게든 하나면 그날은 기록한 날이에요. 30일이 끝나면 체중 변화, 실제 유지칼로리, 운동 횟수, 비포·애프터 사진이 한 장짜리 리포트 카드로 나와요.</p>
+      <div class="flabel" style="margin-top:12px;">목표</div>
+      <div class="seg" id="chalGoal">${Object.entries(CHAL_GOALS).map(([k,v],i)=>`<button type="button" data-v="${k}" class="${i===0?'on':''}" onclick="this.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===this))">${v}</button>`).join('')}</div>
+      <label class="flabel" for="chalW" style="margin-top:12px;">시작 체중 (kg)</label>
+      <input class="txt-input" id="chalW" inputmode="decimal" value="${w}" placeholder="72.4">
+      <div class="flabel" style="margin-top:12px;">시작 사진 (선택)</div>
+      <div class="chal-photos">${ph.b ? `<img src="${ph.b}" alt="시작 사진">` : ''}<button type="button" class="mini-btn ghost" onclick="chalPick('b')">${ph.b?'다시 찍기':'사진 넣기'}</button></div>
+      <p class="pl-tip">사진은 서버에 올라가지 않고 이 기기에만 저장돼요. 같은 장소·같은 시간(아침 공복)·같은 자세로 찍으면 비교가 정확해요.</p>
+      <button type="button" class="mini-btn pl-primary" style="margin-top:14px;width:100%;" onclick="startChal()">오늘부터 30일 시작</button>`;
+    return;
+  }
+  const X = chalStats(I);
+  const dots = I.dots.map((d,i)=>`<i class="${d.future?'f':d.ok?'y':'n'}" title="D+${i+1}"></i>`).join('');
+  const stat = (v,l)=>`<div><b>${v}</b><span>${l}</span></div>`;
+  body.innerHTML = `<div class="chal-head"><b>${I.done?'30일 완료':'D+'+I.day+' / 30'}</b><span>${CHAL_GOALS[I.C.goal]||''} · ${fmtDate(I.C.start)} 시작</span></div>
+    <div class="chal-dots">${dots}</div>
+    <div class="chal-stats">${stat(I.dw==null?'—':(I.dw>0?'+':'')+I.dw+'kg','체중 변화(7일 평균)')}${stat(I.logged+'일','기록한 날')}${stat(X.wk+'회','운동')}${stat(X.avgK?X.avgK.toLocaleString():'—','평균 섭취 kcal')}${stat(X.avgP?X.avgP+'g':'—','평균 단백질')}${stat(X.tdee?X.tdee.toLocaleString():'2주 더','실제 유지칼로리')}</div>
+    <div class="flabel" style="margin-top:14px;">비포·애프터 (이 기기에만 저장)</div>
+    <div class="chal-ba"><div>${ph.b?`<img src="${ph.b}" alt="시작">`:'<span>시작 사진 없음</span>'}<button type="button" class="helper-link" onclick="chalPick('b')">${ph.b?'바꾸기':'넣기'}</button></div>
+      <div>${ph.a?`<img src="${ph.a}" alt="지금">`:'<span>'+(I.day>=25?'이제 찍을 때예요':'D+25부터 찍어요')+'</span>'}<button type="button" class="helper-link" onclick="chalPick('a')">${ph.a?'바꾸기':'지금 사진'}</button></div></div>
+    <button type="button" class="mini-btn pl-primary" style="margin-top:14px;width:100%;" onclick="chalCard()">${I.done?'30일 리포트 카드 만들기':'중간 리포트 카드 만들기'}</button>
+    <button type="button" class="helper-link" style="margin-top:12px;" onclick="endChal()">${I.done?'새 챌린지 시작하려면 끝내기':'챌린지 그만두기'}</button>`;
+}
+async function chalCard(){
+  const I = chalInfo(); if(!I) return; const X = chalStats(I); const ph = chalPhotos();
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const F = (w,sz)=>`${w} ${sz}px "Pretendard Variable", Pretendard, -apple-system, sans-serif`;
+  try{ await document.fonts.ready; }catch(_){}
+  const grd = g.createLinearGradient(0,0,0,H); grd.addColorStop(0,'#141416'); grd.addColorStop(1,'#050506'); g.fillStyle = grd; g.fillRect(0,0,W,H);
+  g.fillStyle = '#8e8e93'; g.font = F(600,32); g.fillText(`${fmtDate(I.C.start).replace(/ \S+요일$/,'')} → ${I.done?fmtDate(I.endK).replace(/ \S+요일$/,''):'D+'+I.day}`, 80, 110);
+  g.fillStyle = '#fff'; g.font = F(900,40); g.textAlign = 'right'; g.fillText('3초식단', W-100, 110); g.fillStyle = '#30d158'; g.beginPath(); g.arc(W-86, 102, 8, 0, Math.PI*2); g.fill(); g.textAlign = 'left';
+  g.fillStyle = '#fff'; g.font = F(900,84); g.fillText(I.done ? '30일 바디 리포트' : `바디 리포트 D+${I.day}`, 80, 220);
+  const loadImg = src=>new Promise(res=>{ if(!src) return res(null); const im = new Image(); im.onload = ()=>res(im); im.onerror = ()=>res(null); im.src = src; });
+  const [ib, ia] = await Promise.all([loadImg(ph.b), loadImg(ph.a)]);
+  let y = 270;
+  if(ib || ia){
+    const bw = 440, bh = 560;
+    [[ib,'시작',80],[ia,'지금',560]].forEach(([im,lab,x])=>{
+      g.fillStyle = '#1c1c1e'; g.beginPath(); if(g.roundRect) g.roundRect(x,y,bw,bh,28); else g.rect(x,y,bw,bh); g.fill();
+      g.save(); g.beginPath(); if(g.roundRect) g.roundRect(x,y,bw,bh,28); else g.rect(x,y,bw,bh); g.clip();
+      if(im){ const r = Math.max(bw/im.width, bh/im.height), dw = im.width*r, dh = im.height*r; g.drawImage(im, x+(bw-dw)/2, y+(bh-dh)/2, dw, dh); }
+      else { g.fillStyle = '#48484a'; g.font = F(600,30); g.fillText('사진 없음', x+150, y+bh/2); }
+      g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(x, y+bh-64, bw, 64); g.restore(); g.fillStyle = '#fff'; g.font = F(800,30); g.fillText(lab, x+24, y+bh-22);
+    });
+    y += 560 + 70;
+  } else y += 40;
+  const items = [
+    [I.dw==null?'—':(I.dw>0?'+':'')+I.dw+'kg', '체중 변화 (7일 평균)'],
+    [I.logged+'/'+Math.min(I.day,30)+'일', '기록한 날'],
+    [X.wk+'회', '운동'],
+    [X.avgK?X.avgK.toLocaleString():'—', '평균 섭취 kcal'],
+    [X.avgP?X.avgP+'g':'—', '평균 단백질'],
+    [X.tdee?X.tdee.toLocaleString():'—', '실제 유지칼로리'],
+  ];
+  const cols = 3, cw = (W-160)/cols, rh = ib||ia ? 150 : 200;
+  items.forEach((it,i)=>{ const cx = 80 + (i%cols)*cw, cy = y + Math.floor(i/cols)*rh;
+    const good = I.dw!=null && (I.C.goal==='cut' ? I.dw<0 : I.C.goal==='bulk' ? I.dw>0 : true);
+    g.fillStyle = i===0 && good ? '#30d158' : '#fff'; g.font = F(800, ib||ia ? 62 : 76); g.fillText(it[0], cx, cy+60);
+    g.fillStyle = '#8e8e93'; g.font = F(600,28); g.fillText(it[1], cx, cy+104); });
+  g.fillStyle = '#636366'; g.font = F(600,28); g.fillText('3cho.kr · 가입 없이 30일 기록', 80, H-60);
+  const blob = await new Promise(r=>c.toBlob(r, 'image/png')); statHit('v.app_chal_card');
+  const file = new File([blob], `3cho-30days-${todayKey()}.png`, { type:'image/png' });
+  try{ if(navigator.canShare && navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:'30일 바디 리포트' }); return; } }catch(e){ if(e && e.name==='AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('리포트 카드를 저장했어요');
+}
+/* ── 주기: 생리 칩(시작일) → 체중 그래프 표시 · 생리 전주 칼로리 여유 ── */
+function cycleStarts(){
+  const C = S.condition||{};
+  const ks = Object.keys(C).filter(k=>C[k]==='period').sort();
+  const st = [];
+  ks.forEach(k=>{ const prev = st[st.length-1];
+    if(prev && (new Date(k+'T12:00:00')-new Date(prev+'T12:00:00'))/86400000 < 12) return;
+    st.push(k); });
+  return st;
+}
+function cycleLen(st){
+  st = st || cycleStarts(); const gaps = [];
+  for(let i=1;i<st.length;i++){ const g = Math.round((new Date(st[i]+'T12:00:00')-new Date(st[i-1]+'T12:00:00'))/86400000); if(g>=21 && g<=40) gaps.push(g); }
+  if(!gaps.length) return 28;
+  gaps.sort((a,b)=>a-b); return gaps[Math.floor(gaps.length/2)];
+}
+function cycleInfo(k){
+  const st = cycleStarts(); if(!st.length) return null;
+  const past = st.filter(s=>s<=k); const len = cycleLen(st);
+  const t = new Date(k+'T12:00:00');
+  const last = past.length ? past[past.length-1] : null;
+  const nextActual = st.find(s=>s>k) || null;
+  if(!last){ // 첫 기록 이전: 다음 실제 시작 7일 전부터만 생리 전주로
+    if(!nextActual) return null;
+    const dn = Math.round((new Date(nextActual+'T12:00:00')-t)/86400000);
+    return dn>=1 && dn<=7 ? { phase:'pms', day:null, len, toNext:dn, predicted:false } : null;
+  }
+  const day = Math.round((t-new Date(last+'T12:00:00'))/86400000)+1;
+  if(day > len+14) return null; // 기록이 끊겨 예측을 믿기 어려움
+  let toNext, predicted;
+  if(nextActual){ toNext = Math.round((new Date(nextActual+'T12:00:00')-t)/86400000); predicted = false; }
+  else { toNext = len - day + 1; predicted = true; }
+  const phase = day<=5 ? 'mens' : (toNext>=1 && toNext<=7) ? 'pms' : 'other';
+  return { phase, day, len, toNext, predicted, last };
+}
+const CYCLE_BUF = 150;
+function cycleBufOn(k){
+  if(!S.profile || S.profile.sex!=='f' || S.cycleBuf===false) return 0;
+  const ci = cycleInfo(k||todayKey()); return ci && ci.phase==='pms' ? CYCLE_BUF : 0;
+}
+function cycleBands(N){
+  if(!cycleStarts().length) return null;
+  const out = []; let cur = null;
+  for(let i=0;i<N;i++){ const k = keyOffset(i-(N-1)); const ci = cycleInfo(k); const ph = ci && ci.phase!=='other' ? ci.phase : null;
+    if(cur && cur.ph===ph){ cur.b = i; continue; }
+    if(cur && cur.ph) out.push(cur); cur = { ph, a:i, b:i }; }
+  if(cur && cur.ph) out.push(cur);
+  return out.map(x=>({ a:x.a, b:x.b, col: x.ph==='mens' ? 'rgba(255,55,95,.16)' : 'rgba(255,55,95,.07)', lab: x.ph==='mens' ? '생리' : '생리 전' }));
+}
+function renderCycleNote(isToday){
+  const el = document.getElementById('cycleNote'); if(!el) return;
+  if(!isToday || !S.profile || S.profile.sex!=='f'){ el.innerHTML = ''; return; }
+  const ci = cycleInfo(todayKey());
+  if(!cycleStarts().length){ el.innerHTML = `<p class="cyc-hint">생리 첫날에 위쪽 <b>생리</b> 칩을 눌러두면, 생리 전 수분 때문에 오른 체중을 따로 표시해 드려요.</p>`; return; }
+  if(!ci || ci.phase==='other'){ el.innerHTML = ci && ci.toNext<=14 && ci.toNext>7 ? `<p class="cyc-hint">다음 생리 ${ci.predicted?'예상 ':''}${ci.toNext}일 전 · 주기 ${ci.len}일</p>` : ''; return; }
+  const ma = maAt(todayKey());
+  const maTxt = ma ? ` 지금 7일 평균은 <b>${Math.round(ma*10)/10}kg</b>예요.` : '';
+  el.innerHTML = ci.phase==='pms'
+    ? `<div class="cyc-note"><b>생리 전주${ci.predicted?'(예상)':''} · ${ci.toNext}일 전</b><br>이 시기엔 수분 때문에 0.5~2kg 오르는 경우가 흔해요. 살이 찐 게 아니라서 생리가 끝나면 대개 빠져요.${maTxt}${cycleBufOn()?`<br>식욕이 늘기 쉬운 주라 오늘 목표에 <b>+${CYCLE_BUF}kcal</b> 여유를 넣어뒀어요.`:''}</div>`
+    : `<div class="cyc-note"><b>생리 ${ci.day}일째</b><br>체중이 출렁여도 정상이에요. 숫자보다 기록을 이어가는 게 중요해요.${maTxt}</div>`;
+}
+function toggleCycleBuf(){ S.cycleBuf = (S.cycleBuf===false); save(); renderPlanSheet(); render(); }
+function cyclePlanHtml(){
+  if(!S.profile || S.profile.sex!=='f') return '';
+  const st = cycleStarts(); const ci = cycleInfo(todayKey());
+  let h = `<div class="pl-sec"><div class="pl-h">생리 주기와 칼로리</div>`;
+  if(!st.length) h += `<p class="pl-p">생리 첫날 홈의 <b>생리</b> 칩을 눌러두면 주기를 계산해요. 2번 이상 기록하면 내 주기 길이로 맞춰져요.</p>`;
+  else h += `<p class="pl-p">마지막 시작 ${fmtDate(st[st.length-1])} · 주기 ${cycleLen(st)}일${st.length<2?'(기본값, 2번 기록하면 내 주기로)':''}${ci && ci.toNext>0 ? ` · 다음 ${ci.predicted?'예상 ':''}${ci.toNext}일 뒤` : ''}</p>`;
+  h += `<p class="pl-p" style="margin-top:6px;">생리 전 1주는 식욕이 늘고 기초대사도 조금 오른다는 연구가 있어요(사람마다 차이가 커요). 그 주에 하루 <b>+${CYCLE_BUF}kcal</b> 여유를 미리 넣어두면 "참다가 터지는" 걸 줄일 수 있어요.</p>
+    <button type="button" class="mini-btn ${S.cycleBuf===false?'ghost':'pl-primary'}" style="margin-top:8px;" onclick="toggleCycleBuf()">생리 전주 여유 ${S.cycleBuf===false?'꺼짐 · 켜기':'켜짐 · 끄기'}</button></div>`;
+  return h;
+}
+
+/* 유입 경로: 3cho.kr/?ref=ig 처럼 들어오면 기기당 한 번만 센다 */
+(function(){ try{ const q = new URLSearchParams(location.search), r = (q.get('ref')||'').toLowerCase();
+  if(r && /^[a-z0-9_]{1,16}$/.test(r)){ const k = '3cho_ref_'+r; if(!localStorage.getItem(k)){ localStorage.setItem(k, todayKey()); statHit('v.app_ref_'+r); } }
+  if(q.has('ref')){ q.delete('ref'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs?'?'+qs:'') + location.hash); }
+}catch(_){} })();
+try{ render(); renderWork(); }catch(_){}
+</script>
 </body>
 </html>

@@ -37,6 +37,8 @@
   <h2>앱 성장 지표</h2>
   <div class="kpi" id="kpiApp"></div>
   <p class="sub" id="appNote" style="margin-top:8px;"></p>
+  <h2>어디서 왔나 (처음 온 기기 수)</h2>
+  <div class="kpi" id="refBox"></div>
   <h2>머신 사용법</h2>
   <div class="kpi" id="kpi"></div>
   <h2>머신 유형별</h2>
@@ -67,10 +69,13 @@ function draw(range){
   }
   const acc = pick.reduce((a,d)=>add(a,d.data), {});
   const A = acc.app||{};
-  document.getElementById('kpiApp').innerHTML = [['active','하루 사용 (기기·일)'],['active3','주 3일+ 기록'],['first_log','첫 기록'],['guide_first','가이드 → 첫 기록'],['share_card','요약 카드 공유'],['share_routine','루틴 공유'],['import_routine','루틴 가져오기']]
+  document.getElementById('kpiApp').innerHTML = [['active','하루 사용 (기기·일)'],['active3','주 3일+ 기록'],['first_log','첫 기록'],['guide_first','가이드 → 첫 기록'],['share_card','요약 카드 공유'],['share_routine','루틴 공유'],['import_routine','루틴 가져오기'],['chal_start','챌린지 시작'],['chal_card','챌린지 리포트 카드'],['plan','약속 적기']]
     .map(([k,l])=>`<div><b>${A[k]||0}</b><span>${l}</span></div>`).join('');
   const act = A.active||0, a3 = A.active3||0;
   document.getElementById('appNote').textContent = act ? `핵심 지표: 주 3일 이상 기록하는 비율 ${Math.round(a3/act*100)}% (하루 사용 중) · 매일 한 번씩만 셉니다` : '앱을 연 기기가 하루 한 번씩 세어져요. 개수만 모아요.';
+  const refs = Object.keys(A).filter(k=>k.indexOf('ref_')===0).sort((a,b)=>A[b]-A[a]);
+  const RN = { ig:'인스타(운동팀)', th:'스레드', kakao:'카톡', blog:'블로그' };
+  document.getElementById('refBox').innerHTML = refs.length ? refs.map(k=>`<div><b>${A[k]}</b><span>${RN[k.slice(4)]||k.slice(4)}</span></div>`).join('') : '<p class="sub">아직 없어요. 링크 끝에 ?ref=ig 처럼 붙이면 여기 셉니다.</p>';
   document.getElementById('kpi').innerHTML = [['v','페이지 열림'],['d3','3D 보기'],['bad','실수 보기'],['set','세팅 저장']]
     .map(([k,l])=>`<div><b>${sum(acc[k])}</b><span>${l}</span></div>`).join('');
   const ids = new Set(); ['v','d3','bad','set'].forEach(k=>Object.keys(acc[k]||{}).forEach(i=>ids.add(i)));

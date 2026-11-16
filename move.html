@@ -92,7 +92,7 @@
 <p class="foot">일반적인 운동 정보이며 의학적 조언이 아닙니다. 통증이 있으면 멈추고 전문가와 상의하세요. 동작 그림은 특정 브랜드 제품이 아닌 같은 계열 머신의 공통 궤적입니다.</p>
 <script src="moves.js?v=3"></script>
 <script src="bodymap.js?v=1"></script>
-<script src="gymdb.js?v=4"></script>
+<script src="gymdb.js?v=5"></script>
 <script src="rig.js?v=4"></script>
 <script>
 (function(){
@@ -218,7 +218,8 @@ function detail(mv, asked){
   alts.forEach(a=>{ (by[a.brand] = by[a.brand]||[]).push(a.name); });
   const brands = Object.keys(by);
   h += `<h2>같은 계열 머신 · ${alts.length}종</h2><p class="note">원하는 머신이 없으면 같은 계열로 바꿔도 됩니다.</p>`;
-  h += brands.map(b=>`<div class="alt"><div class="bh"><span>${esc(b)}</span></div><div class="ms">${by[b].map(esc).join(' · ')}</div></div>`).join('');
+  const BSLUG = {"해머스트렝스": "hammer-strength", "파나타": "panatta", "짐80": "gym80", "사이벡스": "cybex", "라이프": "life-fitness", "이카리안": "precor-icarian", "뉴텍": "newtech-wellness", "디랙스": "drax", "노틸러스": "nautilus", "아스널": "arsenal-strength", "짐레코": "gymleco", "프라임": "prime-fitness", "테크노짐": "technogym", "매트릭스": "matrix-fitness", "매그넘": "matrix-magnum", "아틀란티스": "atlantis", "스타트랙": "star-trac", "바디마스터": "body-masters", "플렉스": "flex-fitness", "메덱스": "medx", "부티빌더": "booty-builder", "DHZ": "dhz-fitness", "왓슨": "watson-gym-equipment"};
+  h += brands.map(b=>`<div class="alt"><div class="bh"><span>${esc(b)}</span>${BSLUG[b]?`<a href="m/${BSLUG[b]}.html" style="font-size:12px;color:#0a8f3c">${esc(b)} 머신 전체 ›</a>`:''}</div><div class="ms">${by[b].map(esc).join(' · ')}</div></div>`).join('');
   // 같은 부위 다른 동작
   const sib = MV.filter(m=>m.grp===mv.grp && m.id!==mv.id);
   if(sib.length) h += `<h2>${mv.grp} 다른 동작</h2><div class="grid">${sib.map(m=>`<a class="tile" href="move.html?t=${m.id}">${esc(m.name)}</a>`).join('')}</div>`;
