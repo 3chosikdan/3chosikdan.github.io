@@ -404,6 +404,11 @@
   .rc-ok { margin-top:8px; font-size:12.5px; background:#eafaf0; color:#0a7a33; border-radius:12px; padding:9px 11px; font-weight:700; }
   .rc-body { display:flex; gap:12px; align-items:center; } .rc-body .rc-maps { flex:0 0 auto; margin:4px 0; } .rc-body .rc-map { height:104px; } .rc-txt { flex:1; min-width:0; } .rc-txt .rc-line { font-size:12.5px; }
   .rc-card .rc-legend { display:none; }
+  .rc-card { cursor:default; } .rc-body { cursor:pointer; }
+
+  .rc-more { border:none; background:none; font:inherit; font-size:12px; font-weight:700; color:#8e8e93; cursor:pointer; padding:0; }
+  .rc-pick { margin:-2px 0 12px; padding-bottom:12px; border-bottom:1px solid #f2f2f7; } html.dark .rc-pick { border-color:#2c2c2e; }
+  .rc-pick .tp-card { background:none !important; padding:0; margin:0; }
   .cond-mini { border:none; background:#f2f2f7; color:#6e6e73; border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer; } .cond-mini.on { background:#e8f8ed; color:#1a7f37; } .cond-mini span { font-size:10px; }
   html.dark .cond-mini { background:#1c1c1e; color:#aeaeb2; } html.dark .cond-mini.on { background:#0f2a18; color:#30d158; }
   .rou-acts { display:flex; gap:8px; margin-top:8px; } .rou-acts .mini-btn { flex:1; margin:0; }
@@ -937,6 +942,22 @@
   html.dark .rou-row { border-color:#2c2c2e; }
   html.dark .rou-row .arr, html.dark .wk-card h4 .arr { background:#2c2c2e; color:#f2f2f7; }
 
+  /* ── v112 디자인 다듬기: 카드 한 가지 스타일, 숫자 정렬, 입력칸 ── */
+  .ring, .wk-in, .mac-val, .stat .v, .rc-line b, .chal-stats b { font-variant-numeric: tabular-nums; }
+  .wk-card, .rc-card { background:#fff; border:1px solid #ececf0; box-shadow:0 1px 2px rgba(0,0,0,.03), 0 4px 14px rgba(0,0,0,.03); border-radius:20px; }
+  .wk-card { padding:16px 16px 12px; margin-bottom:12px; }
+  .wk-card h4 { font-size:16px; letter-spacing:-.3px; }
+  .wk-quick { background:#f7f7f9; border-radius:16px; padding:12px; }
+  .wk-quick .q-last { font-size:12px; color:#8e8e93; }
+  .wk-quick .q-same { box-shadow:0 2px 8px rgba(0,0,0,.12); }
+  .wk-in { width:64px; height:44px; padding:0 6px; border-radius:12px; border:1.5px solid transparent; background:#f2f2f7; font-size:17px; font-weight:800; color:#111; transition:border-color .15s, background .15s; }
+  .wk-in:focus { outline:none; border-color:#30d158; background:#fff; }
+  .wk-in::placeholder { color:#c7c7cc; font-weight:700; }
+  .sync-bar.sync-mini { padding:10px 12px; border-radius:14px; }
+  .flabel { letter-spacing:-.1px; }
+  html.dark .wk-card, html.dark .rc-card { background:#1c1c1e; border-color:#2c2c2e; box-shadow:none; }
+  html.dark .wk-quick { background:#2c2c2e; }
+  html.dark .wk-in { background:#2c2c2e; border-color:transparent; color:#f2f2f7; } html.dark .wk-in:focus { border-color:#30d158; background:#111; }
 </style>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -1073,10 +1094,10 @@
     <div class="chart-card" id="wkChartCard">
       <h4>운동 시각화</h4>
       <div class="sub">백오프 볼륨 = 회복. 탑세트 = 절대 강도. 체중과 겹쳐 보면 감량이 훈련을 깎는지 보입니다.</div>
-      <div class="stat-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;margin:12px 0 8px;">
+      <div class="stat-row" style="display:grid;grid-template-columns:1fr 1fr;margin:12px 0 8px;">
         <div class="stat"><div class="v" id="wkStatSess">–</div><div class="l">이번 주 훈련</div></div>
         <div class="stat"><div class="v" id="wkStatHigh">–</div><div class="l">고강도</div></div>
-        <div class="stat"><div class="v" id="wkStatStag">–</div><div class="l">정체 종목</div></div>
+        <div class="stat" style="display:none"><div class="v" id="wkStatStag">–</div><div class="l">정체 종목</div></div>
       </div>
       <div class="wk-legend"><span><i class="wk-dot" style="background:#111"></i>고강도</span><span><i class="wk-dot" style="background:#c7c7cc"></i>저강도</span><span><i class="wk-dot" style="background:#f2f2f7;box-shadow:inset 0 0 0 1px #e5e5ea"></i>휴식</span></div>
       <div id="wkCal" class="wk-cal"></div>
@@ -6643,8 +6664,7 @@ function renderWork(){
   const menu = routineMenu(sorted, day);
   const mine = menu.shown;
   const curName = rou ? (String(rou.name||'루틴').replace(/[<>]/g,'')+(rou.light?' · 저강도':'')) : '루틴 없이 오늘만 적기';
-  if(typeof todayPickHtml==='function') html += todayPickHtml(routines, day, rou);
-  html += recoveryCardHtml(rou);
+  html += recoveryCardHtml(rou, typeof todayPickHtml==='function' ? todayPickHtml(routines, day, rou) : '');
   html += `<div class="flabel" style="margin:0">오늘 할 루틴</div>
     <button type="button" class="rp" id="wkRouToggle" style="margin-top:8px;" aria-expanded="${window._rouOpen?'true':'false'}" onclick="window._rouOpen=!window._rouOpen; renderWork()">${curName}<span style="float:right;font-weight:800;">${window._rouOpen?'▴':'▾'}</span></button>
     ${window._rouOpen ? `<div class="rou-pick" id="wkRouList">
@@ -7426,7 +7446,7 @@ function bodySvg(view, R, cls){
   return BM.svg({ view, sex:(S.profile&&S.profile.sex==='f')?'f':'m', cls, skin: dark?'#2c2c2e':'#ececf0', hair: dark?'#3a3a3c':'#d8d8de', muscle: dark?'#48484a':'#d1d1d6',
     fill: id=>R && R[id] ? recColor(R[id].st) : null });
 }
-function recoveryCardHtml(rou){
+function recoveryCardHtml(rou, pick){
   if(!window.BODYMAP || !window.MOVES){ if(!window._recBoot){ window._recBoot = 1; loadMoves(()=>loadBodyMap(()=>renderWork())); } return ''; }
   const at = viewDate===todayKey() ? Date.now() : new Date(viewDate+'T23:59:00').getTime();
   const R = computeRecovery(at); if(!R) return '';
@@ -7452,12 +7472,13 @@ function recoveryCardHtml(rou){
       ? `<div class="rc-warn">⚠ 오늘 루틴의 <b>${low.map(r=>NAME[r.id]+' '+r.pct+'%').join(', ')}</b> — 아직 덜 회복됐어요. 탑세트는 쉬고 백오프만 해도 됩니다.</div>`
       : `<div class="rc-ok">✓ 오늘 루틴 부위는 회복됐어요. 탑세트 가도 좋아요.</div>`;
   }
-  return `<button type="button" class="rc-card" onclick="openRecovery()">
-    <div class="rc-head"><b>근육 회복 <span class="tg tg-e">추정</span></b><span>자세히 ›</span></div>
-    <div class="rc-body"><div class="rc-maps">${bodySvg('front', R, 'bodymap rc-map')}${bodySvg('back', R, 'bodymap rc-map')}</div>
+  return `<div class="rc-card">
+    ${pick ? `<div class="rc-pick">${pick}</div>` : ''}
+    <div class="rc-head"><b>근육 회복 <span class="tg tg-e">추정</span></b><button type="button" class="rc-more" onclick="openRecovery()">자세히 ›</button></div>
+    <div class="rc-body" role="button" tabindex="0" onclick="openRecovery()"><div class="rc-maps">${bodySvg('front', R, 'bodymap rc-map')}${bodySvg('back', R, 'bodymap rc-map')}</div>
     <div class="rc-txt">${sum}${rl}</div></div>
     <div class="rc-legend">${['tired','mid','almost','ready'].map(k=>`<span><i style="background:${REC_COL[k]}"></i>${REC_LABEL[k]}</span>`).join('')}</div>
-  </button>`;
+  </div>`;
 }
 let _recSel = null, _recShift = 0;
 function openRecovery(){
@@ -7918,7 +7939,8 @@ function e1Stagnant(exId){
   const before = Math.max(e(L[0]), e(L[1])), after = Math.max(e(L[2]), e(L[3]));
   return before>0 && after <= before*1.01;
 }
-function stagnantList(ids){ return (ids||[]).filter(id=>isStagnantEx(id) || e1Stagnant(id)); }
+function stagnantList(ids){ return []; } // 정체 알림은 끔 — 상급자는 원래 무게가 잘 안 오른다
+isStagnantEx = function(){ return false; };
 
 /* ── 3. 오늘 뭐하지: 회복 + 마지막으로 한 날 → 오늘 할 루틴 ── */
 function lastDoneOf(rid){
