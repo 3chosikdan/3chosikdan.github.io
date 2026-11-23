@@ -942,6 +942,13 @@
   html.dark .rou-row { border-color:#2c2c2e; }
   html.dark .rou-row .arr, html.dark .wk-card h4 .arr { background:#2c2c2e; color:#f2f2f7; }
 
+  .sync-line { display:flex; align-items:center; gap:8px; margin:10px 24px 0; padding:7px 8px 7px 14px; border-radius:100px; background:#f2f2f7; font-size:12.5px; font-weight:600; color:#6e6e73; }
+  .sync-line span { flex:1; display:flex; align-items:center; gap:6px; min-width:0; }
+  .sync-line .sl-go { border:none; background:#111; color:#fff; border-radius:100px; padding:6px 12px; font-size:12px; font-weight:800; font-family:inherit; cursor:pointer; }
+  .sync-line .sl-x { border:none; background:none; color:#aeaeb2; font-size:13px; padding:4px 6px; cursor:pointer; }
+  html.dark .sync-line { background:#1c1c1e; color:#aeaeb2; } html.dark .sync-line .sl-go { background:#f2f2f7; color:#111; }
+  #condMini .cond-mini { margin-left:6px; padding:5px 10px; font-size:12px; }
+  #condBox { padding-top:10px !important; }
   /* ── v112 디자인 다듬기: 카드 한 가지 스타일, 숫자 정렬, 입력칸 ── */
   .ring, .wk-in, .mac-val, .stat .v, .rc-line b, .chal-stats b { font-variant-numeric: tabular-nums; }
   .wk-card, .rc-card { background:#fff; border:1px solid #ececf0; box-shadow:0 1px 2px rgba(0,0,0,.03), 0 4px 14px rgba(0,0,0,.03); border-radius:20px; }
@@ -972,6 +979,7 @@
       <button class="date-arr" id="datePrev" onclick="shiftDate(-1)" aria-label="이전 날">‹</button>
       <button class="date-go" id="dateLabel" onclick="openCal()" aria-label="날짜 선택"></button>
       <button class="date-arr" id="dateNext" onclick="shiftDate(1)" aria-label="다음 날">›</button>
+      <span id="condMini"></span>
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:8px;">
@@ -2257,15 +2265,10 @@ function renderSyncBar(){
     el.innerHTML = `<button type="button" class="cloud-line" onclick="cloudLogin()">다른 기기에 적은 기록이 있나요? <b>구글로 로그인해서 불러오기</b></button>`;
     return;
   }
-  el.innerHTML = `<div class="sync-bar sync-mini">
-    <div class="sm-row"><span>${ico('cloud',15)} <b>이 폰에만 저장 중</b> · ${backupAgoText()}</span>
-      <button type="button" class="on" onclick="cloudLogin()">구글로 저장</button>
-      <button type="button" class="sm-x" aria-label="일주일 숨기기" onclick="S.syncHideUntil=Date.now()+7*86400000;save();render();">✕</button></div>
-    <details><summary>파일로 저장·불러오기</summary><div class="sync-actions">
-      <button type="button" class="off" onclick="shareBackup()">파일로 저장</button>
-      <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
-      <button type="button" class="off" onclick="showLocalBackups()">이 폰 백업</button>
-    </div></details>
+  el.innerHTML = `<div class="sync-line">
+    <span>${ico('cloud',15)} 이 폰에만 저장 중</span>
+    <button type="button" class="sl-go" onclick="cloudLogin()">구글로 저장</button>
+    <button type="button" class="sl-x" aria-label="일주일 숨기기" onclick="S.syncHideUntil=Date.now()+7*86400000;save();render();">✕</button>
   </div>`;
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
@@ -4039,9 +4042,12 @@ function render(){
   const curCond = S.condition[viewDate];
   const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'생리'} : {})};
   const condRow = document.getElementById('condRow');
+  const condMini = document.getElementById('condMini'), condBoxEl = document.getElementById('condBox');
   if(condRow) condRow.innerHTML = window._condOpen
     ? Object.entries(condList).map(([k,label])=>`<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('')
-    : `<button type="button" class="cond-mini ${curCond?'on':''}" onclick="window._condOpen=true; render()">컨디션 · ${curCond && condList[curCond] ? condList[curCond] : '기록'} <span>▾</span></button>`;
+    : '';
+  if(condBoxEl) condBoxEl.style.display = window._condOpen ? '' : 'none';
+  if(condMini) condMini.innerHTML = window._condOpen ? '' : `<button type="button" class="cond-mini ${curCond?'on':''}" onclick="window._condOpen=true; render()">${curCond && condList[curCond] ? condList[curCond] : '컨디션'} <span>▾</span></button>`;
 
   document.getElementById('reco').innerHTML = (!isToday || prot) ? '' : recommend();
   const recoEl = document.getElementById('reco');
