@@ -6814,9 +6814,9 @@ function workCardHtml(exId, day, light){
       ${easy ? '' : `<span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
         <button type="button" class="${unit==='kg'?'on':''}" onclick="setExUnit('${sid}','kg')">kg</button>
         <button type="button" class="${unit==='lb'?'on':''}" onclick="setExUnit('${sid}','lb')">lb</button>
-      </span>
+      </span>`}
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
-      <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>`}
+      <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
     <div class="wk-links"><a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 ›</a>
     <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? ico('sliders',13)+' '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : ico('sliders',13)+' 세팅 번호'}</button></div>
