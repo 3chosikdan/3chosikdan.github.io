@@ -402,6 +402,13 @@
   .rc-eta { font-size:11.5px; color:#8e8e93; margin-left:auto; }
   .rc-warn { margin-top:8px; font-size:12.5px; line-height:1.5; background:#fff4e5; color:#7a4100; border-radius:12px; padding:9px 11px; }
   .rc-ok { margin-top:8px; font-size:12.5px; background:#eafaf0; color:#0a7a33; border-radius:12px; padding:9px 11px; font-weight:700; }
+  .rc-body { display:flex; gap:12px; align-items:center; } .rc-body .rc-maps { flex:0 0 auto; margin:4px 0; } .rc-body .rc-map { height:104px; } .rc-txt { flex:1; min-width:0; } .rc-txt .rc-line { font-size:12.5px; }
+  .rc-card .rc-legend { display:none; }
+  .cond-mini { border:none; background:#f2f2f7; color:#6e6e73; border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer; } .cond-mini.on { background:#e8f8ed; color:#1a7f37; } .cond-mini span { font-size:10px; }
+  html.dark .cond-mini { background:#1c1c1e; color:#aeaeb2; } html.dark .cond-mini.on { background:#0f2a18; color:#30d158; }
+  .rou-acts { display:flex; gap:8px; margin-top:8px; } .rou-acts .mini-btn { flex:1; margin:0; }
+  .rou-mgr { margin-top:8px; padding:10px 12px 4px; border-radius:14px; background:#f7f7f9; } html.dark .rou-mgr { background:#1c1c1e; }
+  .wk-links { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:2px 0 8px; } .wk-links .wk-how { margin:0; } .wk-links .wk-setup { display:inline-flex; align-items:center; gap:3px; width:auto; padding:0; margin:0; }
   .rc-legend { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; font-size:11px; color:#8e8e93; font-weight:600; }
   .rc-legend i { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; vertical-align:middle; }
   .rc-sub { font-size:12.5px; color:#8e8e93; line-height:1.5; margin:-4px 0 12px; }
@@ -962,7 +969,6 @@
     <button type="button" data-v="lift" onclick="setHomeMode('lift')">운동</button>
   </div>
   <div id="condBox" style="padding:12px 24px 0;">
-    <div class="flabel" style="margin:0 0 8px;">컨디션</div>
     <div class="cond-row" id="condRow" style="margin:0;"></div>
   </div>
   <div id="setupBanner" class="hidden" style="margin:8px 24px 0;"></div>
@@ -1039,7 +1045,7 @@
 <!-- TREND -->
 <div id="viewTrend" class="hidden">
   <section>
-    <div class="stat-row" style="display:grid;grid-template-columns:1fr 1fr;">
+    <div class="stat-row" style="display:none;grid-template-columns:1fr 1fr;">
       <div class="stat"><div class="v" id="stAvgKcal">–</div><div class="l">7일 평균 kcal</div></div>
       <div class="stat"><div class="v" id="stAvgP">–</div><div class="l">7일 평균 단백질</div></div>
       <div class="stat"><div class="v" id="stWChange">–</div><div class="l">14일 체중</div></div>
@@ -2994,7 +3000,7 @@ const CONDS = { good:'좋음', ok:'보통', tired:'피곤', refeed:'리피드' }
 function setCond(c){
   const k = viewDate;
   S.condition[k] = (S.condition[k]===c) ? null : c;
-  save(); render();
+  window._condOpen = false; save(); render();
 }
 let pendingDel = null;
 function tapMeal(id){ pendingDel = (pendingDel===id) ? null : id; render(); }
@@ -3765,6 +3771,7 @@ function recommend(){
   if(left <= 0) return prefix+`칼로리 <b>${-left} kcal</b> 초과. 내일 목표가 자동으로 조정되니 오늘은 잊으세요. 물 많이 드시고요.`;
   if(pLeft <= 0) return prefix+`단백질 목표 달성 💪 남은 <b>${left} kcal</b>은 자유 예산입니다.`;
 
+  if(!prefix) return ''; // 링·막대·단백질 카드와 같은 말은 반복하지 않는다
   if(pLeft > left/8)
     return prefix+`<b>${left} kcal</b> 남음 · 단백질 <b>${pLeft}g</b> 부족 — 이게 오늘의 숙제입니다.`;
   return prefix+`잘 가고 있습니다. <b>${left} kcal · P ${pLeft}g</b> 남았습니다.`;
@@ -4011,8 +4018,9 @@ function render(){
   const curCond = S.condition[viewDate];
   const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'생리'} : {})};
   const condRow = document.getElementById('condRow');
-  if(condRow) condRow.innerHTML = Object.entries(condList).map(([k,label])=>
-    `<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
+  if(condRow) condRow.innerHTML = window._condOpen
+    ? Object.entries(condList).map(([k,label])=>`<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('')
+    : `<button type="button" class="cond-mini ${curCond?'on':''}" onclick="window._condOpen=true; render()">컨디션 · ${curCond && condList[curCond] ? condList[curCond] : '기록'} <span>▾</span></button>`;
 
   document.getElementById('reco').innerHTML = (!isToday || prot) ? '' : recommend();
   const recoEl = document.getElementById('reco');
@@ -6621,7 +6629,7 @@ function renderWork(){
     html += `<div class="wk-banner">쉬어가는 주간 ${dl.day}일차 · ${dl.left}일 남음 — 탑세트 목표가 −10%로 나와요. RIR 3~4에서 끝내세요.</div>`;
   } else if(stagnant.length>=2){
     const names = stagnant.slice(0,3).map(id=>{ const e=exercises.find(x=>x.id===id); return e?e.name:id; }).join(', ') + (stagnant.length>3 ? ` 외 ${stagnant.length-3}개` : '');
-    html += `<div class="wk-banner">⚠ 최근 기록이 제자리예요 (${names})<br><b>다음 7일은 쉬어가는 주간을 권해요</b> — 탑세트 무게 −10%, RIR 3~4에서 끝내기. 쉬고 나면 대개 다시 올라가요.${(function(){ const a=recentSleepAvg(); return (a!=null && a<6) ? '<br>최근 수면 평균 '+a.toFixed(1)+'시간. 무게보다 잠을 먼저 보세요.' : ''; })()}
+    html += `<div class="wk-banner">⚠ 기록이 2주째 제자리 (${names}) — <b>7일 쉬어가는 주간</b>(무게 −10%)을 권해요.${(function(){ const a=recentSleepAvg(); return (a!=null && a<6) ? '<br>최근 수면 평균 '+a.toFixed(1)+'시간. 무게보다 잠을 먼저 보세요.' : ''; })()}
       <div class="frow" style="margin-top:8px;margin-bottom:0;">
         <button type="button" class="mini-btn" onclick="startDeload()">쉬어가는 주간 시작</button>
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="this.closest('.wk-banner').remove()">나중에</button>
@@ -6644,11 +6652,15 @@ function renderWork(){
       ${mine.map(r=>rouBtn(r, r.id===day.routineId)).join('')}
     </div>` : ''}
     ${pinned ? `<p class="wk-hint" style="margin:6px 0 0;">${wdName}요일 고정 · 다음 주도 이 루틴으로 시작</p>` : ''}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="pinWeekday()">${wdName}요일에 고정</button>
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
-      <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="openRouSheet(todayLog().routineId)">종목·순서</button>
-      ${rou ? `<button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="shareRoutine()">${ico('share',14)} 루틴 공유</button>` : ''}
+    <div class="rou-acts">
+      <button type="button" class="mini-btn ghost" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
+      <button type="button" class="mini-btn ghost" onclick="window._rouMgr=!window._rouMgr; renderWork()">루틴 관리 ${window._rouMgr?'▴':'▾'}</button>
+    </div>
+    ${window._rouMgr ? `<div class="rou-mgr">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+      <button type="button" class="mini-btn ghost" onclick="pinWeekday()">${wdName}요일에 고정</button>
+      <button type="button" class="mini-btn ghost" onclick="openRouSheet(todayLog().routineId)">종목·순서</button>
+      ${rou ? `<button type="button" class="mini-btn ghost" onclick="shareRoutine()">${ico('share',14)} 공유</button>` : ''}
     </div>
     ${rou ? `<details class="wk-help"><summary>루틴 이름 바꾸기</summary><label class="flabel" for="rouNameEdit" style="margin-top:8px;">루틴 이름</label>
       <input class="txt-input" id="rouNameEdit" value="${String(rou.name||'').replace(/"/g,'')}" aria-label="루틴 이름" placeholder="수 어깨">
@@ -6657,7 +6669,6 @@ function renderWork(){
         <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="addNamedRoutine()">이 이름으로 오늘 루틴 추가</button>
       </div>
       <p class="wk-hint" style="margin:6px 0 0;">이름 저장은 이 루틴 이름을 바꿉니다. 추가는 원래 요일은 두고, 다른 날에 새 루틴을 만듭니다.</p></details>` : ''}
-    <div class="info-line"><button type="button" onclick="openWhy()">${ico('book',15)} <b>근비대 원리</b> — 왜 탑세트 하나만 적나</button><a href="hypert.html">긴 글 ›</a></div>
     <details class="wk-help">
       <summary>루틴 라이브러리 · ${WK_PRESETS.length}가지</summary>
       <p class="wk-hint" style="margin:8px 0;">하나만 고릅니다. 5일 분할을 고르면 그 요일만, 3분할이나 상하체·여자 루틴을 고르면 그 루틴만 위에 나옵니다.</p>
@@ -6669,7 +6680,7 @@ function renderWork(){
       <button type="button" class="wk-pick" onclick="cloneRoutine()"><b>이 루틴 복사해 새로 짜기</b><span>종목은 같고 이름만 다르게 하나 더 생깁니다. 원래 루틴은 안 지워집니다.</span></button>
       <button type="button" class="wk-pick" onclick="rebuildRoutine()"><b>종목만 비우기</b><span>이 루틴 종목 목록만 지웁니다. 지난 날 중량과 식단은 남습니다.</span></button>
       <button type="button" class="helper-link" style="margin-top:10px;" onclick="clearTodayWork()">오늘 적은 중량만 지우기</button>
-    </details>`;
+    </details></div>` : ''}`;
   if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
   if(wkSettings().detail) html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
@@ -6694,18 +6705,18 @@ function renderWork(){
       <span class="wk-unit">분</span>
       <button type="button" class="mini-btn" style="background:#f2f2f7;color:#111;" onclick="toggleWkTimer()">${day.startedAt && !day.done ? '멈추기' : '시작'}</button>
     </div>
-    <p class="wk-hint">시작을 누르면 분이 올라갑니다. 끝난 뒤 숫자만 적어도 됩니다.</p>
     <button type="button" class="mini-btn" style="margin-top:8px;" onclick="finishWorkout()">운동 완료 · 저장 확인</button>
     ${day.done ? `<details class="wk-fold wk-saved" ${window._wkSavedOpen?'open':''} ontoggle="window._wkSavedOpen=this.open"><summary>✓ 저장됨 · ${day.durationMin||0}분${day.finishedAt?' · '+hhmm(day.finishedAt):''} · 종목 ${workLines(day).length}개</summary><div class="wk-fold-body">${workLines(day).map(l=>l.replace(/</g,'')).join('<br>')}</div></details>` : ''}
     ${recentWorkHtml()}
     ${(()=>{ const t = weakMuscleText(); return t ? `<div class="wk-weak">${t}</div>` : ''; })()}
-    <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
+    <div class="info-line" style="margin-top:18px;"><button type="button" onclick="openWhy()">${ico('book',15)} <b>근비대 원리</b> — 왜 탑세트 하나만 적나</button><a href="hypert.html">긴 글 ›</a></div>
+    <details class="wk-help"><summary>설정 · 백오프 자동 계산 ${pct}%</summary>
     <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
       <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
       <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
       <button type="button" data-v="80" onclick="setBoPct(80)">80%</button>
-    </div>
+    </div></details>
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
   setSegOnly('boPctSeg', String(pct));
@@ -6774,15 +6785,15 @@ function workCardHtml(exId, day, light){
   const rirT = (inp)=> easy ? `<span class="wk-unit">회</span>` : `<span class="wk-unit">회 RIR</span>${inp}`;
   return `<div class="wk-card${easy?' easy':''}" id="wkc_${sid}">
     <h4><span class="nm" role="button" tabindex="0" onclick="openExHistory('${sid}')" title="기록 보기">${ex.name}${stag}<svg class="i nm-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
-      <span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
+      ${easy ? '' : `<span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
         <button type="button" class="${unit==='kg'?'on':''}" onclick="setExUnit('${sid}','kg')">kg</button>
         <button type="button" class="${unit==='lb'?'on':''}" onclick="setExUnit('${sid}','lb')">lb</button>
       </span>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
-      <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
+      <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>`}
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
-    <a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 · 세팅 ›</a>
-    <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? ico('sliders',13)+' '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : ico('sliders',13)+' 세팅 번호 적기 (시트·패드)'}</button>
+    <div class="wk-links"><a class="wk-how" href="move.html?n=${encodeURIComponent(ex.name)}">사용법 ›</a>
+    <button type="button" class="wk-setup" onclick="editSetup('${sid}')">${String(ent.setupUsed||'').trim() ? ico('sliders',13)+' '+String(ent.setupUsed).trim().replace(/[<>"]/g,'') : ico('sliders',13)+' 세팅 번호'}</button></div>
     ${quickRowHtml(exId, ex, unit, ent, sid, light)}
     ${(()=>{ if(easy) return ''; const b = bestBefore(exId, viewDate, ex.name, String(ent.setupUsed||'').trim()); if(!(b.v>0)) return ''; const tw = ent.top && +ent.top.weight; const pc = tw>0 ? Math.round(toKg(tw, unit)/b.v*100) : 0; return `<div class="wk-1rm">지난 최고 추정 1RM <b>${Math.round(b.v)}kg</b> · ${b.d.slice(5).replace('-','/')}${pc ? ` · 오늘 탑세트 <b>${pc}%</b> ${zoneOf(pc)} ${evi('nsca')}` : ''}</div>`; })()}
     ${(()=>{ if(!showTop || easy) return ''; const tg = topTarget(exId, ex, unit, ent); const base = (ent.top&&ent.top.weight>0) ? ent.top.weight : (tg ? tg.w : '');
@@ -7443,8 +7454,8 @@ function recoveryCardHtml(rou){
   }
   return `<button type="button" class="rc-card" onclick="openRecovery()">
     <div class="rc-head"><b>근육 회복 <span class="tg tg-e">추정</span></b><span>자세히 ›</span></div>
-    <div class="rc-maps">${bodySvg('front', R, 'bodymap rc-map')}${bodySvg('back', R, 'bodymap rc-map')}</div>
-    ${sum}${rl}
+    <div class="rc-body"><div class="rc-maps">${bodySvg('front', R, 'bodymap rc-map')}${bodySvg('back', R, 'bodymap rc-map')}</div>
+    <div class="rc-txt">${sum}${rl}</div></div>
     <div class="rc-legend">${['tired','mid','almost','ready'].map(k=>`<span><i style="background:${REC_COL[k]}"></i>${REC_LABEL[k]}</span>`).join('')}</div>
   </button>`;
 }
@@ -8262,6 +8273,15 @@ function cyclePlanHtml(){
   if(r && /^[a-z0-9_]{1,16}$/.test(r)){ const k = '3cho_ref_'+r; if(!localStorage.getItem(k)){ localStorage.setItem(k, todayKey()); statHit('v.app_ref_'+r); } }
   if(q.has('ref')){ q.delete('ref'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs?'?'+qs:'') + location.hash); }
 }catch(_){} })();
+/* 추이: 운동 기록이 없거나 판정할 데이터가 모자라면 운동 카드를 숨긴다 */
+(function(){ if(typeof renderTrend!=='function') return; const _rt = renderTrend;
+  renderTrend = function(){ const r = _rt.apply(this, arguments);
+    try{ const log = loadStore(WK.log, {}); const has = Object.keys(log).some(k=>(log[k].entries||[]).some(entDone));
+      const c1 = document.getElementById('wkChartCard'), c2 = document.getElementById('wkJudgeCard'), j = document.getElementById('wkJudge');
+      if(c1) c1.style.display = has ? '' : 'none';
+      if(c2) c2.style.display = (has && j && j.textContent.trim() && !/^판정하려면/.test(j.textContent.trim())) ? '' : 'none';
+    }catch(_){} return r; };
+})();
 try{ render(); renderWork(); }catch(_){}
 </script>
 </body>
