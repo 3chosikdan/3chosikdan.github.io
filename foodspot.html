@@ -947,6 +947,9 @@
   .sync-line .sl-go { border:none; background:#111; color:#fff; border-radius:100px; padding:6px 12px; font-size:12px; font-weight:800; font-family:inherit; cursor:pointer; }
   .sync-line .sl-x { border:none; background:none; color:#aeaeb2; font-size:13px; padding:4px 6px; cursor:pointer; }
   html.dark .sync-line { background:#1c1c1e; color:#aeaeb2; } html.dark .sync-line .sl-go { background:#f2f2f7; color:#111; }
+  .rou-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; } .rou-btns .mini-btn { margin:0; width:100%; }
+  .sync-files { margin:6px 28px 0; font-size:12px; color:#8e8e93; } .sync-files summary { cursor:pointer; } .sync-files .sync-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .sync-files button { border:none; border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; background:#f2f2f7; color:#111; } html.dark .sync-files button { background:#2c2c2e; color:#f2f2f7; }
   #condMini .cond-mini { margin-left:6px; padding:5px 10px; font-size:12px; }
   #condBox { padding-top:10px !important; }
   /* ── v112 디자인 다듬기: 카드 한 가지 스타일, 숫자 정렬, 입력칸 ── */
@@ -1074,7 +1077,7 @@
 <!-- TREND -->
 <div id="viewTrend" class="hidden">
   <section>
-    <div class="stat-row" style="display:none;grid-template-columns:1fr 1fr;">
+    <div class="stat-row" style="display:grid;grid-template-columns:1fr 1fr;">
       <div class="stat"><div class="v" id="stAvgKcal">–</div><div class="l">7일 평균 kcal</div></div>
       <div class="stat"><div class="v" id="stAvgP">–</div><div class="l">7일 평균 단백질</div></div>
       <div class="stat"><div class="v" id="stWChange">–</div><div class="l">14일 체중</div></div>
@@ -2269,7 +2272,12 @@ function renderSyncBar(){
     <span>${ico('cloud',15)} 이 폰에만 저장 중</span>
     <button type="button" class="sl-go" onclick="cloudLogin()">구글로 저장</button>
     <button type="button" class="sl-x" aria-label="일주일 숨기기" onclick="S.syncHideUntil=Date.now()+7*86400000;save();render();">✕</button>
-  </div>`;
+  </div>
+  <details class="sync-files"><summary>파일로 저장·불러오기</summary><div class="sync-actions">
+      <button type="button" class="off" onclick="shareBackup()">파일로 저장</button>
+      <button type="button" class="off" onclick="document.getElementById('importInput').click()">불러오기</button>
+      <button type="button" class="off" onclick="showLocalBackups()">이 폰 백업</button>
+  </div></details>`;
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') mirrorAll(); });
 
@@ -4043,11 +4051,9 @@ function render(){
   const condList = {...CONDS, ...(S.profile && S.profile.sex==='f' ? {period:'생리'} : {})};
   const condRow = document.getElementById('condRow');
   const condMini = document.getElementById('condMini'), condBoxEl = document.getElementById('condBox');
-  if(condRow) condRow.innerHTML = window._condOpen
-    ? Object.entries(condList).map(([k,label])=>`<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('')
-    : '';
-  if(condBoxEl) condBoxEl.style.display = window._condOpen ? '' : 'none';
-  if(condMini) condMini.innerHTML = window._condOpen ? '' : `<button type="button" class="cond-mini ${curCond?'on':''}" onclick="window._condOpen=true; render()">${curCond && condList[curCond] ? condList[curCond] : '컨디션'} <span>▾</span></button>`;
+  if(condRow) condRow.innerHTML = Object.entries(condList).map(([k,label])=>`<button type="button" class="cond-chip ${curCond===k?'on':''}" onclick="setCond('${k}')">${label}</button>`).join('');
+  if(condBoxEl) condBoxEl.style.display = '';
+  if(condMini) condMini.innerHTML = '';
 
   document.getElementById('reco').innerHTML = (!isToday || prot) ? '' : recommend();
   const recoEl = document.getElementById('reco');
@@ -6678,15 +6684,11 @@ function renderWork(){
       ${mine.map(r=>rouBtn(r, r.id===day.routineId)).join('')}
     </div>` : ''}
     ${pinned ? `<p class="wk-hint" style="margin:6px 0 0;">${wdName}요일 고정 · 다음 주도 이 루틴으로 시작</p>` : ''}
-    <div class="rou-acts">
-      <button type="button" class="mini-btn ghost" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
-      <button type="button" class="mini-btn ghost" onclick="window._rouMgr=!window._rouMgr; renderWork()">루틴 관리 ${window._rouMgr?'▴':'▾'}</button>
-    </div>
-    ${window._rouMgr ? `<div class="rou-mgr">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+    <div class="rou-btns">
       <button type="button" class="mini-btn ghost" onclick="pinWeekday()">${wdName}요일에 고정</button>
+      <button type="button" class="mini-btn ghost" onclick="fillLastNumbers(false)">지난 숫자 채우기</button>
       <button type="button" class="mini-btn ghost" onclick="openRouSheet(todayLog().routineId)">종목·순서</button>
-      ${rou ? `<button type="button" class="mini-btn ghost" onclick="shareRoutine()">${ico('share',14)} 공유</button>` : ''}
+      ${rou ? `<button type="button" class="mini-btn ghost" onclick="shareRoutine()">${ico('share',14)} 루틴 공유</button>` : ''}
     </div>
     ${rou ? `<details class="wk-help"><summary>루틴 이름 바꾸기</summary><label class="flabel" for="rouNameEdit" style="margin-top:8px;">루틴 이름</label>
       <input class="txt-input" id="rouNameEdit" value="${String(rou.name||'').replace(/"/g,'')}" aria-label="루틴 이름" placeholder="수 어깨">
@@ -6706,7 +6708,7 @@ function renderWork(){
       <button type="button" class="wk-pick" onclick="cloneRoutine()"><b>이 루틴 복사해 새로 짜기</b><span>종목은 같고 이름만 다르게 하나 더 생깁니다. 원래 루틴은 안 지워집니다.</span></button>
       <button type="button" class="wk-pick" onclick="rebuildRoutine()"><b>종목만 비우기</b><span>이 루틴 종목 목록만 지웁니다. 지난 날 중량과 식단은 남습니다.</span></button>
       <button type="button" class="helper-link" style="margin-top:10px;" onclick="clearTodayWork()">오늘 적은 중량만 지우기</button>
-    </details></div>` : ''}`;
+    </details>`;
   if(rou && rou.note && day.routineId) html += `<div class="wk-hint" style="margin:8px 0 4px;">${rou.note}</div>`;
   if(wkSettings().detail) html += `<div class="wk-row" style="margin:14px 0 2px;">
       <span class="wk-lab" style="width:72px;">${viewDate===todayKey()?'어제 수면':'전날 수면'}</span>
@@ -6736,13 +6738,13 @@ function renderWork(){
     ${recentWorkHtml()}
     ${(()=>{ const t = weakMuscleText(); return t ? `<div class="wk-weak">${t}</div>` : ''; })()}
     <div class="info-line" style="margin-top:18px;"><button type="button" onclick="openWhy()">${ico('book',15)} <b>근비대 원리</b> — 왜 탑세트 하나만 적나</button><a href="hypert.html">긴 글 ›</a></div>
-    <details class="wk-help"><summary>설정 · 백오프 자동 계산 ${pct}%</summary>
+    <div class="flabel" style="margin-top:18px;">백오프 자동 계산</div>
     <p style="font-size:12px;color:#8e8e93;line-height:1.55;margin:0 0 8px;">탑세트에서 20~25% 감량 = 탑의 <b style="color:inherit">${pct}%</b>. kg는 2.5, lb는 5 단위로 반올림. 종목 이름 옆에서 kg·lb를 고릅니다. 워밍업·피더는 적지 않습니다.</p>
     <div class="seg" id="boPctSeg">
       <button type="button" data-v="70" onclick="setBoPct(70)">70%</button>
       <button type="button" data-v="75" onclick="setBoPct(75)">75%</button>
       <button type="button" data-v="80" onclick="setBoPct(80)">80%</button>
-    </div></details>
+    </div>
     <p style="font-size:11px;color:#8e8e93;line-height:1.5;margin-top:16px;">자력 반복만 입력하세요. 보조가 닿은 반복은 적지 않습니다. 일반적인 참고이며 의학적 조언이 아닙니다.</p>`;
   box.innerHTML = html;
   setSegOnly('boPctSeg', String(pct));
@@ -6811,10 +6813,10 @@ function workCardHtml(exId, day, light){
   const rirT = (inp)=> easy ? `<span class="wk-unit">회</span>` : `<span class="wk-unit">회 RIR</span>${inp}`;
   return `<div class="wk-card${easy?' easy':''}" id="wkc_${sid}">
     <h4><span class="nm" role="button" tabindex="0" onclick="openExHistory('${sid}')" title="기록 보기">${ex.name}${stag}<svg class="i nm-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
-      ${easy ? '' : `<span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
+      <span class="unit-tog" role="group" aria-label="${ex.name} 중량 단위">
         <button type="button" class="${unit==='kg'?'on':''}" onclick="setExUnit('${sid}','kg')">kg</button>
         <button type="button" class="${unit==='lb'?'on':''}" onclick="setExUnit('${sid}','lb')">lb</button>
-      </span>`}
+      </span>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',-1)" aria-label="위로">↑</button>
       <button type="button" class="arr" onclick="moveExOnDay('${sid}',1)" aria-label="아래로">↓</button>
       <button type="button" class="helper-link" onclick="openExSheet('${sid}')">수정</button></h4>
